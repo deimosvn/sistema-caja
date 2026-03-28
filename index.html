@@ -5,6 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>POS La Cabaña | Enterprise System V6.2 (Mobile Fix + Audio)</title>
 
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#F97316">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="La Cabaña">
+    <link rel="apple-touch-icon" href="./icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="./icons/icon-512x512.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="La Cabaña POS">
+    <meta name="msapplication-TileImage" content="./icons/icon-144x144.png">
+    <meta name="msapplication-TileColor" content="#F97316">
+
     <!-- 1. DEPENDENCIAS EXTERNAS -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1657,6 +1671,69 @@
 
         // Loop Visualizador Tiempo Cocina (Optimizado a 1 segundo para actualizar estilos en tiempo real)
         setInterval(() => UI.updateKitchenTimers(), 1000);
+
+        // ==================== PWA: SERVICE WORKER REGISTRATION ====================
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js')
+                    .then((registration) => {
+                        console.log('[PWA] Service Worker registrado con scope:', registration.scope);
+                        
+                        // Detectar actualizaciones
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // Nueva versión disponible
+                                    if (confirm('Nueva versión disponible. ¿Actualizar ahora?')) {
+                                        newWorker.postMessage({ type: 'SKIP_WAITING' });
+                                        window.location.reload();
+                                    }
+                                }
+                            });
+                        });
+                    })
+                    .catch((error) => {
+                        console.error('[PWA] Error al registrar Service Worker:', error);
+                    });
+                
+                // Escuchar mensajes del SW (Background Sync)
+                navigator.serviceWorker.addEventListener('message', (event) => {
+                    if (event.data && event.data.type === 'SYNC_ORDERS') {
+                        console.log('[PWA] Sincronizando órdenes pendientes...');
+                    }
+                });
+            });
+        }
+
+        // ==================== PWA: INSTALL PROMPT ====================
+        let deferredPrompt = null;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            // Mostrar botón de instalación en la UI
+            const installBtn = document.createElement('button');
+            installBtn.id = 'pwa-install-btn';
+            installBtn.className = 'fixed bottom-6 right-6 z-[90] bg-gradient-to-r from-orange-500 to-orange-600 text-white px-5 py-3 rounded-2xl shadow-floating flex items-center gap-2 tap-effect font-semibold text-sm animate-up';
+            installBtn.innerHTML = '<i class="fa-solid fa-download"></i> Instalar App';
+            installBtn.onclick = async () => {
+                if (!deferredPrompt) return;
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log('[PWA] Install outcome:', outcome);
+                deferredPrompt = null;
+                installBtn.remove();
+            };
+            document.body.appendChild(installBtn);
+        });
+
+        window.addEventListener('appinstalled', () => {
+            console.log('[PWA] App instalada exitosamente');
+            deferredPrompt = null;
+            const btn = document.getElementById('pwa-install-btn');
+            if (btn) btn.remove();
+            UI.toast('App instalada correctamente', 'success');
+        });
 
     </script>
 </body>
