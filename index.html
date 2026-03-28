@@ -207,6 +207,91 @@
                 font-size: 1.1rem !important;
             }
         }
+
+        /* === MESERO UX IMPROVEMENTS === */
+        
+        /* Categoría activa en el nav */
+        .cat-btn-active {
+            background: #F97316 !important;
+            color: white !important;
+            border-color: #EA580C !important;
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
+            transform: scale(1.05);
+        }
+        
+        /* Animación al agregar item */
+        @keyframes addBounce {
+            0% { transform: scale(1); }
+            30% { transform: scale(0.92); }
+            60% { transform: scale(1.05); border-color: #F97316; box-shadow: 0 0 20px rgba(249,115,22,0.3); }
+            100% { transform: scale(1); }
+        }
+        .add-bounce { animation: addBounce 0.4s ease-out; }
+        
+        /* Badge animado */
+        @keyframes badgePop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.4); }
+            100% { transform: scale(1); }
+        }
+        .badge-pop { animation: badgePop 0.3s ease-out; }
+        
+        /* Cart item entrada */
+        @keyframes cartSlideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .cart-item-enter { animation: cartSlideIn 0.25s ease-out; }
+        
+        /* Modal de nota inline */
+        .note-modal-overlay {
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(8px);
+        }
+        
+        /* Confirmation sheet */
+        .confirm-sheet {
+            transform: translateY(100%);
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .confirm-sheet.show {
+            transform: translateY(0);
+        }
+        
+        /* Qty badge en menu card */
+        .menu-qty-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            min-width: 26px;
+            height: 26px;
+            border-radius: 13px;
+            background: linear-gradient(135deg, #F97316, #EA580C);
+            color: white;
+            font-size: 12px;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(249,115,22,0.5);
+            z-index: 20;
+            padding: 0 6px;
+        }
+        
+        /* Swipe-to-delete hint */
+        .cart-item-actions {
+            transition: max-height 0.2s ease;
+            overflow: hidden;
+        }
+        
+        /* Touch targets mínimos 48px */
+        .touch-target {
+            min-width: 48px;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
     </style>
 </head>
 <body class="h-[100dvh] flex flex-col text-slate-800 bg-brand-base">
@@ -318,84 +403,154 @@
         </div>
 
         <!-- VISTA 1: MESERO (MENU Y COMANDA) -->
-        <div id="v-mesero" class="hidden absolute inset-0 z-30 flex-col md:flex-row bg-slate-50">
+        <div id="v-mesero" class="hidden absolute inset-0 z-30 flex-col md:flex-row bg-slate-50" role="main" aria-label="Interfaz de mesero">
             <!-- Lado Izquierdo: Menú -->
             <div class="flex-1 flex flex-col relative h-full overflow-hidden">
                 <div class="sticky-nav px-3 py-2.5 z-30">
                     <div class="relative max-w-xl mx-auto">
-                        <i class="fa-solid fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                        <input type="text" id="m-search" onkeyup="UI.filterMenu(this.value)" placeholder="Buscar platillo..." class="w-full pl-10 pr-4 py-3 bg-slate-100/80 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:bg-white transition-all border border-transparent focus:border-orange-200">
+                        <i class="fa-solid fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm" aria-hidden="true"></i>
+                        <input type="search" id="m-search" onkeyup="UI.filterMenu(this.value)" placeholder="Buscar platillo..." aria-label="Buscar platillo en el menú" autocomplete="off" class="w-full pl-10 pr-10 py-3.5 bg-slate-100/80 rounded-2xl text-base font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:bg-white transition-all border border-transparent focus:border-orange-200">
+                        <button onclick="document.getElementById('m-search').value='';UI.filterMenu('')" class="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-slate-200/80 text-slate-400 flex items-center justify-center text-xs hover:bg-slate-300 transition-colors hidden" id="m-search-clear" aria-label="Limpiar búsqueda"><i class="fa-solid fa-xmark"></i></button>
                     </div>
                 </div>
 
-                <div id="m-cats-wrapper" class="px-3 py-2 bg-white/90 backdrop-blur-lg z-20 border-b border-slate-100/50">
-                    <div id="m-cat-nav" class="flex gap-2 overflow-x-auto hide-scroll py-1 snap-x"></div>
-                </div>
+                <nav id="m-cats-wrapper" class="px-3 py-2 bg-white/90 backdrop-blur-lg z-20 border-b border-slate-100/50" aria-label="Categorías del menú">
+                    <div id="m-cat-nav" class="flex gap-2 overflow-x-auto hide-scroll py-1 snap-x" role="tablist"></div>
+                </nav>
 
-                <div id="m-grid" class="flex-1 overflow-y-auto p-3 md:p-6 pb-28 md:pb-8 w-full max-w-7xl mx-auto scroll-smooth hide-scroll"></div>
+                <div id="m-grid" class="flex-1 overflow-y-auto p-3 md:p-6 pb-28 md:pb-8 w-full max-w-7xl mx-auto scroll-smooth hide-scroll" role="list" aria-label="Menú de platillos"></div>
 
-                <!-- Boton flotante Mobile - MEJORADO -->
-                <div class="md:hidden absolute bottom-4 left-3 right-3 z-40 animate-up">
-                    <button onclick="UI.toggleCartMobile(true)" class="w-full bg-gradient-to-r from-slate-900 to-slate-800 text-white h-[60px] rounded-2xl shadow-floating flex items-center justify-between px-5 tap-effect border border-slate-700/50 shine-effect">
+                <!-- Botón flotante Mobile - MEJORADO con items count -->
+                <div id="m-float-btn-wrapper" class="md:hidden absolute bottom-4 left-3 right-3 z-40 animate-up" style="display:none">
+                    <button onclick="UI.toggleCartMobile(true)" class="w-full bg-gradient-to-r from-slate-900 to-slate-800 text-white h-[64px] rounded-2xl shadow-floating flex items-center justify-between px-5 tap-effect border border-slate-700/50 shine-effect" aria-label="Ver pedido actual">
                         <div class="flex items-center gap-3">
-                            <span id="m-badge-float" class="w-7 h-7 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 text-[11px] font-bold flex items-center justify-center shadow-lg shadow-orange-500/40">0</span>
-                            <span class="font-semibold text-sm">Ver Pedido</span>
+                            <span id="m-badge-float" class="w-8 h-8 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 text-sm font-bold flex items-center justify-center shadow-lg shadow-orange-500/40" aria-live="polite">0</span>
+                            <div class="text-left">
+                                <span class="font-semibold text-sm block">Ver Pedido</span>
+                                <span id="m-items-desc-float" class="text-[10px] text-slate-400 font-medium"></span>
+                            </div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <span id="m-total-float" class="font-display font-black text-xl">$0.00</span>
-                            <i class="fa-solid fa-chevron-up text-slate-400 text-xs"></i>
+                            <span id="m-total-float" class="font-display font-black text-xl" aria-live="polite">$0.00</span>
+                            <i class="fa-solid fa-chevron-up text-slate-400 text-xs" aria-hidden="true"></i>
                         </div>
                     </button>
                 </div>
             </div>
 
-            <!-- Lado Derecho: Carrito/Comanda - MEJORADO -->
-            <div id="m-cart-panel" class="absolute inset-0 md:static bg-white z-[60] flex flex-col transform translate-y-full md:translate-y-0 transition-transform duration-300 ease-out md:w-[420px] lg:w-[480px] shadow-2xl md:shadow-none md:border-l border-slate-200/50">
+            <!-- Lado Derecho: Carrito/Comanda -->
+            <div id="m-cart-panel" class="absolute inset-0 md:static bg-white z-[60] flex flex-col transform translate-y-full md:translate-y-0 transition-transform duration-300 ease-out md:w-[420px] lg:w-[480px] shadow-2xl md:shadow-none md:border-l border-slate-200/50" role="complementary" aria-label="Orden actual">
                 <div class="flex-none px-4 py-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-white to-slate-50 z-10 safe-top">
                     <div>
                         <h2 class="font-display font-black text-lg text-slate-800 flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse" aria-hidden="true"></span>
                             Orden Actual
                         </h2>
-                        <p class="text-[10px] font-semibold uppercase text-slate-400 tracking-wider">Detalle del Consumo</p>
+                        <p id="m-cart-count-label" class="text-[11px] font-semibold text-slate-400" aria-live="polite">0 productos</p>
                     </div>
-                    <button onclick="UI.toggleCartMobile(false)" class="md:hidden w-9 h-9 rounded-xl bg-slate-100 text-slate-500 tap-effect flex items-center justify-center hover:bg-slate-200 transition-colors"><i class="fa-solid fa-chevron-down"></i></button>
+                    <div class="flex items-center gap-2">
+                        <button onclick="LOGIC.clearCart()" id="m-clear-cart-btn" class="hidden w-10 h-10 rounded-xl bg-red-50 text-red-400 tap-effect flex items-center justify-center hover:bg-red-100 hover:text-red-600 transition-colors" aria-label="Vaciar carrito" title="Vaciar carrito"><i class="fa-solid fa-trash-can text-sm"></i></button>
+                        <button onclick="UI.toggleCartMobile(false)" class="md:hidden w-10 h-10 rounded-xl bg-slate-100 text-slate-500 tap-effect flex items-center justify-center hover:bg-slate-200 transition-colors" aria-label="Cerrar carrito"><i class="fa-solid fa-chevron-down"></i></button>
+                    </div>
                 </div>
 
                 <div class="px-4 py-3 bg-slate-50/80">
+                    <label for="sel-mesa" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Ubicación de la mesa</label>
                     <div class="relative">
-                        <i class="fa-solid fa-location-dot absolute left-3.5 top-1/2 -translate-y-1/2 text-orange-500"></i>
-                        <select id="sel-mesa" class="w-full pl-10 pr-8 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-orange-400 appearance-none shadow-sm cursor-pointer hover:border-orange-300 transition-colors">
+                        <i class="fa-solid fa-location-dot absolute left-3.5 top-1/2 -translate-y-1/2 text-orange-500" aria-hidden="true"></i>
+                        <select id="sel-mesa" aria-label="Seleccionar mesa o ubicación" class="w-full pl-10 pr-8 py-3.5 bg-white border-2 border-slate-200 rounded-xl text-base font-bold text-slate-700 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-200 appearance-none shadow-sm cursor-pointer hover:border-orange-300 transition-colors">
                             <option value="" disabled selected>Selecciona Ubicación...</option>
-                            <option value="1">Mesa 1 (Sala)</option><option value="2">Mesa 2 (Sala)</option>
-                            <option value="3">Mesa 3 (Sala)</option><option value="4">Mesa 4 (Sala)</option>
-                            <option value="5">Mesa 5 (Jardín)</option><option value="6">Mesa 6 (Jardín)</option>
-                            <option value="7">Mesa 7 (VIP)</option><option value="8">Mesa 8 (VIP)</option>
-                            <option value="9">Mesa 9 (VIP)</option><option value="10">Mesa 10 (VIP)</option><option value="11">Mesa 11 (VIP)</option>
-                            <option value="12">Mesa 12 (Afuera)</option><option value="13">Mesa 13 (Afuera)</option>
-                            <option value="14">Mesa 14 (Afuera)</option><option value="15">Mesa 15 (Afuera)</option>
-                            <option value="LLEVAR">📦 PARA LLEVAR</option>
+                            <optgroup label="Sala">
+                                <option value="1">Mesa 1</option><option value="2">Mesa 2</option>
+                                <option value="3">Mesa 3</option><option value="4">Mesa 4</option>
+                            </optgroup>
+                            <optgroup label="Jardín">
+                                <option value="5">Mesa 5</option><option value="6">Mesa 6</option>
+                            </optgroup>
+                            <optgroup label="VIP">
+                                <option value="7">Mesa 7</option><option value="8">Mesa 8</option>
+                                <option value="9">Mesa 9</option><option value="10">Mesa 10</option><option value="11">Mesa 11</option>
+                            </optgroup>
+                            <optgroup label="Afuera">
+                                <option value="12">Mesa 12</option><option value="13">Mesa 13</option>
+                                <option value="14">Mesa 14</option><option value="15">Mesa 15</option>
+                            </optgroup>
+                            <optgroup label="Otros">
+                                <option value="LLEVAR">📦 PARA LLEVAR</option>
+                            </optgroup>
                         </select>
-                        <i class="fa-solid fa-angle-down absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
+                        <i class="fa-solid fa-angle-down absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" aria-hidden="true"></i>
                     </div>
                 </div>
 
-                <div id="m-cart-list" class="flex-1 overflow-y-auto p-3 space-y-2 bg-slate-50/50 hide-scroll"></div>
+                <div id="m-cart-list" class="flex-1 overflow-y-auto p-3 space-y-2 bg-slate-50/50 hide-scroll" role="list" aria-label="Productos en la orden"></div>
 
                 <div class="p-4 bg-white border-t border-slate-100 safe-bottom">
-                    <!-- Botón Platillo Especial - MEJORADO -->
-                    <button onclick="LOGIC.addSpecialItem()" class="w-full mb-3 bg-gradient-to-r from-violet-500 to-purple-600 text-white py-2.5 rounded-xl shadow-md flex items-center justify-center gap-2 tap-effect hover:shadow-lg hover:shadow-purple-500/30 transition-all text-sm">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <!-- Botón Platillo Especial -->
+                    <button onclick="LOGIC.addSpecialItem()" class="w-full mb-3 bg-gradient-to-r from-violet-500 to-purple-600 text-white py-3 rounded-xl shadow-md flex items-center justify-center gap-2 tap-effect hover:shadow-lg hover:shadow-purple-500/30 transition-all text-sm touch-target" aria-label="Agregar platillo especial">
+                        <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
                         <span class="font-semibold">+ Platillo Especial</span>
                     </button>
                     
                     <div class="flex justify-between items-end mb-3">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total</span>
-                        <span id="m-cart-total" class="font-display font-black text-3xl text-slate-900">$0.00</span>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Total</span>
+                            <span id="m-cart-items-total" class="text-[11px] text-slate-400 font-medium"></span>
+                        </div>
+                        <span id="m-cart-total" class="font-display font-black text-3xl text-slate-900" aria-live="polite">$0.00</span>
                     </div>
-                    <button onclick="LOGIC.sendOrder(this)" class="group w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white h-12 rounded-xl shadow-lg shadow-orange-500/30 flex items-center justify-center gap-2 transition-all tap-effect shine-effect">
-                        <span class="font-bold">Enviar a Cocina</span>
-                        <i class="fa-solid fa-paper-plane group-hover:translate-x-1 transition-transform"></i>
+                    <button onclick="LOGIC.confirmSendOrder()" id="btn-send-order" class="group w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white h-14 rounded-xl shadow-lg shadow-orange-500/30 flex items-center justify-center gap-2 transition-all tap-effect shine-effect disabled:opacity-40 disabled:cursor-not-allowed" disabled aria-label="Enviar orden a cocina">
+                        <span class="font-bold text-base">Enviar a Cocina</span>
+                        <i class="fa-solid fa-paper-plane group-hover:translate-x-1 transition-transform" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL: NOTA PARA ITEM DEL CARRITO -->
+        <div id="modal-note" class="fixed inset-0 z-[110] hidden items-end justify-center md:items-center" role="dialog" aria-modal="true" aria-label="Agregar nota al platillo">
+            <div class="absolute inset-0 note-modal-overlay" onclick="UI.closeNoteModal()"></div>
+            <div class="relative bg-white w-full md:max-w-[400px] rounded-t-3xl md:rounded-3xl p-5 md:p-6 shadow-2xl animate-up safe-bottom">
+                <div class="w-10 h-1 bg-slate-200 rounded-full mx-auto mb-4 md:hidden"></div>
+                <h3 class="font-display font-bold text-lg text-slate-800 mb-1" id="note-modal-title">Nota para cocina</h3>
+                <p class="text-xs text-slate-400 mb-3" id="note-modal-item-name"></p>
+                <div class="flex flex-wrap gap-2 mb-3" id="note-quick-tags">
+                    <button onclick="UI.addQuickNote('Sin cebolla')" class="px-3 py-2 bg-slate-100 rounded-xl text-xs font-bold text-slate-600 tap-effect hover:bg-orange-100 hover:text-orange-700 transition-colors">Sin cebolla</button>
+                    <button onclick="UI.addQuickNote('Extra picante')" class="px-3 py-2 bg-slate-100 rounded-xl text-xs font-bold text-slate-600 tap-effect hover:bg-orange-100 hover:text-orange-700 transition-colors">Extra picante</button>
+                    <button onclick="UI.addQuickNote('Sin chile')" class="px-3 py-2 bg-slate-100 rounded-xl text-xs font-bold text-slate-600 tap-effect hover:bg-orange-100 hover:text-orange-700 transition-colors">Sin chile</button>
+                    <button onclick="UI.addQuickNote('Bien caliente')" class="px-3 py-2 bg-slate-100 rounded-xl text-xs font-bold text-slate-600 tap-effect hover:bg-orange-100 hover:text-orange-700 transition-colors">Bien caliente</button>
+                    <button onclick="UI.addQuickNote('Poca grasa')" class="px-3 py-2 bg-slate-100 rounded-xl text-xs font-bold text-slate-600 tap-effect hover:bg-orange-100 hover:text-orange-700 transition-colors">Poca grasa</button>
+                    <button onclick="UI.addQuickNote('Extra limón')" class="px-3 py-2 bg-slate-100 rounded-xl text-xs font-bold text-slate-600 tap-effect hover:bg-orange-100 hover:text-orange-700 transition-colors">Extra limón</button>
+                </div>
+                <textarea id="note-input" rows="2" maxlength="100" placeholder="Escribe instrucciones para cocina..." class="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-200 resize-none" aria-label="Nota para cocina"></textarea>
+                <div class="flex gap-2 mt-3">
+                    <button onclick="UI.closeNoteModal()" class="flex-1 py-3 rounded-xl bg-slate-100 text-slate-600 font-bold text-sm tap-effect hover:bg-slate-200 transition-colors touch-target">Cancelar</button>
+                    <button onclick="UI.saveNote()" class="flex-1 py-3 rounded-xl bg-orange-500 text-white font-bold text-sm tap-effect hover:bg-orange-600 transition-colors touch-target">Guardar Nota</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL: CONFIRMACIÓN DE ENVÍO -->
+        <div id="modal-confirm-send" class="fixed inset-0 z-[110] hidden items-end justify-center md:items-center" role="dialog" aria-modal="true" aria-label="Confirmar envío de orden">
+            <div class="absolute inset-0 note-modal-overlay" onclick="UI.closeConfirmModal()"></div>
+            <div class="relative bg-white w-full md:max-w-[420px] rounded-t-3xl md:rounded-3xl p-5 md:p-6 shadow-2xl confirm-sheet safe-bottom">
+                <div class="w-10 h-1 bg-slate-200 rounded-full mx-auto mb-4 md:hidden"></div>
+                <div class="text-center mb-4">
+                    <div class="w-14 h-14 mx-auto bg-gradient-to-br from-orange-400 to-orange-600 text-white rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-orange-500/30 mb-3">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </div>
+                    <h3 class="font-display font-bold text-xl text-slate-800">Confirmar Envío</h3>
+                    <p id="confirm-mesa-label" class="text-sm text-slate-500 mt-1"></p>
+                </div>
+                <div id="confirm-items-list" class="bg-slate-50 rounded-2xl p-3 mb-4 max-h-[35vh] overflow-y-auto hide-scroll border border-slate-100"></div>
+                <div class="flex justify-between items-center bg-slate-900 text-white rounded-2xl px-5 py-4 mb-4">
+                    <span class="text-sm font-semibold text-slate-300">Total</span>
+                    <span id="confirm-total" class="font-display font-black text-2xl"></span>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="UI.closeConfirmModal()" class="flex-1 py-3.5 rounded-xl bg-slate-100 text-slate-600 font-bold text-sm tap-effect hover:bg-slate-200 transition-colors touch-target">Volver</button>
+                    <button onclick="LOGIC.sendOrder(this)" class="flex-[2] py-3.5 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold text-sm tap-effect shadow-lg shadow-orange-500/30 flex items-center justify-center gap-2 touch-target">
+                        <i class="fa-solid fa-paper-plane"></i> Enviar a Cocina
                     </button>
                 </div>
             </div>
@@ -788,72 +943,239 @@
             },
 
             // RENDERIZADORES DE VISTAS
+            // Índice de nota actual para el modal
+            _noteIdx: -1,
+            
             initMesero: () => {
-                document.getElementById('m-cat-nav').innerHTML = MENU_DB.map(c => 
-                    `<button onclick="document.getElementById('cat-${c.id}').scrollIntoView({behavior:'smooth',block:'start'})" class="whitespace-nowrap px-4 py-2.5 bg-white border border-slate-200 text-xs font-bold text-slate-500 rounded-xl hover:bg-brand-accent hover:text-white transition shadow-sm flex items-center gap-2 snap-start active:scale-95 select-none">
-                        <i class="fa-solid ${c.icon}"></i> ${c.name}
+                // Categorías con scroll-spy
+                document.getElementById('m-cat-nav').innerHTML = MENU_DB.map((c, ci) => 
+                    `<button data-cat="${c.id}" onclick="UI.scrollToCat('${c.id}')" role="tab" aria-selected="${ci===0}" aria-controls="cat-${c.id}" class="cat-btn whitespace-nowrap px-4 py-3 bg-white border border-slate-200 text-sm font-bold text-slate-500 rounded-xl hover:bg-brand-accent hover:text-white transition-all shadow-sm flex items-center gap-2 snap-start active:scale-95 select-none touch-target ${ci===0?'cat-btn-active':''}">
+                        <i class="fa-solid ${c.icon}" aria-hidden="true"></i> ${c.name}
                      </button>`
                 ).join('');
+                
                 document.getElementById('m-grid').innerHTML = MENU_DB.map(c => `
-                    <div id="cat-${c.id}" class="mb-10 scroll-mt-40">
-                        <div class="flex items-center gap-3 mb-5 px-1"><span class="w-1.5 h-6 rounded-full bg-brand-accent"></span><h3 class="text-xl font-display font-black text-slate-800">${c.name}</h3></div>
-                        <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                    <section id="cat-${c.id}" class="mb-8 scroll-mt-36" role="listitem" aria-label="Categoría ${c.name}">
+                        <div class="flex items-center gap-3 mb-4 px-1">
+                            <span class="w-1.5 h-7 rounded-full bg-brand-accent" aria-hidden="true"></span>
+                            <h3 class="text-xl font-display font-black text-slate-800">${c.name}</h3>
+                            <span class="text-xs text-slate-400 font-medium">${c.items.length} items</span>
+                        </div>
+                        <div class="grid grid-cols-2 lg:grid-cols-3 gap-3">
                             ${c.items.map(i => `
-                                <div onclick="LOGIC.cartAdd('${i.n}',${i.p})" class="bg-white p-5 rounded-[20px] shadow-sm border border-slate-100 hover:border-brand-accent cursor-pointer transition-all duration-200 tap-effect group h-[140px] flex flex-col justify-between relative overflow-hidden select-none">
-                                    <div class="absolute -right-4 -bottom-4 text-7xl text-slate-100 group-hover:text-orange-50 transition-colors -rotate-12"><i class="fa-solid ${c.icon}"></i></div>
-                                    <div class="relative z-10"><p class="font-bold text-slate-700 text-sm leading-tight">${i.n}</p></div>
-                                    <div class="relative z-10 flex justify-between items-end">
-                                        <p class="font-display font-black text-lg text-slate-900">${UI.format(i.p)}</p>
-                                        <div class="w-10 h-10 rounded-full bg-slate-50 text-brand-accent flex items-center justify-center shadow-sm group-hover:bg-brand-accent group-hover:text-white transition-colors"><i class="fa-solid fa-plus text-sm"></i></div>
+                                <button data-item-name="${i.n}" onclick="LOGIC.cartAdd('${i.n.replace(/'/g, "\\'") }',${i.p})" class="menu-card bg-white p-4 rounded-2xl shadow-sm border-2 border-slate-100 hover:border-brand-accent cursor-pointer transition-all duration-200 tap-effect group min-h-[120px] flex flex-col justify-between relative overflow-hidden select-none text-left" aria-label="${i.n}, ${UI.format(i.p)}. Toca para agregar">
+                                    <div class="absolute -right-3 -bottom-3 text-6xl text-slate-50 group-hover:text-orange-50 transition-colors -rotate-12" aria-hidden="true"><i class="fa-solid ${c.icon}"></i></div>
+                                    <div class="relative z-10 pr-4"><p class="font-bold text-slate-700 text-sm leading-snug">${i.n}</p></div>
+                                    <div class="relative z-10 flex justify-between items-end mt-2">
+                                        <p class="font-display font-black text-xl text-slate-900">${UI.format(i.p)}</p>
+                                        <div class="w-11 h-11 rounded-full bg-slate-50 text-brand-accent flex items-center justify-center shadow-sm group-hover:bg-brand-accent group-hover:text-white transition-colors touch-target" aria-hidden="true"><i class="fa-solid fa-plus"></i></div>
                                     </div>
-                                </div>
+                                </button>
                             `).join('')}
                         </div>
-                    </div>
+                    </section>
                 `).join('');
+                
+                // Intersection Observer para resaltar categoría activa
+                UI._setupCategoryObserver();
+            },
+            
+            _setupCategoryObserver: () => {
+                const grid = document.getElementById('m-grid');
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if(entry.isIntersecting) {
+                            const catId = entry.target.id.replace('cat-', '');
+                            document.querySelectorAll('.cat-btn').forEach(b => {
+                                const isActive = b.dataset.cat === catId;
+                                b.classList.toggle('cat-btn-active', isActive);
+                                b.setAttribute('aria-selected', isActive);
+                            });
+                            // Scroll nav to active button
+                            const activeBtn = document.querySelector(`.cat-btn[data-cat="${catId}"]`);
+                            if(activeBtn) activeBtn.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
+                        }
+                    });
+                }, { root: grid, threshold: 0.3 });
+                MENU_DB.forEach(c => {
+                    const el = document.getElementById(`cat-${c.id}`);
+                    if(el) observer.observe(el);
+                });
+            },
+            
+            scrollToCat: (catId) => {
+                document.getElementById(`cat-${catId}`).scrollIntoView({behavior:'smooth', block:'start'});
+            },
+            
+            // Actualizar badges de cantidad en los cards del menú
+            updateMenuBadges: () => {
+                document.querySelectorAll('.menu-card').forEach(card => {
+                    const name = card.dataset.itemName;
+                    const item = STATE.cart.find(i => i.n === name);
+                    let badge = card.querySelector('.menu-qty-badge');
+                    if(item && item.qty > 0) {
+                        if(!badge) {
+                            badge = document.createElement('span');
+                            badge.className = 'menu-qty-badge';
+                            card.appendChild(badge);
+                        }
+                        badge.textContent = item.qty;
+                        badge.classList.add('badge-pop');
+                        setTimeout(() => badge.classList.remove('badge-pop'), 300);
+                    } else if(badge) {
+                        badge.remove();
+                    }
+                });
             },
 
             filterMenu: (q) => {
                 const term = q.toLowerCase();
-                document.querySelectorAll('#m-grid .group').forEach(el => {
+                const clearBtn = document.getElementById('m-search-clear');
+                clearBtn.classList.toggle('hidden', !q);
+                // Show/hide individual items
+                document.querySelectorAll('#m-grid .menu-card').forEach(el => {
                     el.style.display = el.innerText.toLowerCase().includes(term) ? 'flex' : 'none';
+                });
+                // Hide empty categories
+                document.querySelectorAll('#m-grid section').forEach(sec => {
+                    const visible = sec.querySelectorAll('.menu-card:not([style*="display: none"])');
+                    sec.style.display = visible.length ? '' : 'none';
                 });
             },
 
             renderCart: () => {
                 const list = document.getElementById('m-cart-list');
-                let total = 0, html = '';
-                if(STATE.cart.length===0) html = `<div class="h-64 flex flex-col items-center justify-center text-slate-300 gap-2 select-none"><i class="fa-solid fa-cart-shopping text-3xl opacity-30"></i><span class="text-xs font-bold uppercase tracking-widest opacity-50">Comanda Vacía</span></div>`;
-                else STATE.cart.forEach((item,idx)=>{
-                    total += (item.p * item.qty);
-                    html += `
-                    <div class="flex items-start gap-3 bg-white p-3 rounded-2xl border border-slate-100 shadow-sm animate-in relative group hover:border-orange-200">
-                        <div class="flex-1">
-                            <p class="text-xs font-bold text-slate-700 leading-snug">${item.n}</p>
-                            <p class="text-[10px] text-slate-400 font-medium mt-0.5">${UI.format(item.p)} x ${item.qty}</p>
-                            ${item.note ? `<div class="mt-1 bg-yellow-50 text-yellow-800 text-[9px] px-1.5 py-0.5 rounded border border-yellow-100 font-bold inline-block"><i class="fa-solid fa-pen text-[8px] mr-1"></i>${item.note}</div>` : ''}
-                        </div>
-                        <div class="flex flex-col items-end gap-2">
-                             <div class="flex items-center bg-slate-50 rounded-lg p-1 border border-slate-100">
-                                <button onclick="LOGIC.cartUpd(${idx},-1)" class="w-8 h-8 flex items-center justify-center bg-white text-slate-500 rounded hover:text-red-500 shadow-sm transition font-bold tap-effect text-lg">-</button>
-                                <span class="w-7 text-center text-xs font-black text-slate-700 select-none">${item.qty}</span>
-                                <button onclick="LOGIC.cartUpd(${idx},1)" class="w-8 h-8 flex items-center justify-center bg-white text-slate-500 rounded hover:text-green-600 shadow-sm transition font-bold tap-effect text-lg">+</button>
-                             </div>
-                             <button onclick="LOGIC.cartNote(${idx})" class="text-[10px] text-slate-400 font-bold underline hover:text-brand-accent p-1">Nota</button>
-                        </div>
+                const sendBtn = document.getElementById('btn-send-order');
+                const clearBtn = document.getElementById('m-clear-cart-btn');
+                const floatWrapper = document.getElementById('m-float-btn-wrapper');
+                let total = 0, totalQty = 0, html = '';
+                
+                if(STATE.cart.length === 0) {
+                    html = `<div class="h-64 flex flex-col items-center justify-center text-slate-300 gap-3 select-none">
+                        <i class="fa-solid fa-receipt text-4xl opacity-20"></i>
+                        <span class="text-sm font-bold opacity-40">Comanda Vacía</span>
+                        <span class="text-xs opacity-30">Toca un platillo para agregarlo</span>
                     </div>`;
-                });
+                    sendBtn.disabled = true;
+                    clearBtn.classList.add('hidden');
+                    floatWrapper.style.display = 'none';
+                } else {
+                    STATE.cart.forEach((item, idx) => {
+                        const subtotal = item.p * item.qty;
+                        total += subtotal;
+                        totalQty += item.qty;
+                        html += `
+                        <div class="cart-item-enter flex items-start gap-3 bg-white p-3.5 rounded-2xl border border-slate-100 shadow-sm relative group hover:border-orange-200 transition-all" role="listitem" aria-label="${item.n}, cantidad ${item.qty}">
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-bold text-slate-700 leading-snug truncate">${item.n}</p>
+                                <p class="text-xs text-slate-400 font-medium mt-0.5">${UI.format(item.p)} × ${item.qty} = <span class="font-bold text-slate-600">${UI.format(subtotal)}</span></p>
+                                ${item.note ? `<button onclick="UI.openNoteModal(${idx})" class="mt-1.5 bg-amber-50 text-amber-700 text-[10px] px-2 py-1 rounded-lg border border-amber-200 font-bold inline-flex items-center gap-1 tap-effect hover:bg-amber-100 transition-colors"><i class="fa-solid fa-pen text-[8px]" aria-hidden="true"></i>${item.note}</button>` 
+                                : `<button onclick="UI.openNoteModal(${idx})" class="mt-1.5 text-[10px] text-slate-400 font-medium flex items-center gap-1 tap-effect hover:text-orange-500 transition-colors py-1"><i class="fa-solid fa-plus text-[8px]" aria-hidden="true"></i>Nota cocina</button>`}
+                            </div>
+                            <div class="flex flex-col items-end gap-2">
+                                <div class="flex items-center bg-slate-50 rounded-xl p-1 border border-slate-100">
+                                    <button onclick="LOGIC.cartUpd(${idx},-1)" class="w-10 h-10 flex items-center justify-center bg-white text-slate-500 rounded-lg hover:text-red-500 hover:bg-red-50 shadow-sm transition font-bold tap-effect text-lg touch-target" aria-label="Reducir cantidad de ${item.n}">−</button>
+                                    <span class="w-8 text-center text-sm font-black text-slate-700 select-none" aria-label="Cantidad: ${item.qty}">${item.qty}</span>
+                                    <button onclick="LOGIC.cartUpd(${idx},1)" class="w-10 h-10 flex items-center justify-center bg-white text-slate-500 rounded-lg hover:text-green-600 hover:bg-green-50 shadow-sm transition font-bold tap-effect text-lg touch-target" aria-label="Aumentar cantidad de ${item.n}">+</button>
+                                </div>
+                                <button onclick="LOGIC.cartRemove(${idx})" class="text-[10px] text-red-300 font-bold flex items-center gap-1 px-2 py-1 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors tap-effect" aria-label="Eliminar ${item.n} del carrito"><i class="fa-solid fa-trash-can text-[9px]" aria-hidden="true"></i>Quitar</button>
+                            </div>
+                        </div>`;
+                    });
+                    sendBtn.disabled = false;
+                    clearBtn.classList.remove('hidden');
+                    floatWrapper.style.display = '';
+                }
+                
                 list.innerHTML = html;
                 const fmt = UI.format(total);
                 document.getElementById('m-cart-total').innerText = fmt;
                 document.getElementById('m-total-float').innerText = fmt;
-                document.getElementById('m-badge-float').innerText = STATE.cart.length;
+                document.getElementById('m-badge-float').innerText = totalQty;
+                document.getElementById('m-cart-count-label').innerText = `${totalQty} producto${totalQty !== 1 ? 's' : ''} · ${STATE.cart.length} línea${STATE.cart.length !== 1 ? 's' : ''}`;
+                document.getElementById('m-cart-items-total').innerText = `${totalQty} producto${totalQty !== 1 ? 's' : ''}`;
+                // Descripción breve en botón flotante
+                const desc = STATE.cart.slice(0, 2).map(i => i.n.length > 15 ? i.n.slice(0,15) + '…' : i.n).join(', ');
+                document.getElementById('m-items-desc-float').innerText = STATE.cart.length > 2 ? desc + ` +${STATE.cart.length - 2}` : desc;
+                
+                // Actualizar badges en menú
+                UI.updateMenuBadges();
             },
 
             toggleCartMobile: (show) => {
                 const el = document.getElementById('m-cart-panel');
                 if(show) { el.classList.remove('translate-y-full','md:translate-y-0'); void el.offsetWidth; }
                 else el.classList.add('translate-y-full');
+            },
+            
+            // Modal de nota inline (reemplaza prompt())
+            openNoteModal: (idx) => {
+                UI._noteIdx = idx;
+                const item = STATE.cart[idx];
+                if(!item) return;
+                document.getElementById('note-modal-item-name').textContent = item.n;
+                document.getElementById('note-input').value = item.note || '';
+                const modal = document.getElementById('modal-note');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                setTimeout(() => document.getElementById('note-input').focus(), 100);
+            },
+            
+            closeNoteModal: () => {
+                const modal = document.getElementById('modal-note');
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                UI._noteIdx = -1;
+            },
+            
+            addQuickNote: (tag) => {
+                const input = document.getElementById('note-input');
+                const current = input.value.trim();
+                input.value = current ? current + ', ' + tag : tag;
+                input.focus();
+            },
+            
+            saveNote: () => {
+                if(UI._noteIdx >= 0 && STATE.cart[UI._noteIdx]) {
+                    STATE.cart[UI._noteIdx].note = document.getElementById('note-input').value.trim();
+                    UI.renderCart();
+                }
+                UI.closeNoteModal();
+            },
+            
+            // Modal de confirmación antes de enviar
+            openConfirmModal: () => {
+                const mesa = document.getElementById('sel-mesa').value;
+                const mesaText = mesa === 'LLEVAR' ? '📦 Para Llevar' : `Mesa ${mesa}`;
+                const selOption = document.getElementById('sel-mesa').selectedOptions[0];
+                const group = selOption?.parentElement?.label || '';
+                document.getElementById('confirm-mesa-label').textContent = group ? `${mesaText} (${group})` : mesaText;
+                
+                let total = 0;
+                document.getElementById('confirm-items-list').innerHTML = STATE.cart.map(item => {
+                    const sub = item.p * item.qty;
+                    total += sub;
+                    return `<div class="flex justify-between items-center py-2 ${item !== STATE.cart[STATE.cart.length-1] ? 'border-b border-slate-100' : ''}">
+                        <div class="flex-1 min-w-0">
+                            <span class="text-sm font-semibold text-slate-700">${item.qty}× ${item.n}</span>
+                            ${item.note ? `<span class="block text-[10px] text-amber-600"><i class="fa-solid fa-pen text-[8px]"></i> ${item.note}</span>` : ''}
+                        </div>
+                        <span class="text-sm font-bold text-slate-800 ml-3">${UI.format(sub)}</span>
+                    </div>`;
+                }).join('');
+                document.getElementById('confirm-total').textContent = UI.format(total);
+                
+                const modal = document.getElementById('modal-confirm-send');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                setTimeout(() => modal.querySelector('.confirm-sheet').classList.add('show'), 10);
+            },
+            
+            closeConfirmModal: () => {
+                const modal = document.getElementById('modal-confirm-send');
+                const sheet = modal.querySelector('.confirm-sheet');
+                sheet.classList.remove('show');
+                setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); }, 350);
             },
 
             toast: (msg, type='info') => {
@@ -1437,9 +1759,45 @@
         };
 
         window.LOGIC = {
-            cartAdd: (n,p) => { if(window.navigator.vibrate)window.navigator.vibrate(15); const x=STATE.cart.find(i=>i.n===n); if(x)x.qty++; else STATE.cart.push({n,p,qty:1,note:''}); UI.renderCart(); UI.toast('Agregado','success'); },
-            cartUpd: (i,d) => { STATE.cart[i].qty+=d; if(STATE.cart[i].qty<=0)STATE.cart.splice(i,1); UI.renderCart(); },
-            cartNote: (i) => { const nt=prompt('Nota cocina:',STATE.cart[i].note); if(nt!==null){STATE.cart[i].note=nt;UI.renderCart();} },
+            cartAdd: (n, p) => { 
+                if(window.navigator.vibrate) window.navigator.vibrate(15);
+                const x = STATE.cart.find(i => i.n === n); 
+                if(x) x.qty++; 
+                else STATE.cart.push({n, p, qty: 1, note: ''}); 
+                UI.renderCart();
+                // Animar la card del menú
+                const card = document.querySelector(`.menu-card[data-item-name="${n}"]`);
+                if(card) { card.classList.remove('add-bounce'); void card.offsetWidth; card.classList.add('add-bounce'); }
+                UI.toast(`${n} agregado`, 'success'); 
+            },
+            cartUpd: (i, d) => { 
+                if(!STATE.cart[i]) return;
+                STATE.cart[i].qty += d; 
+                if(STATE.cart[i].qty <= 0) STATE.cart.splice(i, 1); 
+                if(window.navigator.vibrate) window.navigator.vibrate(10);
+                UI.renderCart(); 
+            },
+            cartRemove: (i) => {
+                if(!STATE.cart[i]) return;
+                const name = STATE.cart[i].n;
+                STATE.cart.splice(i, 1);
+                if(window.navigator.vibrate) window.navigator.vibrate([20, 10, 20]);
+                UI.renderCart();
+                UI.toast(`${name} eliminado`, 'info');
+            },
+            clearCart: () => {
+                if(STATE.cart.length === 0) return;
+                if(!confirm('¿Vaciar toda la comanda?')) return;
+                STATE.cart = [];
+                UI.renderCart();
+                UI.toast('Comanda vaciada', 'info');
+            },
+            cartNote: (i) => { UI.openNoteModal(i); },
+            confirmSendOrder: () => {
+                const m = document.getElementById('sel-mesa').value;
+                if(!m || !STATE.cart.length) return UI.toast('Selecciona mesa y agrega productos', 'error');
+                UI.openConfirmModal();
+            },
             
             // PLATILLO ESPECIAL / PRECIO MANUAL
             addSpecialItem: () => {
@@ -1469,29 +1827,31 @@
             },
             
             sendOrder: async (btn) => {
-                const m = document.getElementById('sel-mesa').value; if(!m || !STATE.cart.length) return UI.toast('Mesa o Carrito Vacío','error');
-                btn.disabled=true; const html=btn.innerHTML; btn.innerHTML='<i class="fa-solid fa-spinner fa-spin text-xl"></i> Enviando...';
+                const m = document.getElementById('sel-mesa').value; 
+                if(!m || !STATE.cart.length) return UI.toast('Selecciona mesa y agrega productos', 'error');
+                btn.disabled = true; const html = btn.innerHTML; 
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xl"></i> Enviando...';
                 try {
-                    const tot = STATE.cart.reduce((a,b)=>a+(b.p*b.qty),0);
-                    const esLlevar = isNaN(parseInt(m)); // Detectar si es para llevar (no es número)
+                    const tot = STATE.cart.reduce((a, b) => a + (b.p * b.qty), 0);
+                    const esLlevar = isNaN(parseInt(m));
                     
-                    // Buscar orden principal abierta (excluir tickets de cocina) - SOLO si NO es para llevar
-                    const open = !esLlevar ? STATE.orders.find(o=>o.mesa==m && o.status!=='pagado' && !o.isKitchenTicket) : null;
+                    const open = !esLlevar ? STATE.orders.find(o => o.mesa == m && o.status !== 'pagado' && !o.isKitchenTicket) : null;
                     
                     if(open){ 
-                        // Actualizar orden principal con TODOS los items (para caja)
                         await updateDoc(doc(ORDERS_COL, open.id), { items:[...open.items,...STATE.cart], total:open.total+tot });
-                        // Crear ticket de cocina SOLO con los nuevos productos
-                        await addDoc(ORDERS_COL,{mesa:m, items:STATE.cart, total:tot, status:'en_cocina', ts:serverTimestamp(), method:'', isKitchenTicket:true, parentOrder:open.id}); 
-                        UI.toast('Agregado a Mesa '+m,'success'); 
+                        await addDoc(ORDERS_COL, {mesa:m, items:STATE.cart, total:tot, status:'en_cocina', ts:serverTimestamp(), method:'', isKitchenTicket:true, parentOrder:open.id}); 
+                        UI.toast('✓ Agregado a Mesa ' + m, 'success'); 
                     }
                     else { 
-                        // Crear nueva orden (siempre para LLEVAR, o si no hay orden abierta)
-                        await addDoc(ORDERS_COL,{mesa:m, items:STATE.cart, total:tot, status:'en_cocina', ts:serverTimestamp(), method:''}); 
-                        UI.toast(esLlevar ? 'Pedido LLEVAR enviado' : 'Enviado','success'); 
+                        await addDoc(ORDERS_COL, {mesa:m, items:STATE.cart, total:tot, status:'en_cocina', ts:serverTimestamp(), method:''}); 
+                        UI.toast(esLlevar ? '✓ Pedido LLEVAR enviado' : '✓ Orden enviada a cocina', 'success'); 
                     }
-                    STATE.cart=[]; UI.renderCart(); UI.toggleCartMobile(false); document.getElementById('sel-mesa').value='';
-                } catch(e){ console.error(e); UI.toast('Error envío','error'); } finally { btn.disabled=false; btn.innerHTML=html; }
+                    STATE.cart = []; UI.renderCart(); UI.toggleCartMobile(false); 
+                    UI.closeConfirmModal();
+                    document.getElementById('sel-mesa').value = '';
+                    if(window.navigator.vibrate) window.navigator.vibrate([100, 50, 100]);
+                } catch(e) { console.error(e); UI.toast('Error al enviar orden', 'error'); } 
+                finally { btn.disabled = false; btn.innerHTML = html; }
             },
             statusUpd: async (id,s) => { 
                 try{
