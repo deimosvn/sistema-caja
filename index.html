@@ -27,65 +27,30 @@
     <!-- Iconos FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     
-    <!-- Tailwind CSS Framework -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS (pre-compiled for Safari 10 / iOS 10 compat) -->
+    <link rel="stylesheet" href="./styles.css">
+    
+    <!-- Firebase v8 SDK (compatible with Safari 10 / iOS 10) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     
     <!-- Motores PDF (Reportes) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
-    <!-- Configuración Visual / Tailwind Theme -->
+    <!-- Polyfills para Safari 10 / iOS 10 -->
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['"Inter"', 'sans-serif'],     
-                        display: ['"Outfit"', 'sans-serif'], 
-                    },
-                    colors: {
-                        brand: {
-                            base: '#F8FAFC', // Fondo más claro
-                            dark: '#0F172A', // Slate 900
-                            accent: '#F97316', // Orange 500
-                            hover: '#EA580C', // Orange 600
-                            success: '#10B981', // Emerald 500
-                            danger: '#EF4444', 
-                            purple: '#8B5CF6',
-                            blue: '#3B82F6',
-                        }
-                    },
-                    boxShadow: {
-                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.1)',
-                        'card': '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06)',
-                        'card-hover': '0 4px 20px rgba(0,0,0,0.12), 0 8px 32px rgba(0,0,0,0.08)',
-                        'floating': '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-                        'glow-orange': '0 0 20px rgba(249, 115, 22, 0.4)',
-                        'glow-green': '0 0 20px rgba(16, 185, 129, 0.4)',
-                        'inner-soft': 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.05)',
-                    },
-                    animation: {
-                        'in': 'fadeIn 0.3s ease-out forwards',
-                        'up': 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-                        'pulse-urgent': 'pulseRed 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                        'scale-in': 'scaleIn 0.2s ease-out forwards',
-                        'shake': 'shake 0.5s ease-in-out',
-                        'glow': 'glow 2s ease-in-out infinite',
-                    },
-                    keyframes: {
-                        fadeIn: { from: { opacity: 0 }, to: { opacity: 1 } },
-                        slideUp: { from: { opacity: 0, transform: 'translateY(16px)' }, to: { opacity: 1, transform: 'translateY(0)' } },
-                        scaleIn: { from: { opacity: 0, transform: 'scale(0.95)' }, to: { opacity: 1, transform: 'scale(1)' } },
-                        shake: { '0%, 100%': { transform: 'translateX(0)' }, '25%': { transform: 'translateX(-4px)' }, '75%': { transform: 'translateX(4px)' } },
-                        glow: { '0%, 100%': { boxShadow: '0 0 5px rgba(249, 115, 22, 0.5)' }, '50%': { boxShadow: '0 0 20px rgba(249, 115, 22, 0.8)' } },
-                        pulseRed: {
-                            '0%, 100%': { opacity: 1, borderColor: '#ef4444', boxShadow: '0 0 0 0 rgba(239, 68, 68, 0.7)' },
-                            '50%': { opacity: .9, borderColor: '#f87171', boxShadow: '0 0 0 12px rgba(239, 68, 68, 0)' }
-                        }
-                    }
-                }
-            }
-        }
+        // Object.entries polyfill
+        if(!Object.entries) Object.entries = function(obj) { return Object.keys(obj).map(function(k){ return [k, obj[k]]; }); };
+        // Object.values polyfill
+        if(!Object.values) Object.values = function(obj) { return Object.keys(obj).map(function(k){ return obj[k]; }); };
+        // String.prototype.padStart polyfill
+        if(!String.prototype.padStart) String.prototype.padStart = function(len, fill) { var s = String(fill || ' '); var r = String(this); while(r.length < len) r = s + r; return r.slice(-len); };
+        // NodeList.forEach polyfill
+        if(!NodeList.prototype.forEach) NodeList.prototype.forEach = Array.prototype.forEach;
+        // Object.assign polyfill (needed for some spread-like ops)
+        if(!Object.assign) Object.assign = function(t){ for(var i=1;i<arguments.length;i++){var s=arguments[i]; if(s!=null) for(var k in s) if(Object.prototype.hasOwnProperty.call(s,k)) t[k]=s[k]; } return t; };
     </script>
 
     <style>
@@ -101,6 +66,14 @@
         /* Fallback for CSS inset shorthand (Safari < 14.5) */
         .absolute[class*="inset-0"], .fixed[class*="inset-0"] {
             top: 0; right: 0; bottom: 0; left: 0;
+        }
+        /* CSS Grid fallback for Safari 10.0 (only 10.1+ supports grid) */
+        @supports not (display: grid) {
+            .grid { display: -webkit-flex; display: flex; -webkit-flex-wrap: wrap; flex-wrap: wrap; }
+            .grid.grid-cols-2 > * { width: 48%; margin: 1%; }
+            .grid.grid-cols-1 > * { width: 100%; margin-bottom: 8px; }
+            .grid.gap-3 > * { margin: 4px; }
+            .col-span-full { width: 100% !important; }
         }
         /* Flex gap polyfill for Safari < 14.1 */
         @supports not (translate: 0) {
@@ -895,14 +868,9 @@
     </div>
 
     <!-- LOGICA DEL SISTEMA -->
-    <script type="module">
-        // 1. IMPORTACIÓN MODULAR DE FIREBASE
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, writeBatch, serverTimestamp, query, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
-
-        // 2. CONFIGURACIÓN E INICIALIZACIÓN
-        const app = initializeApp({
+    <script>
+        // 1. FIREBASE v8 INICIALIZACIÓN (compatible con Safari 10 / iOS 10)
+        var app = firebase.initializeApp({
             apiKey: "AIzaSyD3skMKdCxzCkWQZ--AxMgPEuW4imE3zlA",
             authDomain: "lacabana-pos.firebaseapp.com",
             projectId: "lacabana-pos",
@@ -910,9 +878,16 @@
             messagingSenderId: "638951958072",
             appId: "1:638951958072:web:293bb08e1a1cdd74d0e8cd"
         });
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-        const ORDERS_COL = collection(db, 'artifacts', 'lacabana-progreso', 'public', 'data', 'ordenes');
+        var db = firebase.firestore();
+        var auth = firebase.auth();
+        var ORDERS_COL = db.collection('artifacts').doc('lacabana-progreso').collection('public').doc('data').collection('ordenes');
+        // Helper functions matching previous modular API signatures
+        function addDoc(colRef, data) { return colRef.add(data); }
+        function updateDoc(ref, data) { return ref.update(data); }
+        function deleteDoc(ref) { return ref.delete(); }
+        function doc(colRef, id) { return colRef.doc(id); }
+        function serverTimestamp() { return firebase.firestore.FieldValue.serverTimestamp(); }
+        function writeBatch(dbRef) { return dbRef.batch(); }
 
         // 3. CATALOGO DIGITAL DEL MENU
         const MENU_DB = [
@@ -1105,26 +1080,49 @@
             },
             
             _setupCategoryObserver: () => {
-                const grid = document.getElementById('m-grid');
-                const observer = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        if(entry.isIntersecting) {
-                            const catId = entry.target.id.replace('cat-', '');
+                var grid = document.getElementById('m-grid');
+                if(typeof IntersectionObserver !== 'undefined') {
+                    var observer = new IntersectionObserver((entries) => {
+                        entries.forEach(entry => {
+                            if(entry.isIntersecting) {
+                                var catId = entry.target.id.replace('cat-', '');
+                                document.querySelectorAll('.cat-btn').forEach(b => {
+                                    var isActive = b.dataset.cat === catId;
+                                    b.classList.toggle('cat-btn-active', isActive);
+                                    b.setAttribute('aria-selected', isActive);
+                                });
+                                var activeBtn = document.querySelector('.cat-btn[data-cat="' + catId + '"]');
+                                if(activeBtn) activeBtn.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
+                            }
+                        });
+                    }, { root: grid, threshold: 0.3 });
+                    MENU_DB.forEach(c => {
+                        var el = document.getElementById('cat-' + c.id);
+                        if(el) observer.observe(el);
+                    });
+                } else {
+                    // Fallback scroll-spy para Safari 10 sin IntersectionObserver
+                    grid.addEventListener('scroll', () => {
+                        var scrollTop = grid.scrollTop;
+                        var closest = null;
+                        var closestDist = Infinity;
+                        MENU_DB.forEach(c => {
+                            var el = document.getElementById('cat-' + c.id);
+                            if(el) {
+                                var dist = Math.abs(el.offsetTop - scrollTop - 150);
+                                if(dist < closestDist) { closestDist = dist; closest = c.id; }
+                            }
+                        });
+                        if(closest && closest !== UI._lastActiveCat) {
+                            UI._lastActiveCat = closest;
                             document.querySelectorAll('.cat-btn').forEach(b => {
-                                const isActive = b.dataset.cat === catId;
+                                var isActive = b.dataset.cat === closest;
                                 b.classList.toggle('cat-btn-active', isActive);
                                 b.setAttribute('aria-selected', isActive);
                             });
-                            // Scroll nav to active button
-                            const activeBtn = document.querySelector(`.cat-btn[data-cat="${catId}"]`);
-                            if(activeBtn) activeBtn.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
                         }
                     });
-                }, { root: grid, threshold: 0.3 });
-                MENU_DB.forEach(c => {
-                    const el = document.getElementById(`cat-${c.id}`);
-                    if(el) observer.observe(el);
-                });
+                }
             },
             
             scrollToCat: (catId) => {
@@ -1373,7 +1371,7 @@
                     // Helper: obtener items efectivos (padre + tickets de cocina pendientes)
                     const getEffectiveItems = (o) => {
                         const tickets = STATE.orders.filter(t => t.isKitchenTicket && t.parentOrder === o.id && t.status !== 'pagado');
-                        return tickets.length > 0 ? [...o.items].concat(tickets.reduce(function(acc, t){ return acc.concat(t.items); }, [])) : o.items;
+                        return tickets.length > 0 ? o.items.slice().concat(tickets.reduce(function(acc, t){ return acc.concat(t.items); }, [])) : o.items;
                     };
                     const active = STATE.orders.filter(o=>o.status!=='pagado' && o.status!=='gasto' && !o.isKitchenTicket && !o.isExpense).sort((a,b)=>{
                         const tsA = (a.ts && a.ts.seconds) || 0;
@@ -1458,7 +1456,7 @@
                     document.getElementById('rp-rows').innerHTML = Object.entries(itMap).sort((a,b)=>b[1].s-a[1].s).map(([n,d])=>`<tr><td class="px-6 py-2 text-xs font-bold text-slate-700">${n}</td><td class="px-6 py-2 text-center text-xs bg-slate-50 text-slate-500 font-mono">${d.q}</td><td class="px-6 py-2 text-right text-xs font-bold text-slate-800">${UI.format(d.s)}</td></tr>`).join('');
                     
                     // Combinar ventas y gastos, ordenar por timestamp
-                    const allTransactions = [...sales, ...expenses].sort((a,b) => {
+                    const allTransactions = sales.concat(expenses).sort((a,b) => {
                         const tsA = (a.ts && a.ts.seconds) || 0;
                         const tsB = (b.ts && b.ts.seconds) || 0;
                         return tsB - tsA;
@@ -1585,7 +1583,7 @@
                     const order = STATE.orders.find(o => o.id === id);
                     // Incluir items de kitchen tickets pendientes
                     const tickets = STATE.orders.filter(t => t.isKitchenTicket && t.parentOrder === id && t.status !== 'pagado');
-                    UI.orderItems = order ? [...order.items].concat(tickets.reduce(function(acc, t){ return acc.concat(t.items); }, [])) : [];
+                    UI.orderItems = order ? order.items.slice().concat(tickets.reduce(function(acc, t){ return acc.concat(t.items); }, [])) : [];
                     UI.selectedItems = UI.orderItems.map((_, idx) => idx); // Seleccionar todos por defecto
                     
                     STATE.payData={id, mesa, amt, selectedTotal: amt}; 
@@ -1612,7 +1610,7 @@
             },
 
             // --- MOTOR DE REPORTES PDF PROFESIONAL ---
-            generatePDF: async () => {
+            generatePDF: () => {
                 try {
                     if(!STATE.reportSummary || STATE.reportSummary.history.length === 0) return UI.toast('No hay ventas registradas.', 'error');
                     
@@ -1977,85 +1975,74 @@
                 if(window.navigator.vibrate) window.navigator.vibrate([50, 30, 50]);
             },
             
-            sendOrder: async (btn) => {
+            sendOrder: (btn) => {
                 const m = document.getElementById('sel-mesa').value; 
                 if(!m || !STATE.cart.length) return UI.toast('Selecciona mesa y agrega productos', 'error');
                 btn.disabled = true; const html = btn.innerHTML; 
                 btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xl"></i> Enviando...';
-                try {
-                    const tot = STATE.cart.reduce((a, b) => a + (b.p * b.qty), 0);
-                    const esLlevar = isNaN(parseInt(m));
-                    
-                    const open = !esLlevar ? STATE.orders.find(o => o.mesa == m && o.status !== 'pagado' && !o.isKitchenTicket) : null;
-                    
-                    if(open){ 
-                        // Solo actualizar total en padre (items se agregan al completar ticket en cocina)
-                        await updateDoc(doc(ORDERS_COL, open.id), { total:open.total+tot });
-                        await addDoc(ORDERS_COL, {mesa:m, items:STATE.cart, total:tot, status:'en_cocina', ts:serverTimestamp(), method:'', isKitchenTicket:true, parentOrder:open.id}); 
-                        UI.toast('✓ Agregado a Mesa ' + m, 'success'); 
-                    }
-                    else { 
-                        await addDoc(ORDERS_COL, {mesa:m, items:STATE.cart, total:tot, status:'en_cocina', ts:serverTimestamp(), method:''}); 
-                        UI.toast(esLlevar ? '✓ Pedido LLEVAR enviado' : '✓ Orden enviada a cocina', 'success'); 
-                    }
+                var tot = STATE.cart.reduce((a, b) => a + (b.p * b.qty), 0);
+                var esLlevar = isNaN(parseInt(m));
+                var open = !esLlevar ? STATE.orders.find(o => o.mesa == m && o.status !== 'pagado' && !o.isKitchenTicket) : null;
+                var p;
+                if(open){ 
+                    p = updateDoc(doc(ORDERS_COL, open.id), { total:open.total+tot }).then(() => {
+                        return addDoc(ORDERS_COL, {mesa:m, items:STATE.cart, total:tot, status:'en_cocina', ts:serverTimestamp(), method:'', isKitchenTicket:true, parentOrder:open.id});
+                    }).then(() => { UI.toast('✓ Agregado a Mesa ' + m, 'success'); });
+                } else { 
+                    p = addDoc(ORDERS_COL, {mesa:m, items:STATE.cart, total:tot, status:'en_cocina', ts:serverTimestamp(), method:''}).then(() => {
+                        UI.toast(esLlevar ? '✓ Pedido LLEVAR enviado' : '✓ Orden enviada a cocina', 'success');
+                    });
+                }
+                p.then(() => {
                     STATE.cart = []; UI.renderCart(); UI.toggleCartMobile(false); 
                     UI.closeConfirmModal();
                     document.getElementById('sel-mesa').value = '';
                     if(window.navigator.vibrate) window.navigator.vibrate([100, 50, 100]);
-                } catch(e) { console.error(e); UI.toast('Error al enviar orden', 'error'); } 
-                finally { btn.disabled = false; btn.innerHTML = html; }
+                }).catch(e => { console.error(e); UI.toast('Error al enviar orden', 'error'); })
+                .then(() => { btn.disabled = false; btn.innerHTML = html; });
             },
-            statusUpd: async (id,s) => { 
-                try{
-                    const order = STATE.orders.find(o => o.id === id);
-                    await updateDoc(doc(ORDERS_COL,id),{status:s}); 
-                    // Si es un ticket de cocina adicional y se marca como entregado
+            statusUpd: (id,s) => { 
+                var order = STATE.orders.find(o => o.id === id);
+                updateDoc(doc(ORDERS_COL,id),{status:s}).then(() => {
                     if(order && order.isKitchenTicket && order.parentOrder && s === 'en_mesa') {
-                        const parent = STATE.orders.find(o => o.id === order.parentOrder);
-                        const pendingTickets = STATE.orders.filter(o => o.parentOrder === order.parentOrder && o.status === 'en_cocina' && o.id !== id);
+                        var parent = STATE.orders.find(o => o.id === order.parentOrder);
+                        var pendingTickets = STATE.orders.filter(o => o.parentOrder === order.parentOrder && o.status === 'en_cocina' && o.id !== id);
                         if(parent) {
-                            // Merge items del ticket al padre y actualizar status si no quedan tickets pendientes
-                            const updates = { items: [...parent.items, ...order.items] };
+                            var updates = { items: [].concat(parent.items).concat(order.items) };
                             if(pendingTickets.length === 0) updates.status = 'en_mesa';
-                            await updateDoc(doc(ORDERS_COL, order.parentOrder), updates);
+                            return updateDoc(doc(ORDERS_COL, order.parentOrder), updates);
                         }
                     }
+                }).then(() => {
                     UI.toast('Estatus Cambiado');
-                }catch(e){UI.toast('Error','error');} 
+                }).catch(e => {UI.toast('Error','error');}); 
             },
-            processPayment: async (mt,btn) => {
+            processPayment: (mt,btn) => {
                 if(UI.selectedItems.length === 0) {
                     UI.toast('Selecciona al menos un artículo', 'error');
                     return;
                 }
                 
-                const sp=document.createElement('div'); sp.className='sp flex flex-col items-center gap-1 mt-1 text-slate-400'; sp.innerHTML='<i class="fa-solid fa-spinner fa-spin text-xl"></i>';
+                var sp=document.createElement('div'); sp.className='sp flex flex-col items-center gap-1 mt-1 text-slate-400'; sp.innerHTML='<i class="fa-solid fa-spinner fa-spin text-xl"></i>';
                 btn.disabled=true; btn.querySelector('.content').style.display='none'; btn.appendChild(sp);
-                try { 
-                    await new Promise(r=>setTimeout(r,600)); 
-                    
-                    const orderToPay = STATE.orders.find(o => o.id === STATE.payData.id);
-                    const selectedItemsData = UI.selectedItems.map(idx => UI.orderItems[idx]);
-                    const selectedTotal = STATE.payData.selectedTotal;
-                    
-                    // Verificar si se cobran todos los items o solo algunos
-                    const allItemsSelected = UI.selectedItems.length === UI.orderItems.length;
+                
+                new Promise(function(r){setTimeout(r,600);}).then(() => {
+                    var selectedItemsData = UI.selectedItems.map(idx => UI.orderItems[idx]);
+                    var selectedTotal = STATE.payData.selectedTotal;
+                    var allItemsSelected = UI.selectedItems.length === UI.orderItems.length;
                     
                     if(allItemsSelected) {
-                        // Cobro total - marcar orden como pagada
-                        await updateDoc(doc(ORDERS_COL,STATE.payData.id),{status:'pagado', method:mt, ts:serverTimestamp()}); 
-                        // Eliminar tickets de cocina asociados
-                        const kitchenTickets = STATE.orders.filter(o => o.parentOrder === STATE.payData.id);
-                        for(const ticket of kitchenTickets) {
-                            await deleteDoc(doc(ORDERS_COL, ticket.id));
-                        }
+                        var kitchenTickets = STATE.orders.filter(o => o.parentOrder === STATE.payData.id);
+                        var chain = updateDoc(doc(ORDERS_COL,STATE.payData.id),{status:'pagado', method:mt, ts:serverTimestamp()});
+                        kitchenTickets.forEach(ticket => {
+                            chain = chain.then(() => deleteDoc(doc(ORDERS_COL, ticket.id)));
+                        });
+                        return chain;
                     } else {
-                        // Cobro parcial - crear nueva orden pagada con items seleccionados y actualizar orden original
-                        const remainingItems = UI.orderItems.filter((_, idx) => !UI.selectedItems.includes(idx));
-                        const remainingTotal = remainingItems.reduce((acc, i) => acc + (i.p * i.qty), 0);
+                        var remainingItems = UI.orderItems.filter((_, idx) => !UI.selectedItems.includes(idx));
+                        var remainingTotal = remainingItems.reduce((acc, i) => acc + (i.p * i.qty), 0);
                         
-                        // Crear orden pagada con los items cobrados
-                        await addDoc(ORDERS_COL, {
+                        return addDoc(ORDERS_COL, {
                             mesa: STATE.payData.mesa,
                             items: selectedItemsData,
                             total: selectedTotal,
@@ -2064,93 +2051,89 @@
                             ts: serverTimestamp(),
                             isPartialPayment: true,
                             originalOrderId: STATE.payData.id
-                        });
-                        
-                        // Actualizar orden original con items restantes
-                        if(remainingItems.length > 0) {
-                            await updateDoc(doc(ORDERS_COL, STATE.payData.id), {
-                                items: remainingItems,
-                                total: remainingTotal
-                            });
-                        } else {
-                            // Si no quedan items, marcar como pagada
-                            await updateDoc(doc(ORDERS_COL, STATE.payData.id), {status:'pagado', method:mt, ts:serverTimestamp()});
-                            const kitchenTickets = STATE.orders.filter(o => o.parentOrder === STATE.payData.id);
-                            for(const ticket of kitchenTickets) {
-                                await deleteDoc(doc(ORDERS_COL, ticket.id));
+                        }).then(() => {
+                            if(remainingItems.length > 0) {
+                                return updateDoc(doc(ORDERS_COL, STATE.payData.id), {
+                                    items: remainingItems,
+                                    total: remainingTotal
+                                });
+                            } else {
+                                var kitchenTickets = STATE.orders.filter(o => o.parentOrder === STATE.payData.id);
+                                var chain = updateDoc(doc(ORDERS_COL, STATE.payData.id), {status:'pagado', method:mt, ts:serverTimestamp()});
+                                kitchenTickets.forEach(ticket => {
+                                    chain = chain.then(() => deleteDoc(doc(ORDERS_COL, ticket.id)));
+                                });
+                                return chain;
                             }
-                        }
+                        });
                     }
-                    
+                }).then(() => {
                     UI.modalPay(false); 
                     UI.toast('Cobro OK','success'); 
-                } 
-                catch(e){ UI.toast('Error Pago','error'); btn.disabled=false; btn.querySelector('.content').style.display='flex'; sp.remove(); }
+                })
+                .catch(e => { UI.toast('Error Pago','error'); btn.disabled=false; btn.querySelector('.content').style.display='flex'; sp.remove(); });
             },
-            manualSale: async () => { const d=prompt('Desc:'); if(!d)return; const p=parseFloat(prompt('Monto:')); if(!p)return; await addDoc(ORDERS_COL,{mesa:'CAJA',items:[{n:d,p:p,qty:1}],total:p,status:'pagado',method:'Efectivo',ts:serverTimestamp()}); UI.toast('Venta manual OK'); },
-            addExpense: async () => { 
-                const desc = prompt('Descripción del gasto:'); 
+            manualSale: () => { var d=prompt('Desc:'); if(!d)return; var p=parseFloat(prompt('Monto:')); if(!p)return; addDoc(ORDERS_COL,{mesa:'CAJA',items:[{n:d,p:p,qty:1}],total:p,status:'pagado',method:'Efectivo',ts:serverTimestamp()}).then(() => { UI.toast('Venta manual OK'); }).catch(() => { UI.toast('Error','error'); }); },
+            addExpense: () => { 
+                var desc = prompt('Descripción del gasto:'); 
                 if(!desc) return; 
-                const monto = parseFloat(prompt('Monto del gasto ($):')); 
+                var monto = parseFloat(prompt('Monto del gasto ($):')); 
                 if(!monto || monto <= 0) return UI.toast('Monto inválido', 'error'); 
-                try {
-                    await addDoc(ORDERS_COL, {
-                        mesa: 'GASTO',
-                        items: [{n: desc, p: monto, qty: 1}],
-                        total: monto,
-                        status: 'gasto',
-                        method: 'Efectivo',
-                        ts: serverTimestamp(),
-                        isExpense: true
-                    }); 
+                addDoc(ORDERS_COL, {
+                    mesa: 'GASTO',
+                    items: [{n: desc, p: monto, qty: 1}],
+                    total: monto,
+                    status: 'gasto',
+                    method: 'Efectivo',
+                    ts: serverTimestamp(),
+                    isExpense: true
+                }).then(() => { 
                     UI.toast('Gasto registrado: $' + monto.toFixed(2), 'success'); 
-                } catch(e) { 
+                }).catch(e => { 
                     console.error(e); 
                     UI.toast('Error al registrar gasto', 'error'); 
-                }
+                });
             },
-            resetAll: async () => { if(confirm('⚠️ ¿BORRAR HISTORIAL? (Irreversible)')){ const b=writeBatch(db); STATE.orders.forEach(o=>b.delete(doc(ORDERS_COL,o.id))); await b.commit(); window.location.reload(); } },
+            resetAll: () => { if(confirm('⚠️ ¿BORRAR HISTORIAL? (Irreversible)')){ var b=writeBatch(db); STATE.orders.forEach(o=>b.delete(doc(ORDERS_COL,o.id))); b.commit().then(() => { window.location.reload(); }); } },
             
             // ADMIN ACTIONS
-            adminEdit: async (id, currTot) => {
-                const n = parseFloat(prompt('Nuevo Total Correcto ($):', currTot));
-                if(n && !isNaN(n) && n>=0){ try{await updateDoc(doc(ORDERS_COL, id), {total: n}); UI.toast('Monto Ajustado');}catch(e){UI.toast('Error','error');}}
+            adminEdit: (id, currTot) => {
+                var n = parseFloat(prompt('Nuevo Total Correcto ($):', currTot));
+                if(n && !isNaN(n) && n>=0){ updateDoc(doc(ORDERS_COL, id), {total: n}).then(() => { UI.toast('Monto Ajustado'); }).catch(e => { UI.toast('Error','error'); }); }
             },
-            adminDel: async (id) => {
-                if(confirm('¿ELIMINAR registro permanentemente?')){ try{await deleteDoc(doc(ORDERS_COL, id)); UI.toast('Registro Borrado');}catch(e){UI.toast('Error','error');} }
+            adminDel: (id) => {
+                if(confirm('¿ELIMINAR registro permanentemente?')){ deleteDoc(doc(ORDERS_COL, id)).then(() => { UI.toast('Registro Borrado'); }).catch(e => { UI.toast('Error','error'); }); }
             },
-            removeOrderItem: async (orderId, itemIdx) => {
+            removeOrderItem: (orderId, itemIdx) => {
                 if(!confirm('¿Eliminar este platillo de la orden?')) return;
-                try {
-                    const order = STATE.orders.find(o => o.id === orderId);
-                    if(!order) return UI.toast('Orden no encontrada', 'error');
-                    
-                    const newItems = order.items.filter((_, idx) => idx !== itemIdx);
-                    
-                    if(newItems.length === 0) {
-                        // Si no quedan items, eliminar la orden completa
-                        if(confirm('No quedan platillos. ¿Eliminar toda la orden?')) {
-                            await deleteDoc(doc(ORDERS_COL, orderId));
-                            // Eliminar tickets de cocina asociados
-                            const kitchenTickets = STATE.orders.filter(o => o.parentOrder === orderId);
-                            for(const ticket of kitchenTickets) {
-                                await deleteDoc(doc(ORDERS_COL, ticket.id));
-                            }
-                            UI.toast('Orden eliminada', 'success');
-                        }
-                    } else {
-                        const newTotal = newItems.reduce((acc, i) => acc + (i.p * i.qty), 0);
-                        await updateDoc(doc(ORDERS_COL, orderId), { items: newItems, total: newTotal });
-                        UI.toast('Platillo eliminado', 'success');
-                    }
-                    
-                    // Cerrar modal y refrescar
+                var order = STATE.orders.find(o => o.id === orderId);
+                if(!order) return UI.toast('Orden no encontrada', 'error');
+                
+                var newItems = order.items.filter((_, idx) => idx !== itemIdx);
+                var p;
+                
+                if(newItems.length === 0) {
+                    if(confirm('No quedan platillos. ¿Eliminar toda la orden?')) {
+                        p = deleteDoc(doc(ORDERS_COL, orderId));
+                        var kitchenTickets = STATE.orders.filter(o => o.parentOrder === orderId);
+                        kitchenTickets.forEach(ticket => {
+                            p = p.then(() => deleteDoc(doc(ORDERS_COL, ticket.id)));
+                        });
+                        p.then(() => { UI.toast('Orden eliminada', 'success'); });
+                    } else return;
+                } else {
+                    var newTotal = newItems.reduce((acc, i) => acc + (i.p * i.qty), 0);
+                    p = updateDoc(doc(ORDERS_COL, orderId), { items: newItems, total: newTotal })
+                        .then(() => { UI.toast('Platillo eliminado', 'success'); });
+                }
+                
+                if(p) p.then(() => {
                     document.getElementById('modal-edit-items').classList.add('hidden');
                     document.getElementById('modal-edit-items').classList.remove('flex');
-                } catch(e) {
+                }).catch(e => {
                     console.error(e);
                     UI.toast('Error al eliminar', 'error');
-                }
+                });
             }
         };
 
@@ -2167,17 +2150,17 @@
             }
         }, 5000);
         
-        onAuthStateChanged(auth, u=>{ if(u){ 
+        auth.onAuthStateChanged(u => { if(u){ 
             firebaseConnected = true;
             document.getElementById('app-loader').classList.add('opacity-0','pointer-events-none');
             document.getElementById('indicator-status').className="w-2.5 h-2.5 rounded-full bg-green-500 shadow-glass";
-            onSnapshot(query(ORDERS_COL),(s)=>{ 
-                STATE.orders=s.docs.map(d=>({id:d.id,...d.data()})); 
+            ORDERS_COL.onSnapshot(s => { 
+                STATE.orders=s.docs.map(d => { var data = d.data(); data.id = d.id; return data; }); 
                 if(STATE.role)UI.renderOrders();
                 // Notificación sonora para cocina cuando llega pedido nuevo
                 if(STATE.role==='cocina') s.docChanges().forEach(c=>{ var _d=c.doc.data(); if(c.type==='added' && _d.ts && (Date.now()/1000 - _d.ts.seconds)<30) UI.playSound(); });
             }); 
-        } else signInAnonymously(auth).catch(e => {
+        } else auth.signInAnonymously().catch(e => {
             console.error('Error Firebase Auth:', e);
             document.getElementById('app-loader').classList.add('opacity-0','pointer-events-none');
             UI.toast('Error de conexión', 'error');
@@ -2230,13 +2213,14 @@
             installBtn.id = 'pwa-install-btn';
             installBtn.className = 'fixed bottom-6 right-6 z-[90] bg-gradient-to-r from-orange-500 to-orange-600 text-white px-5 py-3 rounded-2xl shadow-floating flex items-center gap-2 tap-effect font-semibold text-sm animate-up';
             installBtn.innerHTML = '<i class="fa-solid fa-download"></i> Instalar App';
-            installBtn.onclick = async () => {
+            installBtn.onclick = () => {
                 if (!deferredPrompt) return;
                 deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                console.log('[PWA] Install outcome:', outcome);
-                deferredPrompt = null;
-                installBtn.remove();
+                deferredPrompt.userChoice.then(result => {
+                    console.log('[PWA] Install outcome:', result.outcome);
+                    deferredPrompt = null;
+                    installBtn.remove();
+                });
             };
             document.body.appendChild(installBtn);
         });
