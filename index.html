@@ -278,10 +278,17 @@
 
         /* === MESERO MOBILE OPTIMIZATION === */
         @media (max-width: 768px) {
-            /* Menu grid: 2 columnas compactas en mobile */
+            /* Menu grid: compacto en mobile */
             #m-grid {
                 padding: 8px !important;
                 padding-bottom: 100px !important;
+            }
+            /* Más espacio entre secciones de categoría */
+            #m-grid > section {
+                margin-bottom: 2rem !important;
+            }
+            #m-grid > section .grid {
+                gap: 10px !important;
             }
             /* Cart panel: full screen overlay en mobile */
             #m-cart-panel {
@@ -305,6 +312,12 @@
             /* Categories nav más compacta */
             #m-cats-wrapper {
                 padding: 6px 8px !important;
+            }
+            /* En pantallas muy pequeñas, 1 columna */
+            @media (max-width: 400px) {
+                #m-grid > section .grid {
+                    grid-template-columns: 1fr !important;
+                }
             }
             /* Select mesa más compacto */
             #sel-mesa {
@@ -617,7 +630,7 @@
         <!-- MODAL: NOTA PARA ITEM DEL CARRITO -->
         <div id="modal-note" class="fixed inset-0 z-[110] hidden items-end justify-center md:items-center" role="dialog" aria-modal="true" aria-label="Agregar nota al platillo">
             <div class="absolute inset-0 note-modal-overlay" onclick="UI.closeNoteModal()"></div>
-            <div class="relative bg-white w-full md:max-w-[400px] rounded-t-3xl md:rounded-3xl p-5 md:p-6 shadow-2xl animate-up safe-bottom">
+            <div class="relative z-20 bg-white w-full md:max-w-[400px] rounded-t-3xl md:rounded-3xl p-5 md:p-6 shadow-2xl animate-up safe-bottom">
                 <div class="w-10 h-1 bg-slate-200 rounded-full mx-auto mb-4 md:hidden"></div>
                 <h3 class="font-display font-bold text-lg text-slate-800 mb-1" id="note-modal-title">Nota para cocina</h3>
                 <p class="text-xs text-slate-400 mb-3" id="note-modal-item-name"></p>
@@ -640,7 +653,7 @@
         <!-- MODAL: CONFIRMACIÓN DE ENVÍO -->
         <div id="modal-confirm-send" class="fixed inset-0 z-[110] hidden items-end justify-center md:items-center" role="dialog" aria-modal="true" aria-label="Confirmar envío de orden">
             <div class="absolute inset-0 note-modal-overlay" onclick="UI.closeConfirmModal()"></div>
-            <div class="relative bg-white w-full md:max-w-[420px] rounded-t-3xl md:rounded-3xl p-5 md:p-6 shadow-2xl confirm-sheet safe-bottom">
+            <div class="relative z-20 bg-white w-full md:max-w-[420px] rounded-t-3xl md:rounded-3xl p-5 md:p-6 shadow-2xl confirm-sheet safe-bottom">
                 <div class="w-10 h-1 bg-slate-200 rounded-full mx-auto mb-4 md:hidden"></div>
                 <div class="text-center mb-4">
                     <div class="w-14 h-14 mx-auto bg-gradient-to-br from-orange-400 to-orange-600 text-white rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-orange-500/30 mb-3">
