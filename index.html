@@ -96,6 +96,29 @@
             -webkit-font-smoothing: antialiased;
             overscroll-behavior-y: none;
         }
+
+        /* ===== SAFARI / OLD WEBKIT COMPATIBILITY ===== */
+        /* Fallback for CSS inset shorthand (Safari < 14.5) */
+        .absolute[class*="inset-0"], .fixed[class*="inset-0"] {
+            top: 0; right: 0; bottom: 0; left: 0;
+        }
+        /* Flex gap polyfill for Safari < 14.1 */
+        @supports not (translate: 0) {
+            .flex:not(.flex-col):not(.flex-wrap) > * + * { margin-left: 0.375rem; }
+            .flex.gap-1:not(.flex-col) > * + * { margin-left: 0.25rem; }
+            .flex.gap-1\.5:not(.flex-col) > * + * { margin-left: 0.375rem; }
+            .flex.gap-2:not(.flex-col) > * + * { margin-left: 0.5rem; }
+            .flex.gap-3:not(.flex-col) > * + * { margin-left: 0.75rem; }
+            .flex.gap-4:not(.flex-col) > * + * { margin-left: 1rem; }
+            .flex-col.gap-1 > * + * { margin-top: 0.25rem; }
+            .flex-col.gap-2 > * + * { margin-top: 0.5rem; }
+            .flex-col.gap-3 > * + * { margin-top: 0.75rem; }
+            .flex-col.gap-4 > * + * { margin-top: 1rem; }
+            .space-y-2 > * + * { margin-top: 0.5rem; }
+            .space-y-3 > * + * { margin-top: 0.75rem; }
+            .grid.gap-3 { grid-gap: 0.75rem; }
+            .grid.gap-4 { grid-gap: 1rem; }
+        }
         
         /* Ocultar Scrollbars pero permitir scroll */
         .hide-scroll::-webkit-scrollbar { display: none; }
@@ -208,6 +231,89 @@
             }
         }
 
+        /* === CAJERO MOBILE FIX === */
+        @media (max-width: 640px) {
+            /* Forzar single-column y evitar overlap en cajero */
+            #p-active {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 12px !important;
+                padding: 12px !important;
+                padding-bottom: 120px !important;
+            }
+            #p-active > div {
+                width: 100% !important;
+                max-height: none !important;
+                flex-shrink: 0 !important;
+            }
+            /* Limitar altura de items en cajero móvil */
+            #p-active .hide-scroll {
+                max-height: 120px !important;
+            }
+            /* Cocina cards en mobile: single column, full width */
+            #k-grid {
+                grid-template-columns: 1fr !important;
+                gap: 12px !important;
+            }
+            #k-grid > div {
+                max-height: none !important;
+            }
+            /* KDS header más compacto en mobile */
+            #k-grid .kds-header {
+                padding: 12px !important;
+            }
+            #k-grid .kds-header span.font-display {
+                font-size: 1.8rem !important;
+            }
+            /* Items de cocina más compactos en mobile */
+            #k-grid .inner-scroll li span.text-3xl {
+                font-size: 1.5rem !important;
+                padding: 6px 10px !important;
+                min-width: 44px !important;
+            }
+            #k-grid .inner-scroll li .text-2xl {
+                font-size: 1.2rem !important;
+            }
+        }
+
+        /* === MESERO MOBILE OPTIMIZATION === */
+        @media (max-width: 768px) {
+            /* Menu grid: 2 columnas compactas en mobile */
+            #m-grid {
+                padding: 8px !important;
+                padding-bottom: 100px !important;
+            }
+            /* Cart panel: full screen overlay en mobile */
+            #m-cart-panel {
+                border-radius: 0 !important;
+            }
+            /* Cart items spacing */
+            #m-cart-list {
+                padding: 8px !important;
+            }
+            #m-cart-list > div {
+                padding: 8px !important;
+            }
+            /* Botones del footer del carrito más compactos */
+            #v-mesero .safe-bottom {
+                padding: 12px !important;
+            }
+            /* Header principal en mobile */
+            #v-mesero .sticky-nav {
+                padding: 8px 12px !important;
+            }
+            /* Categories nav más compacta */
+            #m-cats-wrapper {
+                padding: 6px 8px !important;
+            }
+            /* Select mesa más compacto */
+            #sel-mesa {
+                padding-top: 10px !important;
+                padding-bottom: 10px !important;
+                font-size: 14px !important;
+            }
+        }
+
         /* === MESERO UX IMPROVEMENTS === */
         
         /* Categoría activa en el nav */
@@ -246,6 +352,7 @@
         /* Modal de nota inline */
         .note-modal-overlay {
             background: rgba(15, 23, 42, 0.5);
+            -webkit-backdrop-filter: blur(8px);
             backdrop-filter: blur(8px);
         }
         
@@ -557,28 +664,28 @@
         </div>
 
         <!-- VISTA 2: COCINA (MONITOR KDS - DISEÑO GRANDE Y LEGIBLE) -->
-        <div id="v-cocina" class="hidden absolute inset-0 z-30 flex-col bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-3 md:p-4 overflow-hidden">
+        <div id="v-cocina" class="hidden absolute inset-0 z-30 flex-col bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-2 md:p-4 overflow-hidden">
             <!-- Header KDS - Compacto -->
-            <div class="flex justify-between items-center mb-4 bg-white/10 backdrop-blur-xl px-4 py-3 rounded-2xl border border-white/10 sticky top-0 z-20 flex-none">
+            <div class="flex justify-between items-center mb-3 md:mb-4 bg-white/10 backdrop-blur-xl px-3 md:px-4 py-2 md:py-3 rounded-2xl border border-white/10 sticky top-0 z-20 flex-none">
                 <div>
-                    <h1 class="text-xl md:text-2xl font-display font-black text-white tracking-tight flex items-center gap-2">
+                    <h1 class="text-lg md:text-2xl font-display font-black text-white tracking-tight flex items-center gap-2">
                         <i class="fa-solid fa-fire text-orange-400 animate-pulse"></i> COCINA
                     </h1>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Monitor de Producción</p>
+                    <p class="text-[9px] md:text-[10px] text-slate-400 font-bold uppercase tracking-widest">Monitor de Producción</p>
                 </div>
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 md:gap-3">
                     <button onclick="UI.playSound()" class="text-white/60 hover:text-orange-400 text-xs font-bold uppercase bg-white/10 px-3 py-2 rounded-xl hover:bg-white/20 transition-all tap-effect hidden md:flex items-center gap-1">
                         <i class="fa-solid fa-bell"></i> Test
                     </button>
-                    <div class="px-4 py-2 bg-orange-500/20 rounded-xl border border-orange-500/30 flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 rounded-full bg-orange-400 animate-pulse shadow-[0_0_10px_rgba(251,146,60,0.8)]"></span>
-                        <span class="text-sm font-bold text-white">Pendientes: <b id="k-count" class="text-orange-400 text-xl ml-1">0</b></span>
+                    <div class="px-3 md:px-4 py-1.5 md:py-2 bg-orange-500/20 rounded-xl border border-orange-500/30 flex items-center gap-2">
+                        <span class="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-orange-400 animate-pulse shadow-[0_0_10px_rgba(251,146,60,0.8)]"></span>
+                        <span class="text-xs md:text-sm font-bold text-white">Pendientes: <b id="k-count" class="text-orange-400 text-lg md:text-xl ml-1">0</b></span>
                     </div>
                 </div>
             </div>
             
             <!-- GRID KDS: Cards grandes con texto legible -->
-            <div id="k-grid" class="flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 pb-32 items-start content-start hide-scroll"></div>
+            <div id="k-grid" class="flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 md:gap-4 pb-32 items-start content-start hide-scroll"></div>
         </div>
 
         <!-- VISTA 3: CAJERO (DISEÑO OPTIMIZADO MÓVIL) -->
@@ -907,9 +1014,13 @@
             // --- MOTOR LOGICO DE TIEMPO REAL VISUAL (KDS) ---
             getTimerState: (ts) => {
                 if(!ts) return { str: '00:00', state: 'fresh' };
-                let d = ts.seconds ? new Date(ts.seconds * 1000) : (ts instanceof Date ? ts : new Date());
+                let d;
+                if(typeof ts.toDate === 'function') d = ts.toDate();
+                else if(ts.seconds) d = new Date(ts.seconds * 1000);
+                else if(ts instanceof Date) d = ts;
+                else d = new Date();
                 const now = new Date();
-                const diffSecs = Math.floor((now - d) / 1000);
+                const diffSecs = Math.max(0, Math.floor((now - d) / 1000));
                 
                 const mm = Math.floor(diffSecs / 60).toString().padStart(2, '0');
                 const ss = (diffSecs % 60).toString().padStart(2, '0');
@@ -1148,7 +1259,7 @@
                 const mesa = document.getElementById('sel-mesa').value;
                 const mesaText = mesa === 'LLEVAR' ? '📦 Para Llevar' : `Mesa ${mesa}`;
                 const selOption = document.getElementById('sel-mesa').selectedOptions[0];
-                const group = selOption?.parentElement?.label || '';
+                const group = (selOption && selOption.parentElement && selOption.parentElement.label) || '';
                 document.getElementById('confirm-mesa-label').textContent = group ? `${mesaText} (${group})` : mesaText;
                 
                 let total = 0;
@@ -1192,8 +1303,8 @@
                 // Cocina ve: tickets de cocina adicionales (isKitchenTicket=true) O ordenes principales nuevas (sin parentOrder y sin isKitchenTicket)
                 if(STATE.role==='cocina'){
                     const pend = STATE.orders.filter(o=>o.status==='en_cocina' && (o.isKitchenTicket === true || (!o.isKitchenTicket && !o.parentOrder))).sort((a,b)=>{
-                        const tsA = a.ts?.seconds || 0;
-                        const tsB = b.ts?.seconds || 0;
+                        const tsA = (a.ts && a.ts.seconds) || 0;
+                        const tsB = (b.ts && b.ts.seconds) || 0;
                         return tsA - tsB;
                     });
                     document.getElementById('k-count').innerText = pend.length;
@@ -1246,20 +1357,27 @@
                 // RENDER VISTA CAJERO (CON SCROLL INTERNO Y LISTA COMPLETA)
                 // Caja NO ve los tickets de cocina (isKitchenTicket), ni los gastos (isExpense), solo las ordenes principales
                 if(STATE.role==='cajero'){
+                    // Helper: obtener items efectivos (padre + tickets de cocina pendientes)
+                    const getEffectiveItems = (o) => {
+                        const tickets = STATE.orders.filter(t => t.isKitchenTicket && t.parentOrder === o.id && t.status !== 'pagado');
+                        return tickets.length > 0 ? [...o.items].concat(tickets.reduce(function(acc, t){ return acc.concat(t.items); }, [])) : o.items;
+                    };
                     const active = STATE.orders.filter(o=>o.status!=='pagado' && o.status!=='gasto' && !o.isKitchenTicket && !o.isExpense).sort((a,b)=>{
-                        const tsA = a.ts?.seconds || 0;
-                        const tsB = b.ts?.seconds || 0;
+                        const tsA = (a.ts && a.ts.seconds) || 0;
+                        const tsB = (b.ts && b.ts.seconds) || 0;
                         return tsA - tsB;
                     });
                     const paid = STATE.orders.filter(o=>(o.status==='pagado' || o.isExpense) && !o.isKitchenTicket).sort((a,b)=>{
-                        const tsA = a.ts?.seconds || 0;
-                        const tsB = b.ts?.seconds || 0;
+                        const tsA = (a.ts && a.ts.seconds) || 0;
+                        const tsB = (b.ts && b.ts.seconds) || 0;
                         return tsB - tsA;
                     });
 
                     // AQUI SE HA EXTENDIDO EL CODIGO PARA PERMITIR SCROLL Y VER TODOS LOS ITEMS
                     // Se elimina items.slice(0,4) y se coloca el map completo dentro de un div con scroll
-                    document.getElementById('p-active').innerHTML = active.map(o=>`
+                    document.getElementById('p-active').innerHTML = active.map(o=>{
+                        const effectiveItems = getEffectiveItems(o);
+                        return `
                         <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all group flex flex-col border border-slate-200/50 overflow-hidden animate-in w-full h-fit">
                             <div class="bg-gradient-to-r from-slate-50 to-slate-100 p-3 md:p-4 border-b border-slate-100 flex justify-between items-start flex-none">
                                 <div>
@@ -1274,7 +1392,7 @@
                             <!-- SECCION SCROLLABLE MEJORADA PARA MOVILES -->
                             <div class="flex-1 p-3 md:p-4 bg-white overflow-y-auto max-h-[25vh] md:max-h-[30vh] min-h-[80px] hide-scroll border-b border-slate-100">
                                 <ul class="space-y-1.5 md:space-y-2 text-xs text-slate-500 font-medium">
-                                    ${o.items.map(i => `
+                                    ${effectiveItems.map(i => `
                                     <li class="flex justify-between items-start gap-2 py-1">
                                         <div class="flex gap-2 items-start flex-1 min-w-0">
                                             <span class="font-bold text-white bg-slate-700 px-1.5 py-0.5 rounded text-[10px] md:text-xs min-w-[22px] text-center flex-none">${i.qty}</span>
@@ -1284,7 +1402,7 @@
                                     </li>`).join('')}
                                 </ul>
                                 <div class="mt-3 pt-2 border-t border-dashed border-slate-200 text-center text-[9px] md:text-[10px] text-slate-400">
-                                    <i class="fa-solid fa-utensils mr-1"></i> ${o.items.reduce((acc, el) => acc + el.qty, 0)} artículos
+                                    <i class="fa-solid fa-utensils mr-1"></i> ${effectiveItems.reduce((acc, el) => acc + el.qty, 0)} artículos
                                 </div>
                             </div>
 
@@ -1303,7 +1421,7 @@
                                     </button>
                                 </div>
                             </div>
-                        </div>`).join('') || `<div class="col-span-full flex flex-col items-center justify-center text-slate-300 mt-10 h-48 md:h-64 border-2 border-dashed border-slate-200 rounded-3xl bg-white/50">
+                        </div>`}).join('') || `<div class="col-span-full flex flex-col items-center justify-center text-slate-300 mt-10 h-48 md:h-64 border-2 border-dashed border-slate-200 rounded-3xl bg-white/50">
                             <i class="fa-solid fa-cash-register text-3xl md:text-4xl mb-2 opacity-50"></i>
                             <span class="text-xs md:text-sm font-bold uppercase tracking-widest">Sin cuentas activas</span>
                         </div>`;
@@ -1328,8 +1446,8 @@
                     
                     // Combinar ventas y gastos, ordenar por timestamp
                     const allTransactions = [...sales, ...expenses].sort((a,b) => {
-                        const tsA = a.ts?.seconds || 0;
-                        const tsB = b.ts?.seconds || 0;
+                        const tsA = (a.ts && a.ts.seconds) || 0;
+                        const tsB = (b.ts && b.ts.seconds) || 0;
                         return tsB - tsA;
                     });
                     
@@ -1406,7 +1524,11 @@
                 document.getElementById('edit-mesa-label').innerText = isNaN(order.mesa) ? 'LLEVAR' : `Mesa ${order.mesa}`;
                 document.getElementById('edit-order-id').innerText = '#' + orderId.slice(0,4);
                 
-                document.getElementById('edit-items-list').innerHTML = order.items.map((item, idx) => `
+                // Mostrar items del padre
+                const tickets = STATE.orders.filter(t => t.isKitchenTicket && t.parentOrder === orderId && t.status !== 'pagado');
+                const ticketItems = tickets.reduce(function(acc, t){ return acc.concat(t.items); }, []);
+                
+                let html = order.items.map((item, idx) => `
                     <div class="flex items-center gap-2 p-2.5 bg-white rounded-xl border border-slate-100 group hover:border-red-200 transition-all">
                         <div class="flex-1 min-w-0">
                             <p class="text-xs text-slate-700 font-medium truncate">${item.n}</p>
@@ -1416,7 +1538,21 @@
                             <i class="fa-solid fa-trash-can text-xs"></i>
                         </button>
                     </div>
-                `).join('') || '<p class="text-center text-slate-400 text-xs py-4">Sin artículos</p>';
+                `).join('');
+                // Mostrar items de tickets de cocina pendientes (no editables)
+                if(ticketItems.length > 0) {
+                    html += '<p class="text-[10px] font-bold text-orange-500 uppercase mt-2 mb-1 px-1">🆕 Adicionales (en cocina)</p>';
+                    html += ticketItems.map(item => `
+                        <div class="flex items-center gap-2 p-2.5 bg-orange-50 rounded-xl border border-orange-200/50">
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs text-slate-700 font-medium truncate">${item.n}</p>
+                                <p class="text-[10px] text-slate-400">${UI.format(item.p)} x ${item.qty} = <span class="font-bold text-slate-600">${UI.format(item.p * item.qty)}</span></p>
+                            </div>
+                            <span class="text-[9px] font-bold text-orange-500 bg-orange-100 px-2 py-1 rounded-lg">EN COCINA</span>
+                        </div>
+                    `).join('');
+                }
+                document.getElementById('edit-items-list').innerHTML = html || '<p class="text-center text-slate-400 text-xs py-4">Sin artículos</p>';
                 
                 document.getElementById('edit-total-label').innerText = UI.format(order.total);
                 
@@ -1434,7 +1570,9 @@
                 const el=document.getElementById('modal-pay'); 
                 if(show){
                     const order = STATE.orders.find(o => o.id === id);
-                    UI.orderItems = order ? [...order.items] : [];
+                    // Incluir items de kitchen tickets pendientes
+                    const tickets = STATE.orders.filter(t => t.isKitchenTicket && t.parentOrder === id && t.status !== 'pagado');
+                    UI.orderItems = order ? [...order.items].concat(tickets.reduce(function(acc, t){ return acc.concat(t.items); }, [])) : [];
                     UI.selectedItems = UI.orderItems.map((_, idx) => idx); // Seleccionar todos por defecto
                     
                     STATE.payData={id, mesa, amt, selectedTotal: amt}; 
@@ -1479,7 +1617,7 @@
                     const gastos = STATE.reportSummary.gastos || 0;
                     const efectivoEnCaja = fondo + efectivo - gastos;
                     const numTransacciones = STATE.reportSummary.history.length;
-                    const numGastos = STATE.reportSummary.expenses?.length || 0;
+                    const numGastos = (STATE.reportSummary.expenses && STATE.reportSummary.expenses.length) || 0;
                     const ticketPromedio = numTransacciones > 0 ? ventasTotal / numTransacciones : 0;
                     
                     // Colores corporativos
@@ -1662,9 +1800,9 @@
                     doc.text("HISTORIAL DE TRANSACCIONES", 15, yPos);
                     
                     let tRows = STATE.reportSummary.history.map((h, idx) => {
-                        const hora = h.ts?.seconds ? new Date(h.ts.seconds * 1000).toLocaleTimeString('es-MX', {hour: '2-digit', minute: '2-digit'}) : '--:--';
+                        const hora = (h.ts && h.ts.seconds) ? new Date(h.ts.seconds * 1000).toLocaleTimeString('es-MX', {hour: '2-digit', minute: '2-digit'}) : '--:--';
                         const mesa = isNaN(h.mesa) ? h.mesa : `Mesa ${h.mesa}`;
-                        return [idx + 1, hora, mesa, h.method?.toUpperCase() || 'N/A', UI.format(h.total)];
+                        return [idx + 1, hora, mesa, (h.method ? h.method.toUpperCase() : '') || 'N/A', UI.format(h.total)];
                     });
                     
                     doc.autoTable({
@@ -1704,8 +1842,8 @@
                         doc.text("GASTOS OPERATIVOS", 15, yPos);
                         
                         let gRows = STATE.reportSummary.expenses.map((e, idx) => {
-                            const hora = e.ts?.seconds ? new Date(e.ts.seconds * 1000).toLocaleTimeString('es-MX', {hour: '2-digit', minute: '2-digit'}) : '--:--';
-                            return [idx + 1, hora, e.items[0]?.n || 'Gasto', "-" + UI.format(e.total)];
+                            const hora = (e.ts && e.ts.seconds) ? new Date(e.ts.seconds * 1000).toLocaleTimeString('es-MX', {hour: '2-digit', minute: '2-digit'}) : '--:--';
+                            return [idx + 1, hora, (e.items[0] && e.items[0].n) || 'Gasto', "-" + UI.format(e.total)];
                         });
                         
                         doc.autoTable({
@@ -1838,7 +1976,8 @@
                     const open = !esLlevar ? STATE.orders.find(o => o.mesa == m && o.status !== 'pagado' && !o.isKitchenTicket) : null;
                     
                     if(open){ 
-                        await updateDoc(doc(ORDERS_COL, open.id), { items:[...open.items,...STATE.cart], total:open.total+tot });
+                        // Solo actualizar total en padre (items se agregan al completar ticket en cocina)
+                        await updateDoc(doc(ORDERS_COL, open.id), { total:open.total+tot });
                         await addDoc(ORDERS_COL, {mesa:m, items:STATE.cart, total:tot, status:'en_cocina', ts:serverTimestamp(), method:'', isKitchenTicket:true, parentOrder:open.id}); 
                         UI.toast('✓ Agregado a Mesa ' + m, 'success'); 
                     }
@@ -1857,17 +1996,19 @@
                 try{
                     const order = STATE.orders.find(o => o.id === id);
                     await updateDoc(doc(ORDERS_COL,id),{status:s}); 
-                    // Si es un ticket de cocina adicional y se marca como entregado, también actualizar la orden principal
+                    // Si es un ticket de cocina adicional y se marca como entregado
                     if(order && order.isKitchenTicket && order.parentOrder && s === 'en_mesa') {
                         const parent = STATE.orders.find(o => o.id === order.parentOrder);
-                        // Si no hay más tickets pendientes de cocina para esta mesa, marcar orden principal como en_mesa
                         const pendingTickets = STATE.orders.filter(o => o.parentOrder === order.parentOrder && o.status === 'en_cocina' && o.id !== id);
-                        if(pendingTickets.length === 0 && parent) {
-                            await updateDoc(doc(ORDERS_COL, order.parentOrder), {status: 'en_mesa'});
+                        if(parent) {
+                            // Merge items del ticket al padre y actualizar status si no quedan tickets pendientes
+                            const updates = { items: [...parent.items, ...order.items] };
+                            if(pendingTickets.length === 0) updates.status = 'en_mesa';
+                            await updateDoc(doc(ORDERS_COL, order.parentOrder), updates);
                         }
                     }
                     UI.toast('Estatus Cambiado');
-                }catch{UI.toast('Error','error');} 
+                }catch(e){UI.toast('Error','error');} 
             },
             processPayment: async (mt,btn) => {
                 if(UI.selectedItems.length === 0) {
@@ -1963,7 +2104,7 @@
                 if(n && !isNaN(n) && n>=0){ try{await updateDoc(doc(ORDERS_COL, id), {total: n}); UI.toast('Monto Ajustado');}catch(e){UI.toast('Error','error');}}
             },
             adminDel: async (id) => {
-                if(confirm('¿ELIMINAR registro permanentemente?')){ try{await deleteDoc(doc(ORDERS_COL, id)); UI.toast('Registro Borrado');}catch{UI.toast('Error','error');} }
+                if(confirm('¿ELIMINAR registro permanentemente?')){ try{await deleteDoc(doc(ORDERS_COL, id)); UI.toast('Registro Borrado');}catch(e){UI.toast('Error','error');} }
             },
             removeOrderItem: async (orderId, itemIdx) => {
                 if(!confirm('¿Eliminar este platillo de la orden?')) return;
@@ -2021,7 +2162,7 @@
                 STATE.orders=s.docs.map(d=>({id:d.id,...d.data()})); 
                 if(STATE.role)UI.renderOrders();
                 // Notificación sonora para cocina cuando llega pedido nuevo
-                if(STATE.role==='cocina') s.docChanges().forEach(c=>{ if(c.type==='added' && (Date.now()/1000 - c.doc.data().ts?.seconds)<30) UI.playSound(); });
+                if(STATE.role==='cocina') s.docChanges().forEach(c=>{ var _d=c.doc.data(); if(c.type==='added' && _d.ts && (Date.now()/1000 - _d.ts.seconds)<30) UI.playSound(); });
             }); 
         } else signInAnonymously(auth).catch(e => {
             console.error('Error Firebase Auth:', e);
