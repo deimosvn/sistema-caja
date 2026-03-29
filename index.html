@@ -229,7 +229,6 @@
                 gap: 12px !important;
             }
             #k-grid > div {
-                max-height: none !important;
                 width: 100% !important;
             }
             /* KDS header más compacto en mobile */
@@ -680,7 +679,7 @@
         </div>
 
         <!-- VISTA 2: COCINA (MONITOR KDS - DISEÑO GRANDE Y LEGIBLE) -->
-        <div id="v-cocina" class="hidden absolute inset-0 z-30 flex-col bg-slate-900 p-2 md:p-4 overflow-hidden">
+        <div id="v-cocina" class="hidden absolute inset-0 z-30 flex-col bg-slate-900 p-2 md:p-4" style="overflow:hidden;">
             <!-- Header KDS - Compacto -->
             <div class="flex justify-between items-center mb-3 md:mb-4 bg-white/10 backdrop-blur-xl px-3 md:px-4 py-2 md:py-3 rounded-2xl border border-white/10 sticky top-0 z-20 flex-none">
                 <div>
@@ -701,7 +700,7 @@
             </div>
             
             <!-- GRID KDS: Cards grandes con texto legible -->
-            <div id="k-grid" class="flex-1 overflow-y-auto pb-32 hide-scroll" style="display:-webkit-flex;display:flex;-webkit-flex-wrap:wrap;flex-wrap:wrap;-webkit-align-content:flex-start;align-content:flex-start;gap:12px;"></div>
+            <div id="k-grid" class="flex-1 pb-32 hide-scroll" style="display:-webkit-flex;display:flex;-webkit-flex-wrap:wrap;flex-wrap:wrap;-webkit-align-content:flex-start;align-content:flex-start;gap:12px;overflow-y:auto;-webkit-overflow-scrolling:touch;"></div>
         </div>
 
         <!-- VISTA 3: CAJERO (DISEÑO OPTIMIZADO MÓVIL) -->
@@ -1363,7 +1362,7 @@
                         const { str, state } = UI.getTimerState(o.ts); 
                         // KDS CARD OPTIMIZADO CON LETRAS GRANDES PARA COCINA
                         return `
-                        <div id="k-card-${o.id}" class="kds-card-base state-${state} bg-slate-800 rounded-2xl shadow-2xl flex flex-col animate-up relative group break-inside-avoid w-full max-h-[600px] border border-white/10" style="-webkit-flex-shrink:0;flex-shrink:0;width:100%;max-width:100%;">
+                        <div id="k-card-${o.id}" class="kds-card-base state-${state} bg-slate-800 rounded-2xl shadow-2xl flex flex-col animate-up relative group break-inside-avoid w-full border border-white/10" style="-webkit-flex-shrink:0;flex-shrink:0;width:100%;max-width:100%;">
                             <div class="kds-header p-4 md:p-5 flex justify-between items-center transition-colors duration-500 flex-none rounded-t-2xl">
                                 <div class="flex flex-col">
                                     <span class="font-display font-black text-4xl md:text-5xl leading-none text-white drop-shadow-lg">MESA ${o.mesa}</span>
@@ -1374,7 +1373,7 @@
                                 </div>
                             </div>
                             <!-- Cuerpo con items GRANDES -->
-                            <div class="flex-1 overflow-y-auto inner-scroll bg-slate-900/50 relative p-4 max-h-[400px] hide-scroll">
+                            <div class="bg-slate-900/50 relative p-4">
                                 <ul class="space-y-3">
                                 ${o.items.map(i=>`
                                     <li class="flex items-start gap-3 bg-white/5 p-3 rounded-xl border border-white/10">
