@@ -216,6 +216,7 @@
             }
             #p-active > div {
                 width: 100% !important;
+                height: auto !important;
                 max-height: none !important;
                 flex-shrink: 0 !important;
             }
@@ -262,6 +263,23 @@
             }
             #m-grid > section .grid {
                 gap: 10px !important;
+            }
+            /* Horizontal scroll for menu item rows on mobile */
+            #m-grid .menu-items-row {
+                display: -webkit-flex !important;
+                display: flex !important;
+                flex-wrap: nowrap !important;
+                -webkit-flex-wrap: nowrap !important;
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch;
+                gap: 10px !important;
+                padding-bottom: 8px !important;
+            }
+            #m-grid .menu-items-row .menu-card {
+                -webkit-flex-shrink: 0 !important;
+                flex-shrink: 0 !important;
+                width: 160px !important;
+                min-height: 110px !important;
             }
             /* Cart panel: full screen overlay en mobile */
             #m-cart-panel {
@@ -1060,9 +1078,9 @@
                             <h3 class="text-xl font-display font-black text-slate-800">${c.name}</h3>
                             <span class="text-xs text-slate-400 font-medium">${c.items.length} items</span>
                         </div>
-                        <div class="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                        <div class="menu-items-row flex gap-3 overflow-x-auto hide-scroll snap-x pb-2 md:grid md:grid-cols-3 md:overflow-x-visible md:flex-wrap">
                             ${c.items.map(i => `
-                                <button data-item-name="${i.n}" onclick="LOGIC.cartAdd('${i.n.replace(/'/g, "\\'") }',${i.p})" class="menu-card bg-white p-4 rounded-2xl shadow-sm border-2 border-slate-100 hover:border-brand-accent cursor-pointer transition-all duration-200 tap-effect group min-h-[120px] flex flex-col justify-between relative overflow-hidden select-none text-left" aria-label="${i.n}, ${UI.format(i.p)}. Toca para agregar">
+                                <button data-item-name="${i.n}" onclick="LOGIC.cartAdd('${i.n.replace(/'/g, "\\'") }',${i.p})" class="menu-card bg-white p-4 rounded-2xl shadow-sm border-2 border-slate-100 hover:border-brand-accent cursor-pointer transition-all duration-200 tap-effect group min-h-[120px] flex flex-col justify-between relative overflow-hidden select-none text-left snap-start flex-shrink-0 w-[160px] md:w-auto" aria-label="${i.n}, ${UI.format(i.p)}. Toca para agregar">
                                     <div class="absolute -right-3 -bottom-3 text-6xl text-slate-50 group-hover:text-orange-50 transition-colors -rotate-12" aria-hidden="true"><i class="fa-solid ${c.icon}"></i></div>
                                     <div class="relative z-10 pr-4"><p class="font-bold text-slate-700 text-sm leading-snug">${i.n}</p></div>
                                     <div class="relative z-10 flex justify-between items-end mt-2">
@@ -1389,7 +1407,7 @@
                     document.getElementById('p-active').innerHTML = active.map(o=>{
                         const effectiveItems = getEffectiveItems(o);
                         return `
-                        <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all group flex flex-col border border-slate-200/50 overflow-hidden animate-in w-full h-fit">
+                        <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all group flex flex-col border border-slate-200/50 overflow-hidden animate-in w-full">
                             <div class="bg-gradient-to-r from-slate-50 to-slate-100 p-3 md:p-4 border-b border-slate-100 flex justify-between items-start flex-none">
                                 <div>
                                     <div class="flex gap-2 items-center mb-1 flex-wrap">
