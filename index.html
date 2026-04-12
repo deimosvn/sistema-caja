@@ -1417,6 +1417,7 @@
                     // Se elimina items.slice(0,4) y se coloca el map completo dentro de un div con scroll
                     document.getElementById('p-active').innerHTML = active.map(o=>{
                         const effectiveItems = getEffectiveItems(o);
+                        const effectiveTotal = effectiveItems.reduce((acc, i) => acc + (i.p * i.qty), 0);
                         return `
                         <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all group flex flex-col border border-slate-200/50 overflow-hidden animate-in w-full">
                             <div class="bg-gradient-to-r from-slate-50 to-slate-100 p-3 md:p-4 border-b border-slate-100 flex justify-between items-start flex-none">
@@ -1449,13 +1450,13 @@
                             <div class="p-3 md:p-4 bg-gradient-to-r from-slate-50 to-slate-100 flex justify-between items-center gap-2 flex-none">
                                 <div class="flex flex-col">
                                     <span class="text-[9px] font-bold uppercase text-slate-400">Por cobrar</span>
-                                    <span class="font-display font-black text-xl md:text-2xl text-slate-900 leading-none">${UI.format(o.total)}</span>
+                                    <span class="font-display font-black text-xl md:text-2xl text-slate-900 leading-none">${UI.format(effectiveTotal)}</span>
                                 </div>
                                 <div class="flex gap-1.5 flex-1 justify-end">
                                     <button onclick="UI.modalEditItems('${o.id}')" class="h-10 md:h-12 w-10 md:w-12 rounded-xl bg-white border-2 border-slate-200 text-slate-500 flex items-center justify-center hover:border-red-300 hover:text-red-500 hover:bg-red-50 transition-all tap-effect" title="Editar platillos">
                                         <i class="fa-solid fa-pen-to-square text-sm"></i>
                                     </button>
-                                    <button onclick="UI.modalPay(true,'${o.id}','${o.mesa}',${o.total})" class="h-10 md:h-12 px-4 md:px-5 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 text-white flex items-center justify-center hover:from-green-400 hover:to-emerald-500 transition-all shadow-lg shadow-green-500/30 tap-effect gap-2">
+                                    <button onclick="UI.modalPay(true,'${o.id}','${o.mesa}',${effectiveTotal})" class="h-10 md:h-12 px-4 md:px-5 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 text-white flex items-center justify-center hover:from-green-400 hover:to-emerald-500 transition-all shadow-lg shadow-green-500/30 tap-effect gap-2">
                                         <span class="font-bold text-xs md:text-sm uppercase">Cobrar</span>
                                         <i class="fa-solid fa-dollar-sign text-xs"></i>
                                     </button>
@@ -2036,10 +2037,10 @@
                     if(order && order.isKitchenTicket && order.parentOrder && s === 'en_mesa') {
                         var parent = STATE.orders.find(o => o.id === order.parentOrder);
                         var pendingTickets = STATE.orders.filter(o => o.parentOrder === order.parentOrder && o.status === 'en_cocina' && o.id !== id);
-                        if(parent) {
-                            var updates = { items: [].concat(parent.items).concat(order.items) };
-                            if(pendingTickets.length === 0) updates.status = 'en_mesa';
-                            return updateDoc(doc(ORDERS_COL, order.parentOrder), updates);
+                        // Only update parent status when all kitchen tickets are done
+                        // Do NOT merge items here to avoid double-counting
+                        if(parent && pendingTickets.length === 0) {
+                            return updateDoc(doc(ORDERS_COL, order.parentOrder), {status: 'en_mesa'});
                         }
                     }
                 }).then(() => {
@@ -2059,10 +2060,11 @@
                     var selectedItemsData = UI.selectedItems.map(idx => UI.orderItems[idx]);
                     var selectedTotal = STATE.payData.selectedTotal;
                     var allItemsSelected = UI.selectedItems.length === UI.orderItems.length;
+                    var kitchenTickets = STATE.orders.filter(o => o.parentOrder === STATE.payData.id && o.isKitchenTicket);
                     
                     if(allItemsSelected) {
-                        var kitchenTickets = STATE.orders.filter(o => o.parentOrder === STATE.payData.id);
-                        var chain = updateDoc(doc(ORDERS_COL,STATE.payData.id),{status:'pagado', method:mt, ts:serverTimestamp()});
+                        // Save all effective items into parent for historical record
+                        var chain = updateDoc(doc(ORDERS_COL,STATE.payData.id),{status:'pagado', method:mt, ts:serverTimestamp(), items: UI.orderItems, total: selectedTotal});
                         kitchenTickets.forEach(ticket => {
                             chain = chain.then(() => deleteDoc(doc(ORDERS_COL, ticket.id)));
                         });
@@ -2081,19 +2083,20 @@
                             isPartialPayment: true,
                             originalOrderId: STATE.payData.id
                         }).then(() => {
+                            // Update parent with remaining items and delete all kitchen tickets
+                            var chain;
                             if(remainingItems.length > 0) {
-                                return updateDoc(doc(ORDERS_COL, STATE.payData.id), {
+                                chain = updateDoc(doc(ORDERS_COL, STATE.payData.id), {
                                     items: remainingItems,
                                     total: remainingTotal
                                 });
                             } else {
-                                var kitchenTickets = STATE.orders.filter(o => o.parentOrder === STATE.payData.id);
-                                var chain = updateDoc(doc(ORDERS_COL, STATE.payData.id), {status:'pagado', method:mt, ts:serverTimestamp()});
-                                kitchenTickets.forEach(ticket => {
-                                    chain = chain.then(() => deleteDoc(doc(ORDERS_COL, ticket.id)));
-                                });
-                                return chain;
+                                chain = updateDoc(doc(ORDERS_COL, STATE.payData.id), {status:'pagado', method:mt, ts:serverTimestamp()});
                             }
+                            kitchenTickets.forEach(ticket => {
+                                chain = chain.then(() => deleteDoc(doc(ORDERS_COL, ticket.id)));
+                            });
+                            return chain;
                         });
                     }
                 }).then(() => {
@@ -2102,7 +2105,7 @@
                 })
                 .catch(e => { UI.toast('Error Pago','error'); btn.disabled=false; btn.querySelector('.content').style.display='flex'; sp.remove(); });
             },
-            manualSale: () => { var d=prompt('Desc:'); if(!d)return; var p=parseFloat(prompt('Monto:')); if(!p)return; addDoc(ORDERS_COL,{mesa:'CAJA',items:[{n:d,p:p,qty:1}],total:p,status:'pagado',method:'Efectivo',ts:serverTimestamp()}).then(() => { UI.toast('Venta manual OK'); }).catch(() => { UI.toast('Error','error'); }); },
+            manualSale: () => { var d=prompt('Desc:'); if(!d)return; var p=parseFloat(prompt('Monto:')); if(!p||p<=0)return UI.toast('Monto inválido','error'); addDoc(ORDERS_COL,{mesa:'CAJA',items:[{n:d,p:p,qty:1}],total:p,status:'pagado',method:'Efectivo',ts:serverTimestamp()}).then(() => { UI.toast('Venta manual OK'); }).catch(() => { UI.toast('Error','error'); }); },
             addExpense: () => { 
                 var desc = prompt('Descripción del gasto:'); 
                 if(!desc) return; 
@@ -2139,6 +2142,7 @@
                 if(!order) return UI.toast('Orden no encontrada', 'error');
                 
                 var newItems = order.items.filter((_, idx) => idx !== itemIdx);
+                var ticketTotal = STATE.orders.filter(function(t){ return t.isKitchenTicket && t.parentOrder === orderId && t.status !== 'pagado'; }).reduce(function(acc, t){ return acc + t.total; }, 0);
                 var p;
                 
                 if(newItems.length === 0) {
@@ -2151,7 +2155,7 @@
                         p.then(() => { UI.toast('Orden eliminada', 'success'); });
                     } else return;
                 } else {
-                    var newTotal = newItems.reduce((acc, i) => acc + (i.p * i.qty), 0);
+                    var newTotal = newItems.reduce((acc, i) => acc + (i.p * i.qty), 0) + ticketTotal;
                     p = updateDoc(doc(ORDERS_COL, orderId), { items: newItems, total: newTotal })
                         .then(() => { UI.toast('Platillo eliminado', 'success'); });
                 }
