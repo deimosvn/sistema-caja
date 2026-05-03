@@ -1023,6 +1023,20 @@
                             </div>
                         </div>
 
+                        <!-- GASTOS SOBRE VENTAS (DONUT) -->
+                        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                            <div class="px-4 py-3 border-b border-slate-100 bg-gradient-to-r from-teal-50 to-cyan-50 flex items-center gap-2">
+                                <div class="w-7 h-7 rounded-lg bg-teal-500 text-white flex items-center justify-center text-sm shrink-0"><i class="fa-solid fa-chart-pie"></i></div>
+                                <div>
+                                    <h3 class="font-bold text-slate-800 text-sm">Estructura de Costos</h3>
+                                    <p class="text-[9px] text-slate-400">Porcentaje de gastos sobre ventas — insumos, operativos y ganancia neta</p>
+                                </div>
+                            </div>
+                            <div id="rp-gastos-ventas" class="p-4">
+                                <p class="text-xs text-slate-400 text-center py-4">Sin datos de ventas para este período</p>
+                            </div>
+                        </div>
+
                         <!-- HISTORIAL DE FINES DE SEMANA ANTERIORES -->
                         <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
                             <div class="px-4 py-3 border-b border-slate-100 bg-gradient-to-r from-emerald-50 to-green-50 flex items-center justify-between gap-2">
@@ -2436,6 +2450,87 @@
                             compRow('Gastos totales',  'fa-arrow-trend-down','bg-red-100 text-red-500',       s0.gastos,   s1.gastos)   +
                             compRow('Ganancia neta',   'fa-chart-line',     'bg-green-100 text-green-600',   s0.ganancia, s1.ganancia) +
                             compRow('Núm. de órdenes', 'fa-receipt',        'bg-blue-100 text-blue-500',     s0.ordenes,  s1.ordenes);
+                    }
+                }
+
+                // ── ESTRUCTURA DE COSTOS (donut chart) ─────────────
+                var gvEl = document.getElementById('rp-gastos-ventas');
+                if(gvEl) {
+                    var gvVentas = salesFiltered.reduce(function(a,o){ return a+(o.total||0); }, 0);
+                    if(gvVentas <= 0) {
+                        gvEl.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">Sin ventas registradas en este período</p>';
+                    } else {
+                        var gvIns  = insumosFiltered.reduce(function(a,i){ return a+(i.costo_total||0); }, 0);
+                        var gvOp   = gastosFiltered.reduce(function(a,g){ return a+(g.monto||0); }, 0)
+                                   + oldExpenses.reduce(function(a,e){ return a+(e.total||0); }, 0);
+                        var gvTotG = gvIns + gvOp;
+                        var gvGan  = gvVentas - gvTotG;
+                        var isLoss = gvGan < 0;
+
+                        // Percentages (visual arcs capped at 100 total)
+                        var pIns  = gvIns  / gvVentas * 100;
+                        var pOp   = gvOp   / gvVentas * 100;
+                        var pGanV = Math.max(0, 100 - pIns - pOp);
+                        // If over 100%, normalise arcs proportionally so ring stays full
+                        if(pIns + pOp > 100) {
+                            var tot = pIns + pOp;
+                            pIns = pIns / tot * 100;
+                            pOp  = pOp  / tot * 100;
+                            pGanV = 0;
+                        }
+
+                        var C  = 2 * Math.PI * 54; // circumference r=54 ≈ 339.3
+                        var s1 = pIns  / 100 * C;
+                        var s2 = pOp   / 100 * C;
+                        var s3 = pGanV / 100 * C;
+
+                        function _gvRow(label, dot, bg, valor, pct, pctNum) {
+                            var bar = Math.min(Math.abs(pctNum), 100);
+                            return '<div class="rounded-xl ' + bg + ' px-3 py-2 flex flex-col gap-1">' +
+                                '<div class="flex items-center gap-2">' +
+                                '<div class="w-2.5 h-2.5 rounded-full shrink-0" style="background:' + dot + '"></div>' +
+                                '<span class="text-xs text-slate-700 flex-1 font-medium">' + label + '</span>' +
+                                '<span class="text-[10px] font-bold text-slate-500 font-mono">' + pct + '</span>' +
+                                '<span class="text-xs font-black font-mono text-slate-800 ml-2">' + UI.format(valor) + '</span>' +
+                                '</div>' +
+                                '<div class="w-full bg-white/70 rounded-full h-1">' +
+                                '<div class="h-1 rounded-full transition-all" style="width:' + bar + '%;background:' + dot + '"></div>' +
+                                '</div>' +
+                                '</div>';
+                        }
+
+                        var pTotStr  = (gvTotG / gvVentas * 100).toFixed(1);
+                        var pInsStr  = pIns.toFixed(1);
+                        var pOpStr   = pOp.toFixed(1);
+                        var pGanStr  = (Math.abs(gvGan) / gvVentas * 100).toFixed(1);
+
+                        var circleBg = '<circle cx="64" cy="64" r="54" fill="none" stroke="#f1f5f9" stroke-width="16"/>';
+                        var cIns = s1 > 0.1 ? '<circle cx="64" cy="64" r="54" fill="none" stroke="#38bdf8" stroke-width="16" stroke-dasharray="' + s1.toFixed(2) + ' ' + (C - s1).toFixed(2) + '" stroke-dashoffset="0" transform="rotate(-90,64,64)"/>' : '';
+                        var cOp  = s2 > 0.1 ? '<circle cx="64" cy="64" r="54" fill="none" stroke="#fb923c" stroke-width="16" stroke-dasharray="' + s2.toFixed(2) + ' ' + (C - s2).toFixed(2) + '" stroke-dashoffset="' + (-s1).toFixed(2) + '" transform="rotate(-90,64,64)"/>' : '';
+                        var cGan = s3 > 0.1 ? '<circle cx="64" cy="64" r="54" fill="none" stroke="#4ade80" stroke-width="16" stroke-dasharray="' + s3.toFixed(2) + ' ' + (C - s3).toFixed(2) + '" stroke-dashoffset="' + (-(s1 + s2)).toFixed(2) + '" transform="rotate(-90,64,64)"/>' : '';
+
+                        gvEl.innerHTML =
+                            '<div class="flex flex-col sm:flex-row items-center gap-5">' +
+                            '<div class="relative shrink-0">' +
+                            '<svg width="128" height="128" viewBox="0 0 128 128">' +
+                            circleBg + cIns + cOp + cGan +
+                            '</svg>' +
+                            '<div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">' +
+                            '<span class="font-black text-xl ' + (isLoss ? 'text-red-600' : 'text-slate-800') + '">' + pTotStr + '%</span>' +
+                            '<span class="text-[8px] text-slate-400 text-center leading-tight">gastos<br>/ ventas</span>' +
+                            '</div>' +
+                            '</div>' +
+                            '<div class="flex-1 w-full flex flex-col gap-2">' +
+                            _gvRow('Insumos (carne)', '#38bdf8', 'bg-sky-50', gvIns, pInsStr + '%', parseFloat(pInsStr)) +
+                            _gvRow('Gastos operativos', '#fb923c', 'bg-orange-50', gvOp, pOpStr + '%', parseFloat(pOpStr)) +
+                            _gvRow(isLoss ? 'Pérdida neta' : 'Ganancia neta', isLoss ? '#f87171' : '#4ade80', isLoss ? 'bg-red-50' : 'bg-green-50', gvGan, (isLoss ? '-' : '') + pGanStr + '%', parseFloat(pGanStr)) +
+                            '<div class="flex items-center gap-2 pt-1 border-t border-slate-100 mt-1">' +
+                            '<div class="w-2.5 h-2.5 rounded-full bg-slate-300 shrink-0"></div>' +
+                            '<span class="text-xs text-slate-500 flex-1">Total Ventas</span>' +
+                            '<span class="text-xs font-black font-mono text-slate-800">' + UI.format(gvVentas) + '</span>' +
+                            '</div>' +
+                            '</div>' +
+                            '</div>';
                     }
                 }
             },
