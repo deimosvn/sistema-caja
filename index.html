@@ -979,6 +979,80 @@
                             </div>
                         </div>
 
+                        <!-- ══════════════ INSIGHTS ══════════════ -->
+
+                        <!-- TOP 3 PLATILLOS MÁS RENTABLES -->
+                        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                            <div class="px-4 py-3 border-b border-slate-100 bg-gradient-to-r from-amber-50 to-orange-50 flex items-center gap-2">
+                                <div class="w-7 h-7 rounded-lg bg-amber-400 text-white flex items-center justify-center text-sm shrink-0"><i class="fa-solid fa-trophy"></i></div>
+                                <div>
+                                    <h3 class="font-bold text-slate-800 text-sm">Top 3 Platillos más Rentables</h3>
+                                    <p class="text-[9px] text-slate-400">Por ganancia neta total generada (precio − costo carne × cantidad)</p>
+                                </div>
+                            </div>
+                            <div id="rp-top3" class="p-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                <p class="col-span-3 text-xs text-slate-400 text-center py-4">Sin datos de ventas para este período</p>
+                            </div>
+                        </div>
+
+                        <!-- HORAS PICO DE VENTAS -->
+                        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                            <div class="px-4 py-3 border-b border-slate-100 bg-gradient-to-r from-blue-50 to-indigo-50 flex items-center gap-2">
+                                <div class="w-7 h-7 rounded-lg bg-blue-500 text-white flex items-center justify-center text-sm shrink-0"><i class="fa-solid fa-clock"></i></div>
+                                <div>
+                                    <h3 class="font-bold text-slate-800 text-sm">Horas Pico de Ventas</h3>
+                                    <p class="text-[9px] text-slate-400">Número de órdenes cobradas por hora del día</p>
+                                </div>
+                            </div>
+                            <div id="rp-horas-pico" class="p-4">
+                                <p class="text-xs text-slate-400 text-center py-4">Sin datos de ventas para este período</p>
+                            </div>
+                        </div>
+
+                        <!-- COMPARATIVA SEMANA VS SEMANA ANTERIOR -->
+                        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                            <div class="px-4 py-3 border-b border-slate-100 bg-gradient-to-r from-violet-50 to-purple-50 flex items-center gap-2">
+                                <div class="w-7 h-7 rounded-lg bg-violet-500 text-white flex items-center justify-center text-sm shrink-0"><i class="fa-solid fa-arrow-right-arrow-left"></i></div>
+                                <div>
+                                    <h3 class="font-bold text-slate-800 text-sm">Comparativa vs Fin de Semana Anterior</h3>
+                                    <p class="text-[9px] text-slate-400">Este fin de semana vs el anterior</p>
+                                </div>
+                            </div>
+                            <div id="rp-comparativa" class="p-3">
+                                <p class="text-xs text-slate-400 text-center py-4">Selecciona "Fin de Semana" para ver la comparativa</p>
+                            </div>
+                        </div>
+
+                        <!-- HISTORIAL DE FINES DE SEMANA ANTERIORES -->
+                        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                            <div class="px-4 py-3 border-b border-slate-100 bg-gradient-to-r from-emerald-50 to-green-50 flex items-center justify-between gap-2">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-7 h-7 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-sm shrink-0"><i class="fa-solid fa-calendar-week"></i></div>
+                                    <div>
+                                        <h3 class="font-bold text-slate-800 text-sm">Historial de Fines de Semana</h3>
+                                        <p class="text-[9px] text-slate-400">Últimas 8 semanas — haz clic en una fila para verla</p>
+                                    </div>
+                                </div>
+                                <button onclick="UI.renderHistorialFines()" class="text-[10px] text-emerald-600 border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 tap-effect transition-colors"><i class="fa-solid fa-rotate-right"></i> Actualizar</button>
+                            </div>
+                            <div id="rp-historial-fines" class="overflow-auto hide-scroll max-h-[340px]">
+                                <table class="w-full text-left text-sm">
+                                    <thead class="bg-white text-[9px] font-black text-slate-400 uppercase tracking-wider sticky top-0 z-10 border-b border-slate-100">
+                                        <tr>
+                                            <th class="px-4 py-2.5">Fecha</th>
+                                            <th class="px-4 py-2.5 text-right">Ventas</th>
+                                            <th class="px-4 py-2.5 text-right">Gastos</th>
+                                            <th class="px-4 py-2.5 text-right">Ganancia</th>
+                                            <th class="px-4 py-2.5 text-center">Órdenes</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="rp-historial-fines-rows" class="divide-y divide-slate-100 text-slate-600 bg-white">
+                                        <tr><td colspan="5" class="text-center py-5 text-xs text-slate-400">Presiona "Actualizar" para cargar el historial</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
                         <div class="pt-6 pb-8 text-center border-t border-slate-200">
                              <button onclick="LOGIC.resetAll()" class="text-[10px] text-red-300 hover:text-red-500 font-black uppercase tracking-[0.2em] transition hover:bg-red-50 px-4 py-2 rounded-lg">Reset Sistema (Borrar Todo)</button>
                         </div>
@@ -1761,7 +1835,7 @@
                 const act=t==='active'; document.getElementById('p-active').classList.toggle('hidden',!act); document.getElementById('p-report').classList.toggle('hidden',act);
                 document.getElementById('btn-tab-act').classList.toggle('border-brand-accent',act); document.getElementById('btn-tab-act').classList.toggle('text-brand-accent',act); document.getElementById('btn-tab-act').classList.toggle('border-transparent',!act);
                 document.getElementById('btn-tab-rep').classList.toggle('border-brand-accent',!act); document.getElementById('btn-tab-rep').classList.toggle('text-brand-accent',!act); document.getElementById('btn-tab-rep').classList.toggle('border-transparent',act);
-                if(!act) UI.renderFinance();
+                if(!act) { UI.renderFinance(); UI.renderHistorialFines(); }
             },
             
             // Selección de items para cobro parcial
@@ -2172,6 +2246,242 @@
 
                 // Actualizar reportSummary para el generador de PDF
                 STATE.reportSummary = {total:ventasBrutas, cash:efectivo, card:tarjeta, gastos:totalGastos, items:itemMap, history:salesFiltered, expenses:oldExpenses};
+
+                // Renderizar insights (Top3, Horas Pico, Comparativa)
+                UI.renderInsights(salesFiltered, itemMap, avgCostoPorKilo, insumosFiltered, gastosFiltered, oldExpenses);
+            },
+
+            // ══════════════════════════════════════════════════════
+            // INSIGHTS: Top3 · Horas Pico · Comparativa · Historial
+            // ══════════════════════════════════════════════════════
+
+            // Calcula stats resumidas de un conjunto de ventas/gastos
+            _calcFindeStats: function(sales, insumos, gastosERP, oldExp, avgCostoPorKilo) {
+                var ventas  = sales.reduce(function(a,o){ return a+(o.total||0); }, 0);
+                var costoIns= insumos.reduce(function(a,i){ return a+(i.costo_total||0); }, 0);
+                var costoGas= gastosERP.reduce(function(a,g){ return a+(g.monto||0); }, 0);
+                var costoOld= oldExp.reduce(function(a,e){ return a+(e.total||0); }, 0);
+                var gastos  = costoIns + costoGas + costoOld;
+                var ganancia= ventas - gastos;
+                // itemMap
+                var imap = {};
+                sales.forEach(function(o){ (o.items||[]).forEach(function(i){ if(!imap[i.n]) imap[i.n]={q:0,s:0}; imap[i.n].q+=i.qty; imap[i.n].s+=i.qty*i.p; }); });
+                return { ventas:ventas, gastos:gastos, ganancia:ganancia, ordenes:sales.length, imap:imap };
+            },
+
+            // Helper: rango de un fin de semana (weeksAgo=0 = este finde, 1 = el anterior, etc.)
+            _getWeekendRange: function(weeksAgo) {
+                var today = new Date();
+                var d = today.getDay(); // 0=Dom, 6=Sab
+                var diffS = d === 6 ? 0 : (d + 7 - 6) % 7;
+                var sat = new Date(today); sat.setDate(today.getDate() - diffS - weeksAgo*7);
+                var sun = new Date(sat);  sun.setDate(sat.getDate() + 1);
+                var ss = new Date(sat); ss.setHours(0,0,0,0);
+                var se = new Date(sat); se.setHours(23,59,59,999);
+                var ds = new Date(sun); ds.setHours(0,0,0,0);
+                var de = new Date(sun); de.setHours(23,59,59,999);
+                return {
+                    satStart: ss.getTime(), satEnd: se.getTime(),
+                    sunStart: ds.getTime(), sunEnd: de.getTime(),
+                    label: sat.toLocaleDateString('es-MX',{day:'numeric',month:'short'}) + ' – ' + sun.toLocaleDateString('es-MX',{day:'numeric',month:'short',year:'numeric'})
+                };
+            },
+
+            // Renderiza Top3, Horas Pico y Comparativa
+            renderInsights: function(salesFiltered, itemMap, avgCostoPorKilo, insumosFiltered, gastosFiltered, oldExpenses) {
+
+                // ── TOP 3 PLATILLOS MÁS RENTABLES ──────────────────
+                var top3El = document.getElementById('rp-top3');
+                if(top3El) {
+                    var conGanancia = Object.entries(itemMap).map(function(entry){
+                        var nombre = entry[0], data = entry[1];
+                        var esc = ESCANDALLO_DEFAULT.find(function(e){ return e.producto===nombre; });
+                        var ganTotal = null;
+                        if(esc && avgCostoPorKilo[esc.tipo]) {
+                            var costoCarne = avgCostoPorKilo[esc.tipo] * (esc.gramos/1000);
+                            ganTotal = (data.s/data.q - costoCarne) * data.q;
+                        }
+                        return { nombre:nombre, q:data.q, ventas:data.s, ganTotal:ganTotal };
+                    }).filter(function(x){ return x.ganTotal !== null; })
+                      .sort(function(a,b){ return b.ganTotal - a.ganTotal; })
+                      .slice(0,3);
+
+                    if(!conGanancia.length) {
+                        top3El.innerHTML = '<p class="col-span-3 text-xs text-slate-400 text-center py-4">Agrega insumos del período para calcular rentabilidad</p>';
+                    } else {
+                        var medallas = ['🥇','🥈','🥉'];
+                        var colores  = [
+                            'border-amber-300 bg-amber-50',
+                            'border-slate-300 bg-slate-50',
+                            'border-orange-200 bg-orange-50'
+                        ];
+                        var textColors = ['text-amber-600','text-slate-600','text-orange-500'];
+                        top3El.innerHTML = conGanancia.map(function(p, idx){
+                            var pct = conGanancia[0].ganTotal > 0 ? (p.ganTotal/conGanancia[0].ganTotal*100).toFixed(0) : 0;
+                            return '<div class="border-2 ' + colores[idx] + ' rounded-xl p-3 flex flex-col gap-1.5">' +
+                                '<div class="flex items-center gap-1.5">' +
+                                '<span class="text-xl">' + medallas[idx] + '</span>' +
+                                '<span class="text-xs font-black text-slate-800 leading-tight flex-1">' + p.nombre + '</span>' +
+                                '</div>' +
+                                '<p class="font-display font-black text-lg ' + textColors[idx] + '">' + UI.format(p.ganTotal) + '</p>' +
+                                '<p class="text-[9px] text-slate-400">' + p.q + ' uds · ' + UI.format(p.ventas) + ' venta</p>' +
+                                '<div class="w-full bg-white rounded-full h-1.5 border border-slate-200">' +
+                                '<div class="' + (idx===0?'bg-amber-400':idx===1?'bg-slate-400':'bg-orange-400') + ' h-1.5 rounded-full" style="width:' + pct + '%"></div>' +
+                                '</div>' +
+                                '</div>';
+                        }).join('');
+                    }
+                }
+
+                // ── HORAS PICO ──────────────────────────────────────
+                var horasEl = document.getElementById('rp-horas-pico');
+                if(horasEl) {
+                    var horaCounts = {};
+                    salesFiltered.forEach(function(o){
+                        var ms = o.ts&&o.ts.seconds ? o.ts.seconds*1000 : null;
+                        if(!ms) return;
+                        var h = new Date(ms).getHours();
+                        if(!horaCounts[h]) horaCounts[h]=0;
+                        horaCounts[h]++;
+                    });
+                    var horasKeys = Object.keys(horaCounts).map(Number).sort(function(a,b){return a-b;});
+                    if(!horasKeys.length) {
+                        horasEl.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">Sin datos de timestamp en este período</p>';
+                    } else {
+                        var maxCount = Math.max.apply(null, horasKeys.map(function(h){return horaCounts[h];}));
+                        // Rellena horas faltantes entre la primera y última hora
+                        var allHours = [];
+                        for(var h = horasKeys[0]; h <= horasKeys[horasKeys.length-1]; h++) allHours.push(h);
+                        var bars = allHours.map(function(h){
+                            var cnt = horaCounts[h] || 0;
+                            var pct = maxCount > 0 ? Math.round(cnt/maxCount*100) : 0;
+                            var isPico = cnt === maxCount && cnt > 0;
+                            var barH = Math.max(4, Math.round(pct * 0.64)); // max 64px
+                            var hLabel = h < 12 ? h+'am' : (h===12?'12pm':(h-12)+'pm');
+                            return '<div class="flex flex-col items-center gap-1 flex-1 min-w-0">' +
+                                '<span class="text-[8px] font-bold ' + (isPico?'text-orange-500':'text-slate-400') + '">' + (cnt||'') + '</span>' +
+                                '<div class="w-full flex items-end justify-center" style="height:64px">' +
+                                '<div class="w-full max-w-[24px] rounded-t-sm transition-all ' + (isPico?'bg-orange-400':'bg-slate-200') + '" style="height:' + barH + 'px"></div>' +
+                                '</div>' +
+                                '<span class="text-[8px] ' + (isPico?'text-orange-500 font-black':'text-slate-400') + ' whitespace-nowrap">' + hLabel + '</span>' +
+                                '</div>';
+                        }).join('');
+                        var picoHora = horasKeys.reduce(function(best,h){ return (horaCounts[h]||0) > (horaCounts[best]||0) ? h : best; }, horasKeys[0]);
+                        var picoLabel = picoHora < 12 ? picoHora+'am' : (picoHora===12?'12pm':(picoHora-12)+'pm');
+                        horasEl.innerHTML =
+                            '<div class="flex items-center gap-1.5 mb-3">' +
+                            '<i class="fa-solid fa-fire text-orange-500 text-sm"></i>' +
+                            '<span class="text-xs font-bold text-slate-700">Hora pico: <span class="text-orange-500">' + picoLabel + '</span></span>' +
+                            '<span class="text-[10px] text-slate-400 ml-1">(' + horaCounts[picoHora] + ' órdenes)</span>' +
+                            '</div>' +
+                            '<div class="flex gap-0.5 items-end">' + bars + '</div>';
+                    }
+                }
+
+                // ── COMPARATIVA FINDE ACTUAL VS ANTERIOR ────────────
+                var compEl = document.getElementById('rp-comparativa');
+                if(compEl) {
+                    var filtro = STATE.filtroFinanzas;
+                    if(filtro !== 'finde' && filtro !== 'sabado' && filtro !== 'domingo') {
+                        compEl.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">Selecciona Sábado, Domingo o Fin de Semana para ver la comparativa</p>';
+                    } else {
+                        // Rango de este finde y del anterior
+                        var w0 = UI._getWeekendRange(0); // este finde
+                        var w1 = UI._getWeekendRange(1); // finde anterior
+                        function filterByRange(arr, tsField, range) {
+                            return arr.filter(function(x){
+                                var ts = x[tsField];
+                                if(!ts) return false;
+                                var ms = ts.seconds ? ts.seconds*1000 : Number(ts);
+                                return (ms>=range.satStart && ms<=range.satEnd) || (ms>=range.sunStart && ms<=range.sunEnd);
+                            });
+                        }
+                        var sales0 = filterByRange(STATE.orders.filter(function(o){ return o.status==='pagado' && !o.isExpense && !o.isKitchenTicket; }), 'ts', w0);
+                        var sales1 = filterByRange(STATE.orders.filter(function(o){ return o.status==='pagado' && !o.isExpense && !o.isKitchenTicket; }), 'ts', w1);
+                        var ins0   = filterByRange(STATE.insumos,    'fecha', w0);
+                        var ins1   = filterByRange(STATE.insumos,    'fecha', w1);
+                        var gas0   = filterByRange(STATE.gastosERP,  'fecha', w0);
+                        var gas1   = filterByRange(STATE.gastosERP,  'fecha', w1);
+                        var old0   = filterByRange(STATE.orders.filter(function(o){ return o.isExpense; }), 'ts', w0);
+                        var old1   = filterByRange(STATE.orders.filter(function(o){ return o.isExpense; }), 'ts', w1);
+                        var s0 = UI._calcFindeStats(sales0, ins0, gas0, old0, {});
+                        var s1 = UI._calcFindeStats(sales1, ins1, gas1, old1, {});
+
+                        function delta(curr, prev) {
+                            if(prev === 0) return curr > 0 ? {pct:'nuevo', up:true} : {pct:'—', up:null};
+                            var p = ((curr-prev)/Math.abs(prev)*100);
+                            return {pct: (p>=0?'+':'') + p.toFixed(1)+'%', up: p>=0};
+                        }
+                        function compRow(label, icon, color, v0, v1) {
+                            var d = delta(v0, v1);
+                            var arrow = d.up===null ? '' : (d.up ? '▲' : '▼');
+                            var arrowColor = d.up===null ? '' : (d.up ? 'text-green-500' : 'text-red-500');
+                            return '<div class="flex items-center gap-3 py-2.5 border-b border-slate-50 last:border-0">' +
+                                '<div class="w-7 h-7 rounded-lg ' + color + ' flex items-center justify-center text-xs shrink-0"><i class="fa-solid ' + icon + '"></i></div>' +
+                                '<span class="text-xs text-slate-600 flex-1 font-medium">' + label + '</span>' +
+                                '<span class="text-xs text-slate-400 font-mono w-20 text-right">' + UI.format(v1) + '</span>' +
+                                '<span class="text-xs font-black font-mono w-20 text-right text-slate-800">' + UI.format(v0) + '</span>' +
+                                '<span class="text-[10px] font-black ' + arrowColor + ' w-14 text-right">' + arrow + ' ' + d.pct + '</span>' +
+                                '</div>';
+                        }
+                        compEl.innerHTML =
+                            '<div class="flex text-[9px] text-slate-400 font-bold uppercase tracking-wide gap-3 pb-1 border-b border-slate-100 mb-1">' +
+                            '<div class="w-7 shrink-0"></div>' +
+                            '<div class="flex-1">Métrica</div>' +
+                            '<div class="w-20 text-right">Ant. (' + w1.label + ')</div>' +
+                            '<div class="w-20 text-right">Este (' + w0.label + ')</div>' +
+                            '<div class="w-14 text-right">Δ</div>' +
+                            '</div>' +
+                            compRow('Ventas brutas',   'fa-coins',          'bg-amber-100 text-amber-600',   s0.ventas,   s1.ventas)   +
+                            compRow('Gastos totales',  'fa-arrow-trend-down','bg-red-100 text-red-500',       s0.gastos,   s1.gastos)   +
+                            compRow('Ganancia neta',   'fa-chart-line',     'bg-green-100 text-green-600',   s0.ganancia, s1.ganancia) +
+                            compRow('Núm. de órdenes', 'fa-receipt',        'bg-blue-100 text-blue-500',     s0.ordenes,  s1.ordenes);
+                    }
+                }
+            },
+
+            // Historial de los últimos 8 fines de semana (se calcula on-demand)
+            renderHistorialFines: function() {
+                var tbody = document.getElementById('rp-historial-fines-rows');
+                if(!tbody) return;
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-xs text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-1"></i>Calculando…</td></tr>';
+
+                setTimeout(function() {
+                    var rows = [];
+                    for(var w = 0; w < 8; w++) {
+                        var range = UI._getWeekendRange(w);
+                        function mkFilter(r) {
+                            return function(x, tsField) {
+                                var ts = x[tsField];
+                                if(!ts) return false;
+                                var ms = ts.seconds ? ts.seconds*1000 : Number(ts);
+                                return (ms>=r.satStart && ms<=r.satEnd) || (ms>=r.sunStart && ms<=r.sunEnd);
+                            };
+                        }
+                        var f = mkFilter(range);
+                        var sales = STATE.orders.filter(function(o){ return o.status==='pagado' && !o.isExpense && !o.isKitchenTicket && f(o,'ts'); });
+                        var ins   = STATE.insumos.filter(function(i){ return f(i,'fecha'); });
+                        var gas   = STATE.gastosERP.filter(function(g){ return f(g,'fecha'); });
+                        var old   = STATE.orders.filter(function(o){ return o.isExpense && f(o,'ts'); });
+                        var st    = UI._calcFindeStats(sales, ins, gas, old, {});
+                        if(st.ordenes === 0 && w > 0) continue; // no mostrar semanas vacías excepto la actual
+                        var isEste = w === 0;
+                        var ganColor = st.ganancia >= 0 ? 'text-green-600 font-black' : 'text-red-600 font-black';
+                        rows.push(
+                            '<tr class="hover:bg-slate-50 transition-colors cursor-pointer ' + (isEste?'bg-orange-50/50':'') + '" onclick="UI.setFiltroFinanzas(\'finde\')" title="Haz clic para ver este período">' +
+                            '<td class="px-4 py-2.5 text-xs font-bold text-slate-700">' +
+                            (isEste ? '<span class="inline-block bg-orange-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded mr-1.5">ESTE</span>' : '') +
+                            range.label +
+                            '</td>' +
+                            '<td class="px-4 py-2.5 text-right text-xs font-mono font-bold text-slate-800">' + UI.format(st.ventas) + '</td>' +
+                            '<td class="px-4 py-2.5 text-right text-xs font-mono text-red-500">' + UI.format(st.gastos) + '</td>' +
+                            '<td class="px-4 py-2.5 text-right text-xs font-mono ' + ganColor + '">' + UI.format(st.ganancia) + '</td>' +
+                            '<td class="px-4 py-2.5 text-center text-xs text-slate-500">' + st.ordenes + '</td>' +
+                            '</tr>'
+                        );
+                    }
+                    tbody.innerHTML = rows.join('') || '<tr><td colspan="5" class="text-center py-5 text-xs text-slate-400">Sin datos históricos disponibles</td></tr>';
+                }, 0);
             },
 
             // --- MOTOR DE REPORTES PDF PROFESIONAL ERP v7.0 ---
