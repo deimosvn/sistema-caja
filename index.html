@@ -776,7 +776,7 @@
                 <div id="p-report" class="hidden absolute inset-0 overflow-y-auto p-3 md:p-5 bg-gradient-to-b from-slate-50 to-slate-100 pb-32 hide-scroll">
                     <div class="max-w-7xl mx-auto space-y-4">
 
-                        <!-- SELECTOR DE TURNO/FECHA -->
+                        <!-- SELECTOR DE TURNO/FECHA + PDF EXPORT -->
                         <div class="bg-white rounded-2xl p-3 md:p-4 shadow-sm border border-slate-200">
                             <p class="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-2.5">Vista de período</p>
                             <div class="flex gap-2 overflow-x-auto hide-scroll pb-1">
@@ -784,6 +784,28 @@
                                 <button onclick="UI.setFiltroFinanzas('sabado')" id="filtro-sabado" class="filtro-btn whitespace-nowrap px-4 py-2.5 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold transition-all tap-effect hover:bg-slate-200">Sábado</button>
                                 <button onclick="UI.setFiltroFinanzas('domingo')" id="filtro-domingo" class="filtro-btn whitespace-nowrap px-4 py-2.5 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold transition-all tap-effect hover:bg-slate-200">Domingo</button>
                                 <button onclick="UI.setFiltroFinanzas('finde')" id="filtro-finde" class="filtro-btn whitespace-nowrap px-4 py-2.5 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold transition-all tap-effect hover:bg-slate-200">Fin de Semana</button>
+                            </div>
+                            <!-- Descargar PDF por período -->
+                            <div class="mt-3 pt-3 border-t border-slate-100">
+                                <p class="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-1.5"><i class="fa-solid fa-file-pdf text-orange-400"></i> Descargar Reporte PDF</p>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                    <button onclick="UI.generatePDF('hoy')" class="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-white text-[10px] font-bold transition-all shadow tap-effect">
+                                        <i class="fa-solid fa-file-pdf text-orange-400 text-sm"></i>
+                                        <span>Hoy</span>
+                                    </button>
+                                    <button onclick="UI.generatePDF('sabado')" class="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-white text-[10px] font-bold transition-all shadow tap-effect">
+                                        <i class="fa-solid fa-file-pdf text-orange-400 text-sm"></i>
+                                        <span>Sábado</span>
+                                    </button>
+                                    <button onclick="UI.generatePDF('domingo')" class="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-white text-[10px] font-bold transition-all shadow tap-effect">
+                                        <i class="fa-solid fa-file-pdf text-orange-400 text-sm"></i>
+                                        <span>Domingo</span>
+                                    </button>
+                                    <button onclick="UI.generatePDF('finde')" class="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 active:scale-95 text-white text-[10px] font-bold transition-all shadow-lg shadow-orange-500/30 tap-effect">
+                                        <i class="fa-solid fa-file-pdf text-sm"></i>
+                                        <span>Fin de Semana</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
@@ -2152,304 +2174,422 @@
                 STATE.reportSummary = {total:ventasBrutas, cash:efectivo, card:tarjeta, gastos:totalGastos, items:itemMap, history:salesFiltered, expenses:oldExpenses};
             },
 
-            // --- MOTOR DE REPORTES PDF PROFESIONAL ---
-            generatePDF: () => {
+            // --- MOTOR DE REPORTES PDF PROFESIONAL ERP v7.0 ---
+            generatePDF: (filtro) => {
                 try {
-                    if(!STATE.reportSummary || STATE.reportSummary.history.length === 0) return UI.toast('No hay ventas registradas.', 'error');
-                    
+                    const f = filtro || STATE.filtroFinanzas || 'hoy';
                     const { jsPDF } = window.jspdf;
                     const doc = new jsPDF();
                     const d = new Date();
-                    const fechaStr = d.toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-                    const horaStr = d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
-                    
-                    // Cálculos financieros
-                    const fondo = STATE.cashFund || 0;
-                    const ventasTotal = STATE.reportSummary.total || 0;
-                    const efectivo = STATE.reportSummary.cash || 0;
-                    const tarjeta = STATE.reportSummary.card || 0;
-                    const gastos = STATE.reportSummary.gastos || 0;
-                    const efectivoEnCaja = fondo + efectivo - gastos;
-                    const numTransacciones = STATE.reportSummary.history.length;
-                    const numGastos = (STATE.reportSummary.expenses && STATE.reportSummary.expenses.length) || 0;
-                    const ticketPromedio = numTransacciones > 0 ? ventasTotal / numTransacciones : 0;
-                    
-                    // Colores corporativos
-                    const naranja = [249, 115, 22];
-                    const oscuro = [15, 23, 42];
-                    const gris = [100, 116, 139];
-                    const verde = [34, 197, 94];
-                    const rojo = [239, 68, 68];
-                    
-                    // ========== ENCABEZADO ==========
-                    // Barra lateral decorativa
-                    doc.setFillColor(...naranja);
-                    doc.rect(0, 0, 8, 297, 'F');
-                    
-                    // Logo y nombre del negocio
-                    doc.setFillColor(...oscuro);
-                    doc.roundedRect(15, 10, 180, 35, 3, 3, 'F');
-                    
-                    doc.setFont("helvetica", "bold");
-                    doc.setTextColor(255, 255, 255);
-                    doc.setFontSize(22);
-                    doc.text("LA CABAÑA", 25, 27);
-                    doc.setFontSize(10);
-                    doc.setTextColor(200, 200, 200);
-                    doc.text("DE LA PROGRESO MENUDERÍA", 25, 35);
-                    
-                    // Info de contacto
-                    doc.setFontSize(8);
-                    doc.setTextColor(150, 150, 150);
-                    doc.text("Benito Juárez 20, Progreso, 21325 Mexicali, B.C.", 110, 27);
-                    doc.text("Tel: (686) XXX-XXXX", 110, 33);
-                    
-                    // Título del reporte
-                    doc.setTextColor(...oscuro);
-                    doc.setFontSize(18);
-                    doc.setFont("helvetica", "bold");
-                    doc.text("CORTE DE CAJA", 15, 58);
-                    
-                    doc.setFontSize(10);
-                    doc.setTextColor(...gris);
-                    doc.text(`Folio: #${d.getTime().toString().slice(-8)}`, 15, 65);
-                    
-                    // Fecha y hora
-                    doc.setFontSize(9);
-                    doc.text(fechaStr.charAt(0).toUpperCase() + fechaStr.slice(1), 110, 58);
-                    doc.text(`Hora de corte: ${horaStr}`, 110, 65);
-                    
-                    // Línea separadora
-                    doc.setDrawColor(...naranja);
-                    doc.setLineWidth(0.5);
-                    doc.line(15, 70, 195, 70);
-                    
-                    // ========== RESUMEN FINANCIERO ==========
-                    doc.setFontSize(11);
-                    doc.setTextColor(...oscuro);
-                    doc.setFont("helvetica", "bold");
-                    doc.text("RESUMEN FINANCIERO", 15, 80);
-                    
-                    // Tarjetas de resumen
-                    const cardY = 85;
-                    const cardH = 25;
-                    const cardW = 35;
-                    
-                    // Card 1: Fondo
-                    doc.setFillColor(241, 245, 249);
-                    doc.roundedRect(15, cardY, cardW, cardH, 2, 2, 'F');
-                    doc.setFontSize(7);
-                    doc.setTextColor(...gris);
-                    doc.text("FONDO INICIAL", 17, cardY + 7);
-                    doc.setFontSize(11);
-                    doc.setTextColor(...oscuro);
-                    doc.setFont("helvetica", "bold");
-                    doc.text(UI.format(fondo), 17, cardY + 16);
-                    
-                    // Card 2: Ventas
-                    doc.setFillColor(254, 243, 199);
-                    doc.roundedRect(53, cardY, cardW, cardH, 2, 2, 'F');
-                    doc.setFontSize(7);
-                    doc.setTextColor(...gris);
-                    doc.text("VENTAS TOTALES", 55, cardY + 7);
-                    doc.setFontSize(11);
-                    doc.setTextColor(...naranja);
-                    doc.setFont("helvetica", "bold");
-                    doc.text(UI.format(ventasTotal), 55, cardY + 16);
-                    
-                    // Card 3: Efectivo
-                    doc.setFillColor(220, 252, 231);
-                    doc.roundedRect(91, cardY, cardW, cardH, 2, 2, 'F');
-                    doc.setFontSize(7);
-                    doc.setTextColor(...gris);
-                    doc.text("EFECTIVO", 93, cardY + 7);
-                    doc.setFontSize(11);
-                    doc.setTextColor(...verde);
-                    doc.setFont("helvetica", "bold");
-                    doc.text(UI.format(efectivo), 93, cardY + 16);
-                    
-                    // Card 4: Tarjeta
-                    doc.setFillColor(219, 234, 254);
-                    doc.roundedRect(129, cardY, cardW, cardH, 2, 2, 'F');
-                    doc.setFontSize(7);
-                    doc.setTextColor(...gris);
-                    doc.text("TARJETA", 131, cardY + 7);
-                    doc.setFontSize(11);
-                    doc.setTextColor(59, 130, 246);
-                    doc.setFont("helvetica", "bold");
-                    doc.text(UI.format(tarjeta), 131, cardY + 16);
-                    
-                    // Card 5: Gastos
-                    doc.setFillColor(254, 226, 226);
-                    doc.roundedRect(167, cardY, 28, cardH, 2, 2, 'F');
-                    doc.setFontSize(7);
-                    doc.setTextColor(...gris);
-                    doc.text("GASTOS", 169, cardY + 7);
-                    doc.setFontSize(11);
-                    doc.setTextColor(...rojo);
-                    doc.setFont("helvetica", "bold");
-                    doc.text("-" + UI.format(gastos), 169, cardY + 16);
-                    
-                    // ========== TOTAL EN CAJA (DESTACADO) ==========
-                    doc.setFillColor(...oscuro);
-                    doc.roundedRect(15, 115, 180, 20, 3, 3, 'F');
-                    doc.setFontSize(10);
-                    doc.setTextColor(200, 200, 200);
-                    doc.text("EFECTIVO TOTAL EN CAJA", 20, 126);
-                    doc.setFontSize(16);
-                    doc.setTextColor(255, 255, 255);
-                    doc.setFont("helvetica", "bold");
-                    doc.text(UI.format(efectivoEnCaja), 140, 128);
-                    
-                    // ========== ESTADÍSTICAS ==========
-                    doc.setFontSize(9);
-                    doc.setTextColor(...gris);
-                    doc.setFont("helvetica", "normal");
-                    doc.text(`Transacciones: ${numTransacciones}  |  Gastos registrados: ${numGastos}  |  Ticket promedio: ${UI.format(ticketPromedio)}`, 15, 145);
-                    
-                    // ========== MIX DE VENTAS ==========
-                    doc.setFontSize(11);
-                    doc.setTextColor(...oscuro);
-                    doc.setFont("helvetica", "bold");
-                    doc.text("DESGLOSE DE PRODUCTOS VENDIDOS", 15, 155);
-                    
-                    let pRows = Object.entries(STATE.reportSummary.items)
-                        .sort((a,b) => b[1].s - a[1].s)
-                        .map(([n, v], idx) => [idx + 1, n.toUpperCase(), v.q, UI.format(v.s)]);
-                    
-                    doc.autoTable({
-                        startY: 160,
-                        margin: { left: 15, right: 15 },
-                        head: [['#', 'PRODUCTO', 'CANTIDAD', 'SUBTOTAL']],
-                        body: pRows,
-                        theme: 'striped',
-                        headStyles: { 
-                            fillColor: naranja, 
-                            textColor: 255, 
-                            fontStyle: 'bold',
-                            fontSize: 8
-                        },
-                        bodyStyles: { fontSize: 8 },
-                        columnStyles: { 
-                            0: { cellWidth: 10, halign: 'center' },
-                            1: { cellWidth: 'auto' },
-                            2: { cellWidth: 25, halign: 'center' },
-                            3: { cellWidth: 30, halign: 'right' }
-                        },
-                        alternateRowStyles: { fillColor: [248, 250, 252] }
+
+                    // ── Calcular datos del período (mismo algoritmo que renderFinance) ──
+                    const ranges = UI._getDateRange(f);
+                    const inRange = ts => {
+                        if(!ts) return true;
+                        const ms = ts.seconds ? ts.seconds*1000 : (ts instanceof Date ? ts.getTime() : Number(ts));
+                        return ranges.some(r => ms >= r.start && ms <= r.end);
+                    };
+
+                    const salesFiltered   = STATE.orders.filter(o => o.status==='pagado' && !o.isExpense && !o.isKitchenTicket && inRange(o.ts));
+                    const oldExpenses     = STATE.orders.filter(o => o.isExpense && inRange(o.ts));
+                    const insumosFiltered = (STATE.insumos||[]).filter(i => inRange(i.fecha));
+                    const gastosFiltered  = (STATE.gastosERP||[]).filter(g => inRange(g.fecha));
+
+                    const ventasBrutas   = salesFiltered.reduce((a,o) => a+(o.total||0), 0);
+                    const efectivo       = salesFiltered.filter(o => o.method==='Efectivo').reduce((a,o) => a+(o.total||0), 0);
+                    const tarjeta        = salesFiltered.filter(o => o.method && o.method!=='Efectivo').reduce((a,o) => a+(o.total||0), 0);
+                    const totalInsumos   = insumosFiltered.reduce((a,i) => a+(i.costo_total||0), 0);
+                    const totalGastosERP = gastosFiltered.reduce((a,g) => a+(g.monto||0), 0);
+                    const totalOldExp    = oldExpenses.reduce((a,e) => a+(e.total||0), 0);
+                    const totalGastos    = totalInsumos + totalGastosERP + totalOldExp;
+                    const gananciaNeta   = ventasBrutas - totalGastos;
+                    const ticketPromedio = salesFiltered.length > 0 ? ventasBrutas / salesFiltered.length : 0;
+                    const fondo          = STATE.cashFund || 0;
+                    const efectivoEnCaja = fondo + efectivo - totalGastos;
+
+                    // Costo promedio ponderado por kilo de carne
+                    const kilosPorTipo = {}, costoTotalPorTipo = {};
+                    insumosFiltered.forEach(i => {
+                        if(!kilosPorTipo[i.tipo]) { kilosPorTipo[i.tipo]=0; costoTotalPorTipo[i.tipo]=0; }
+                        kilosPorTipo[i.tipo]      += (i.kilos_comprados||0);
+                        costoTotalPorTipo[i.tipo] += (i.costo_total||0);
                     });
-                    
-                    // ========== HISTORIAL DE TRANSACCIONES ==========
-                    let yPos = doc.lastAutoTable.finalY + 10;
-                    
-                    // Verificar si necesitamos nueva página
-                    if (yPos > 220) {
-                        doc.addPage();
-                        yPos = 20;
-                    }
-                    
-                    doc.setFontSize(11);
-                    doc.setTextColor(...oscuro);
-                    doc.setFont("helvetica", "bold");
-                    doc.text("HISTORIAL DE TRANSACCIONES", 15, yPos);
-                    
-                    let tRows = STATE.reportSummary.history.map((h, idx) => {
-                        const hora = (h.ts && h.ts.seconds) ? new Date(h.ts.seconds * 1000).toLocaleTimeString('es-MX', {hour: '2-digit', minute: '2-digit'}) : '--:--';
-                        const mesa = isNaN(h.mesa) ? h.mesa : `Mesa ${h.mesa}`;
-                        return [idx + 1, hora, mesa, (h.method ? h.method.toUpperCase() : '') || 'N/A', UI.format(h.total)];
+                    const avgCostoPorKilo = {};
+                    Object.keys(kilosPorTipo).forEach(tipo => {
+                        avgCostoPorKilo[tipo] = kilosPorTipo[tipo] > 0 ? costoTotalPorTipo[tipo]/kilosPorTipo[tipo] : 0;
                     });
-                    
-                    doc.autoTable({
-                        startY: yPos + 5,
-                        margin: { left: 15, right: 15 },
-                        head: [['#', 'HORA', 'REFERENCIA', 'MÉTODO', 'MONTO']],
-                        body: tRows,
-                        theme: 'grid',
-                        headStyles: { 
-                            fillColor: oscuro, 
-                            textColor: 255, 
-                            fontStyle: 'bold',
-                            fontSize: 8
-                        },
-                        bodyStyles: { fontSize: 8 },
-                        columnStyles: { 
-                            0: { cellWidth: 10, halign: 'center' },
-                            1: { cellWidth: 20, halign: 'center' },
-                            2: { cellWidth: 'auto' },
-                            3: { cellWidth: 25, halign: 'center' },
-                            4: { cellWidth: 30, halign: 'right', fontStyle: 'bold' }
-                        }
-                    });
-                    
-                    // ========== GASTOS (si hay) ==========
-                    if (STATE.reportSummary.expenses && STATE.reportSummary.expenses.length > 0) {
-                        yPos = doc.lastAutoTable.finalY + 10;
-                        
-                        if (yPos > 250) {
-                            doc.addPage();
-                            yPos = 20;
-                        }
-                        
-                        doc.setFontSize(11);
-                        doc.setTextColor(...rojo);
-                        doc.setFont("helvetica", "bold");
-                        doc.text("GASTOS OPERATIVOS", 15, yPos);
-                        
-                        let gRows = STATE.reportSummary.expenses.map((e, idx) => {
-                            const hora = (e.ts && e.ts.seconds) ? new Date(e.ts.seconds * 1000).toLocaleTimeString('es-MX', {hour: '2-digit', minute: '2-digit'}) : '--:--';
-                            return [idx + 1, hora, (e.items[0] && e.items[0].n) || 'Gasto', "-" + UI.format(e.total)];
+
+                    // Mapa de items vendidos
+                    const itemMap = {};
+                    salesFiltered.forEach(o => {
+                        (o.items||[]).forEach(i => {
+                            if(!itemMap[i.n]) itemMap[i.n]={q:0,s:0};
+                            itemMap[i.n].q += i.qty;
+                            itemMap[i.n].s += i.qty * i.p;
                         });
-                        
+                    });
+
+                    // Gramos consumidos estimados por tipo de carne
+                    const gramosPorTipo = {};
+                    Object.entries(itemMap).forEach(([nombre, data]) => {
+                        const esc = ESCANDALLO_DEFAULT.find(e => e.producto===nombre);
+                        if(esc) {
+                            if(!gramosPorTipo[esc.tipo]) gramosPorTipo[esc.tipo]=0;
+                            gramosPorTipo[esc.tipo] += esc.gramos * data.q;
+                        }
+                    });
+
+                    // ── Etiqueta de período ──
+                    const periodoLabels = { hoy:'Hoy', sabado:'Sábado', domingo:'Domingo', finde:'Fin de Semana' };
+                    const periodoLabel  = periodoLabels[f] || 'Período';
+                    let rangeDate = '';
+                    if(ranges.length === 1) {
+                        const rd = new Date(ranges[0].start).toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+                        rangeDate = rd.charAt(0).toUpperCase() + rd.slice(1);
+                    } else if(ranges.length === 2) {
+                        const s1 = new Date(ranges[0].start).toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long'});
+                        const s2 = new Date(ranges[1].start).toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+                        rangeDate = s1.charAt(0).toUpperCase()+s1.slice(1) + '   y   ' + s2.charAt(0).toUpperCase()+s2.slice(1);
+                    }
+
+                    // ── Paleta de colores corporativos ──
+                    const C = {
+                        naranja : [249,115,22],
+                        oscuro  : [15,23,42],
+                        gris    : [100,116,139],
+                        verde   : [21,128,61],
+                        rojo    : [239,68,68],
+                        azul    : [59,130,246],
+                        emerald : [16,185,129],
+                    };
+
+                    // ── Barra lateral naranja en cada página ──
+                    const pageChrome = () => {
+                        doc.setFillColor(...C.naranja);
+                        doc.rect(0, 0, 5, 297, 'F');
+                    };
+                    pageChrome();
+
+                    // ========== ENCABEZADO ==========
+                    doc.setFillColor(...C.oscuro);
+                    doc.roundedRect(13, 8, 184, 38, 3, 3, 'F');
+
+                    doc.setFont("helvetica","bold");
+                    doc.setTextColor(255,255,255);
+                    doc.setFontSize(21);
+                    doc.text("LA CABAÑA", 21, 24);
+                    doc.setFontSize(8);
+                    doc.setTextColor(180,180,180);
+                    doc.text("DE LA PROGRESO — MENUDERÍA", 21, 31);
+
+                    doc.setFontSize(7);
+                    doc.setTextColor(120,120,120);
+                    doc.text("Benito Juárez 20, Progreso, Mexicali, B.C.", 118, 22);
+                    doc.text("lacabana.pos@gmail.com", 118, 29);
+
+                    doc.setFillColor(...C.naranja);
+                    doc.roundedRect(118, 33, 75, 9, 2, 2, 'F');
+                    doc.setFont("helvetica","bold");
+                    doc.setFontSize(7);
+                    doc.setTextColor(255,255,255);
+                    doc.text("REPORTE ERP COMPLETO v7.0", 155.5, 39.5, {align:'center'});
+
+                    // Título + período
+                    doc.setTextColor(...C.oscuro);
+                    doc.setFontSize(17);
+                    doc.setFont("helvetica","bold");
+                    doc.text(`CORTE DE CAJA — ${periodoLabel.toUpperCase()}`, 13, 57);
+                    doc.setFontSize(8.5);
+                    doc.setTextColor(...C.gris);
+                    doc.setFont("helvetica","normal");
+                    doc.text(rangeDate, 13, 64);
+                    doc.setFontSize(8);
+                    doc.text(`Folio: #${d.getTime().toString().slice(-8)}`, 130, 57);
+                    doc.text(`Generado: ${d.toLocaleString('es-MX')}`, 130, 64);
+
+                    doc.setDrawColor(...C.naranja);
+                    doc.setLineWidth(0.6);
+                    doc.line(13, 68, 197, 68);
+
+                    // ========== KPIs FINANCIEROS (2 filas) ==========
+                    doc.setFontSize(10);
+                    doc.setTextColor(...C.oscuro);
+                    doc.setFont("helvetica","bold");
+                    doc.text("RESUMEN FINANCIERO", 13, 75);
+
+                    const kpiCard = (x, y, w, h, bg, label, val, valColor) => {
+                        doc.setFillColor(...bg);
+                        doc.roundedRect(x, y, w, h, 2, 2, 'F');
+                        doc.setFontSize(6);
+                        doc.setTextColor(...C.gris);
+                        doc.setFont("helvetica","bold");
+                        doc.text(label, x+3, y+7);
+                        doc.setFontSize(10.5);
+                        doc.setTextColor(...valColor);
+                        doc.setFont("helvetica","bold");
+                        doc.text(val, x+3, y+17);
+                    };
+
+                    // Fila 1: Ventas Brutas, Efectivo, Tarjeta, Ticket Prom.
+                    const row1Y = 79, kH = 22;
+                    kpiCard(13,  row1Y, 60, kH, [241,245,249], "VENTAS BRUTAS",    UI.format(ventasBrutas),   C.naranja);
+                    kpiCard(77,  row1Y, 39, kH, [220,252,231], "EFECTIVO",         UI.format(efectivo),       C.verde);
+                    kpiCard(120, row1Y, 39, kH, [219,234,254], "TARJETA",          UI.format(tarjeta),        C.azul);
+                    kpiCard(163, row1Y, 34, kH, [241,245,249], "TICKET PROM.",     UI.format(ticketPromedio), C.gris);
+
+                    // Fila 2: Costo Insumos, Gastos ERP, Otros Gastos, Ganancia Neta
+                    const row2Y = row1Y + kH + 3;
+                    kpiCard(13,  row2Y, 45, kH, [219,234,254], "COSTO INSUMOS",    UI.format(totalInsumos),   C.azul);
+                    kpiCard(62,  row2Y, 45, kH, [254,226,226], "GASTOS OPERATIVOS",UI.format(totalGastosERP), C.rojo);
+                    kpiCard(111, row2Y, 45, kH, [254,226,226], "OTROS GASTOS",     UI.format(totalOldExp),    C.rojo);
+                    const ganBg    = gananciaNeta >= 0 ? [209,250,229] : [254,226,226];
+                    const ganColor = gananciaNeta >= 0 ? C.emerald : C.rojo;
+                    kpiCard(160, row2Y, 37, kH, ganBg, "GANANCIA NETA REAL",       UI.format(gananciaNeta),   ganColor);
+
+                    // Barra destacada: Efectivo Total en Caja
+                    const eciY = row2Y + kH + 4;
+                    doc.setFillColor(...C.oscuro);
+                    doc.roundedRect(13, eciY, 184, 15, 2, 2, 'F');
+                    doc.setFontSize(8);
+                    doc.setTextColor(160,160,160);
+                    doc.setFont("helvetica","normal");
+                    doc.text("EFECTIVO TOTAL EN CAJA  (fondo inicial + ventas en efectivo − gastos)", 17, eciY+9.5);
+                    doc.setFontSize(13);
+                    doc.setTextColor(255,255,255);
+                    doc.setFont("helvetica","bold");
+                    doc.text(UI.format(efectivoEnCaja), 197, eciY+10, {align:'right'});
+
+                    doc.setDrawColor(220,220,220);
+                    doc.setLineWidth(0.3);
+                    doc.line(13, eciY+21, 197, eciY+21);
+
+                    let yPos = eciY + 27;
+
+                    // ========== INVENTARIO ESTIMADO DE CARNE ==========
+                    const tiposInv = Object.keys(kilosPorTipo);
+                    if(tiposInv.length > 0) {
+                        if(yPos > 240) { doc.addPage(); pageChrome(); yPos = 15; }
+                        doc.setFontSize(9.5);
+                        doc.setTextColor(...C.oscuro);
+                        doc.setFont("helvetica","bold");
+                        doc.text("INVENTARIO ESTIMADO DE CARNE", 13, yPos);
+
+                        const invRows = tiposInv.map(tipo => {
+                            const comprados  = kilosPorTipo[tipo];
+                            const consumidos = (gramosPorTipo[tipo]||0)/1000;
+                            const restantes  = Math.max(0, comprados - consumidos);
+                            const pct        = comprados>0 ? (restantes/comprados*100).toFixed(0)+'%' : '0%';
+                            return [tipo, comprados.toFixed(2)+' kg', consumidos.toFixed(2)+' kg', restantes.toFixed(2)+' kg', pct, UI.format(avgCostoPorKilo[tipo]||0)+'/kg'];
+                        });
+
                         doc.autoTable({
-                            startY: yPos + 5,
-                            margin: { left: 15, right: 15 },
-                            head: [['#', 'HORA', 'DESCRIPCIÓN', 'MONTO']],
-                            body: gRows,
+                            startY: yPos+4,
+                            margin: {left:13, right:13},
+                            head: [['TIPO DE CARNE','COMPRADO','CONSUMIDO (est.)','RESTANTE','% STOCK','COSTO/KG']],
+                            body: invRows,
                             theme: 'grid',
-                            headStyles: { 
-                                fillColor: rojo, 
-                                textColor: 255, 
-                                fontStyle: 'bold',
-                                fontSize: 8
+                            headStyles: { fillColor:C.azul, textColor:255, fontStyle:'bold', fontSize:7.5 },
+                            bodyStyles: { fontSize:8.5 },
+                            columnStyles: {
+                                0: {fontStyle:'bold'},
+                                1: {halign:'right'},
+                                2: {halign:'right'},
+                                3: {halign:'right', fontStyle:'bold'},
+                                4: {halign:'center'},
+                                5: {halign:'right'}
+                            }
+                        });
+                        yPos = doc.lastAutoTable.finalY + 8;
+                    }
+
+                    // ========== MIX DE VENTAS + MARGEN POR PLATO ==========
+                    const mixData = Object.entries(itemMap).sort((a,b) => b[1].s - a[1].s);
+                    if(mixData.length > 0) {
+                        if(yPos > 220) { doc.addPage(); pageChrome(); yPos = 15; }
+                        doc.setFontSize(9.5);
+                        doc.setTextColor(...C.oscuro);
+                        doc.setFont("helvetica","bold");
+                        doc.text("MIX DE VENTAS + MARGEN POR PLATO", 13, yPos);
+
+                        const mixRows = mixData.map(([nombre, data], idx) => {
+                            const esc = ESCANDALLO_DEFAULT.find(e => e.producto===nombre);
+                            let ganStr = 'N/D';
+                            if(esc && avgCostoPorKilo[esc.tipo]) {
+                                const costo = avgCostoPorKilo[esc.tipo]*(esc.gramos/1000);
+                                ganStr = UI.format((data.s/data.q) - costo);
+                            }
+                            return [idx+1, nombre.toUpperCase(), data.q, UI.format(data.s), UI.format(data.q>0 ? data.s/data.q : 0), ganStr];
+                        });
+
+                        doc.autoTable({
+                            startY: yPos+4,
+                            margin: {left:13, right:13},
+                            head: [['#','PRODUCTO','CANT.','VENTA TOTAL','PRECIO PROM.','GANANCIA/U']],
+                            body: mixRows,
+                            foot: [['','TOTALES', mixData.reduce((a,[,dt])=>a+dt.q,0), UI.format(ventasBrutas),'','']],
+                            theme: 'striped',
+                            headStyles: { fillColor:C.naranja, textColor:255, fontStyle:'bold', fontSize:7.5 },
+                            footStyles: { fillColor:[254,243,199], textColor:C.naranja, fontStyle:'bold', fontSize:8 },
+                            bodyStyles: { fontSize:8.5 },
+                            columnStyles: {
+                                0: {cellWidth:8,  halign:'center'},
+                                1: {fontStyle:'bold'},
+                                2: {cellWidth:15, halign:'center'},
+                                3: {cellWidth:27, halign:'right', fontStyle:'bold'},
+                                4: {cellWidth:27, halign:'right'},
+                                5: {cellWidth:27, halign:'right', fontStyle:'bold'}
                             },
-                            bodyStyles: { fontSize: 8, textColor: rojo },
-                            columnStyles: { 
-                                0: { cellWidth: 10, halign: 'center' },
-                                1: { cellWidth: 20, halign: 'center' },
-                                2: { cellWidth: 'auto' },
-                                3: { cellWidth: 30, halign: 'right', fontStyle: 'bold' }
+                            alternateRowStyles: {fillColor:[248,250,252]}
+                        });
+                        yPos = doc.lastAutoTable.finalY + 8;
+                    }
+
+                    // ========== INSUMOS DEL PERÍODO ==========
+                    if(insumosFiltered.length > 0) {
+                        if(yPos > 220) { doc.addPage(); pageChrome(); yPos = 15; }
+                        doc.setFontSize(9.5);
+                        doc.setTextColor(...C.azul);
+                        doc.setFont("helvetica","bold");
+                        doc.text("INSUMOS DEL PERÍODO", 13, yPos);
+
+                        const insRows = [...insumosFiltered].sort((a,b) =>
+                            (b.fecha&&b.fecha.seconds?b.fecha.seconds:0)-(a.fecha&&a.fecha.seconds?a.fecha.seconds:0)
+                        ).map((i, idx) => {
+                            const hora = i.fecha&&i.fecha.seconds ? new Date(i.fecha.seconds*1000).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}) : '--:--';
+                            return [idx+1, i.tipo, (i.kilos_comprados||0).toFixed(2)+' kg', UI.format(i.costo_total), UI.format(i.costo_por_kilo)+'/kg', hora];
+                        });
+
+                        doc.autoTable({
+                            startY: yPos+4,
+                            margin: {left:13, right:13},
+                            head: [['#','TIPO DE CARNE','KILOS','COSTO TOTAL','$/KG','HORA']],
+                            body: insRows,
+                            foot: [['','TOTAL',
+                                insumosFiltered.reduce((a,i)=>a+(i.kilos_comprados||0),0).toFixed(2)+' kg',
+                                UI.format(totalInsumos),'','']],
+                            theme: 'grid',
+                            headStyles: { fillColor:C.azul, textColor:255, fontStyle:'bold', fontSize:7.5 },
+                            footStyles: { fillColor:[219,234,254], textColor:C.azul, fontStyle:'bold', fontSize:8 },
+                            bodyStyles: { fontSize:8.5 },
+                            columnStyles: {
+                                0: {cellWidth:8,  halign:'center'},
+                                1: {fontStyle:'bold'},
+                                2: {halign:'right'},
+                                3: {halign:'right', fontStyle:'bold'},
+                                4: {halign:'right'},
+                                5: {cellWidth:22, halign:'center'}
+                            }
+                        });
+                        yPos = doc.lastAutoTable.finalY + 8;
+                    }
+
+                    // ========== GASTOS OPERATIVOS ==========
+                    const todosLosGastos = [];
+                    gastosFiltered.slice().sort((a,b)=>(b.fecha&&b.fecha.seconds?b.fecha.seconds:0)-(a.fecha&&a.fecha.seconds?a.fecha.seconds:0)).forEach((g,idx) => {
+                        const hora = g.fecha&&g.fecha.seconds ? new Date(g.fecha.seconds*1000).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}) : '--:--';
+                        todosLosGastos.push([todosLosGastos.length+1, g.concepto, 'ERP', UI.format(g.monto), hora]);
+                    });
+                    oldExpenses.slice().sort((a,b)=>(b.ts&&b.ts.seconds?b.ts.seconds:0)-(a.ts&&a.ts.seconds?a.ts.seconds:0)).forEach((e) => {
+                        const hora = e.ts&&e.ts.seconds ? new Date(e.ts.seconds*1000).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}) : '--:--';
+                        todosLosGastos.push([todosLosGastos.length+1, (e.items&&e.items[0]&&e.items[0].n)||'Gasto', 'Caja', UI.format(e.total), hora]);
+                    });
+                    if(todosLosGastos.length > 0) {
+                        if(yPos > 220) { doc.addPage(); pageChrome(); yPos = 15; }
+                        doc.setFontSize(9.5);
+                        doc.setTextColor(...C.rojo);
+                        doc.setFont("helvetica","bold");
+                        doc.text("GASTOS OPERATIVOS", 13, yPos);
+
+                        doc.autoTable({
+                            startY: yPos+4,
+                            margin: {left:13, right:13},
+                            head: [['#','CONCEPTO','TIPO','MONTO','HORA']],
+                            body: todosLosGastos,
+                            foot: [['','','TOTAL GASTOS', UI.format(totalGastos),'']],
+                            theme: 'grid',
+                            headStyles: { fillColor:C.rojo, textColor:255, fontStyle:'bold', fontSize:7.5 },
+                            footStyles: { fillColor:[254,226,226], textColor:C.rojo, fontStyle:'bold', fontSize:8 },
+                            bodyStyles: { fontSize:8.5, textColor:C.rojo },
+                            columnStyles: {
+                                0: {cellWidth:8,  halign:'center'},
+                                1: {fontStyle:'bold'},
+                                2: {cellWidth:18, halign:'center'},
+                                3: {cellWidth:30, halign:'right', fontStyle:'bold'},
+                                4: {cellWidth:20, halign:'center'}
+                            }
+                        });
+                        yPos = doc.lastAutoTable.finalY + 8;
+                    }
+
+                    // ========== HISTORIAL DE TRANSACCIONES ==========
+                    const allTrans = [...salesFiltered, ...oldExpenses].sort((a,b) =>
+                        (b.ts&&b.ts.seconds?b.ts.seconds:0)-(a.ts&&a.ts.seconds?a.ts.seconds:0)
+                    );
+                    if(allTrans.length > 0) {
+                        if(yPos > 210) { doc.addPage(); pageChrome(); yPos = 15; }
+                        doc.setFontSize(9.5);
+                        doc.setTextColor(...C.oscuro);
+                        doc.setFont("helvetica","bold");
+                        doc.text(`HISTORIAL DE TRANSACCIONES  (${allTrans.length} movimientos)`, 13, yPos);
+
+                        const tRows = allTrans.map((h, idx) => {
+                            const hora  = h.ts&&h.ts.seconds ? new Date(h.ts.seconds*1000).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}) : '--:--';
+                            const ref   = isNaN(h.mesa) ? h.mesa : `Mesa ${h.mesa}`;
+                            const tipo  = h.isExpense ? 'GASTO' : (h.method||'N/A').toUpperCase();
+                            const monto = (h.isExpense ? '-' : '') + UI.format(h.total);
+                            return [idx+1, hora, ref, tipo, monto];
+                        });
+
+                        doc.autoTable({
+                            startY: yPos+4,
+                            margin: {left:13, right:13},
+                            head: [['#','HORA','REFERENCIA','MÉTODO','MONTO']],
+                            body: tRows,
+                            foot: [['','','','TOTAL VENTAS', UI.format(ventasBrutas)]],
+                            theme: 'grid',
+                            headStyles: { fillColor:C.oscuro, textColor:255, fontStyle:'bold', fontSize:7.5 },
+                            footStyles: { fillColor:[254,243,199], textColor:C.naranja, fontStyle:'bold', fontSize:8 },
+                            bodyStyles: { fontSize:8 },
+                            columnStyles: {
+                                0: {cellWidth:8,  halign:'center'},
+                                1: {cellWidth:18, halign:'center'},
+                                2: {fontStyle:'bold'},
+                                3: {cellWidth:22, halign:'center'},
+                                4: {cellWidth:28, halign:'right', fontStyle:'bold'}
                             }
                         });
                     }
-                    
-                    // ========== PIE DE PÁGINA ==========
+
+                    // ========== PIE DE PÁGINA EN TODAS LAS PÁGINAS ==========
                     const pageCount = doc.internal.getNumberOfPages();
-                    for (let i = 1; i <= pageCount; i++) {
+                    for(let i=1; i<=pageCount; i++) {
                         doc.setPage(i);
-                        
+                        // Barra lateral naranja
+                        doc.setFillColor(...C.naranja);
+                        doc.rect(0, 0, 5, 297, 'F');
                         // Línea de pie
-                        doc.setDrawColor(200, 200, 200);
+                        doc.setDrawColor(200,200,200);
                         doc.setLineWidth(0.3);
-                        doc.line(15, 280, 195, 280);
-                        
+                        doc.line(13, 280, 197, 280);
                         // Texto de pie
-                        doc.setFontSize(8);
-                        doc.setTextColor(...gris);
-                        doc.setFont("helvetica", "normal");
-                        doc.text("La Cabaña de la Progreso - Sistema POS", 15, 287);
-                        doc.text(`Página ${i} de ${pageCount}`, 175, 287);
-                        doc.text(`Generado: ${d.toLocaleString('es-MX')}`, 85, 287);
+                        doc.setFontSize(7.5);
+                        doc.setTextColor(...C.gris);
+                        doc.setFont("helvetica","normal");
+                        doc.text("La Cabaña de la Progreso — Sistema ERP POS v7.0", 13, 287);
+                        doc.text(`Página ${i} de ${pageCount}`, 197, 287, {align:'right'});
+                        doc.text(`Corte: ${periodoLabel}  |  ${d.toLocaleString('es-MX')}`, 105, 287, {align:'center'});
                     }
-                    
-                    doc.save(`Corte_LaCabana_${d.toISOString().slice(0,10)}.pdf`);
-                    UI.toast("PDF Generado exitosamente", 'success');
-                } catch (e) { 
-                    console.error(e); 
-                    UI.toast("Error al generar PDF", 'error'); 
+
+                    // ── Guardar archivo ──
+                    const rangeStr = ranges.length>0 ? new Date(ranges[0].start).toISOString().slice(0,10) : d.toISOString().slice(0,10);
+                    doc.save(`Corte_LaCabana_${periodoLabel}_${rangeStr}.pdf`);
+                    UI.toast(`PDF "${periodoLabel}" generado exitosamente`, 'success');
+                } catch(e) {
+                    console.error(e);
+                    UI.toast("Error al generar PDF: " + e.message, 'error');
                 }
             }
         };
-
         window.LOGIC = {
             cartAdd: (n, p) => { 
                 if(window.navigator.vibrate) window.navigator.vibrate(15);
