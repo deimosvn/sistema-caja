@@ -8,16 +8,59 @@
     <!-- PWA Meta Tags -->
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#F97316">
+
+    <!-- iOS PWA: Compatibilidad con TODOS los iPhone/iPad (iOS 7 – iOS 17+) -->
+    <!-- Habilitar modo app en Safari -->
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-touch-fullscreen" content="yes">
+    <!-- Barra de estado: black-translucent usa el theme_color y permite full-screen real -->
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="La Cabaña">
-    <link rel="apple-touch-icon" href="./icons/icon-192x192.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192x192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="./icons/icon-512x512.png">
+
+    <!-- apple-touch-icon: iOS usa el más cercano al tamaño de pantalla.
+         Declarar TODOS los tamaños clave asegura compatibilidad con iPhone 4 (iOS 7)
+         hasta iPhone 15 Pro Max (iOS 17). Sin estos tags iOS aplica screenshot genérico. -->
+    <!-- iPhone 6 Plus, 7 Plus, 8 Plus, X, XS, 11 Pro, 12 mini, 13 mini (180×180 @3x) -->
+    <link rel="apple-touch-icon" sizes="180x180" href="./icons/icon-180x180.png">
+    <!-- iPhone 6, 7, 8, SE 2ª/3ª gen, iPod touch 7ª gen (120×120 @2x) -->
+    <link rel="apple-touch-icon" sizes="120x120" href="./icons/icon-120x120.png">
+    <!-- iPad Pro 11"/12.9" (167×167 @2x) -->
+    <link rel="apple-touch-icon" sizes="167x167" href="./icons/icon-167x167.png">
+    <!-- iPad Air, iPad mini 6ª gen, iPad 9ª gen (152×152 @2x) -->
+    <link rel="apple-touch-icon" sizes="152x152" href="./icons/icon-152x152.png">
+    <!-- iPad (no-retina legacy) (76×76 @1x) -->
+    <link rel="apple-touch-icon" sizes="76x76" href="./icons/icon-76x76.png">
+    <!-- iPhone 4S retina, iPod Touch 5ª gen (114×114 @2x) -->
+    <link rel="apple-touch-icon" sizes="114x114" href="./icons/icon-114x114.png">
+    <!-- iPhone 3G/3GS, iPod Touch 1–4 (57×57 @1x) — iOS más antiguo compatible -->
+    <link rel="apple-touch-icon" sizes="57x57" href="./icons/icon-57x57.png">
+    <!-- Fallback genérico (sin sizes) para navegadores y iOS antiguos -->
+    <link rel="apple-touch-icon" href="./icons/icon-180x180.png">
+
+    <!-- Splash screens iOS (portrait) – evitan pantalla blanca al abrir la PWA.
+         iOS elige la imagen cuyas dimensiones más se acercan al viewport de la pantalla. -->
+    <!-- iPhone 15 Pro Max / 14 Plus (430×932) -->
+    <link rel="apple-touch-startup-image" media="screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="./icons/splash-1290x2796.png">
+    <!-- iPhone 15 / 14 / 13 (390×844) -->
+    <link rel="apple-touch-startup-image" media="screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="./icons/splash-1170x2532.png">
+    <!-- iPhone SE 3ª gen / 8 / 7 / 6s (375×667) -->
+    <link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="./icons/splash-750x1334.png">
+    <!-- iPad Pro 12.9" (1024×1366) -->
+    <link rel="apple-touch-startup-image" media="screen and (device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="./icons/splash-2048x2732.png">
+
+    <!-- Android / Chrome PWA -->
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="La Cabaña POS">
+    <meta name="application-name" content="La Cabaña">
+
+    <!-- Windows tile (acceso directo en IE/Edge legacy) -->
     <meta name="msapplication-TileImage" content="./icons/icon-144x144.png">
     <meta name="msapplication-TileColor" content="#F97316">
+    <meta name="msapplication-config" content="none">
+
+    <!-- Favicons estándar para navegadores de escritorio -->
+    <link rel="icon" type="image/png" sizes="32x32" href="./icons/icon-96x96.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="./icons/icon-512x512.png">
 
     <!-- 1. DEPENDENCIAS EXTERNAS -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -729,12 +772,39 @@
                 <!-- Panel 1: Mesas Activas -->
                 <div id="p-active" class="absolute inset-0 overflow-y-auto p-3 md:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4 content-start pb-32 hide-scroll"></div>
 
-                <!-- Panel 2: Reporte Financiero Completo (Optimizado Mobile) -->
-                <div id="p-report" class="hidden absolute inset-0 overflow-y-auto p-3 md:p-6 bg-gradient-to-b from-slate-50 to-slate-100 pb-32 hide-scroll">
-                    <div class="max-w-7xl mx-auto space-y-4 md:space-y-6">
-                        
-                        <!-- SECCION FONDO CAJA (Compacto Mobile) -->
-                        <div class="bg-white rounded-2xl p-3 md:p-5 shadow-sm border border-slate-200 flex items-center justify-between gap-3 animate-in">
+                <!-- Panel 2: Reporte Financiero ERP -->
+                <div id="p-report" class="hidden absolute inset-0 overflow-y-auto p-3 md:p-5 bg-gradient-to-b from-slate-50 to-slate-100 pb-32 hide-scroll">
+                    <div class="max-w-7xl mx-auto space-y-4">
+
+                        <!-- SELECTOR DE TURNO/FECHA -->
+                        <div class="bg-white rounded-2xl p-3 md:p-4 shadow-sm border border-slate-200">
+                            <p class="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-2.5">Vista de período</p>
+                            <div class="flex gap-2 overflow-x-auto hide-scroll pb-1">
+                                <button onclick="UI.setFiltroFinanzas('hoy')" id="filtro-hoy" class="filtro-btn whitespace-nowrap px-4 py-2.5 rounded-xl bg-orange-500 text-white text-xs font-bold transition-all tap-effect shadow-sm">Hoy</button>
+                                <button onclick="UI.setFiltroFinanzas('sabado')" id="filtro-sabado" class="filtro-btn whitespace-nowrap px-4 py-2.5 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold transition-all tap-effect hover:bg-slate-200">Sábado</button>
+                                <button onclick="UI.setFiltroFinanzas('domingo')" id="filtro-domingo" class="filtro-btn whitespace-nowrap px-4 py-2.5 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold transition-all tap-effect hover:bg-slate-200">Domingo</button>
+                                <button onclick="UI.setFiltroFinanzas('finde')" id="filtro-finde" class="filtro-btn whitespace-nowrap px-4 py-2.5 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold transition-all tap-effect hover:bg-slate-200">Fin de Semana</button>
+                            </div>
+                        </div>
+
+                        <!-- ACCIONES ERP -->
+                        <div class="grid grid-cols-3 gap-3">
+                            <button onclick="UI.openModalInsumo()" class="bg-white border-2 border-dashed border-blue-200 hover:border-blue-400 hover:bg-blue-50 text-blue-600 rounded-2xl p-3 md:p-4 flex flex-col items-center gap-1.5 tap-effect transition-all shadow-sm">
+                                <i class="fa-solid fa-scale-balanced text-xl md:text-2xl"></i>
+                                <span class="text-[9px] md:text-[10px] font-black uppercase tracking-wide text-center">Comprar Insumo</span>
+                            </button>
+                            <button onclick="UI.openModalGastoERP()" class="bg-white border-2 border-dashed border-red-200 hover:border-red-400 hover:bg-red-50 text-red-500 rounded-2xl p-3 md:p-4 flex flex-col items-center gap-1.5 tap-effect transition-all shadow-sm">
+                                <i class="fa-solid fa-receipt text-xl md:text-2xl"></i>
+                                <span class="text-[9px] md:text-[10px] font-black uppercase tracking-wide text-center">Agregar Gasto</span>
+                            </button>
+                            <button onclick="LOGIC.erp.cerrarTurno()" class="bg-gradient-to-br from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 text-white rounded-2xl p-3 md:p-4 flex flex-col items-center gap-1.5 tap-effect transition-all shadow-lg">
+                                <i class="fa-solid fa-flag-checkered text-xl md:text-2xl"></i>
+                                <span class="text-[9px] md:text-[10px] font-black uppercase tracking-wide text-center">Cerrar Turno</span>
+                            </button>
+                        </div>
+
+                        <!-- FONDO CAJA -->
+                        <div class="bg-white rounded-2xl p-3 md:p-5 shadow-sm border border-slate-200 flex items-center justify-between gap-3">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-indigo-400 to-violet-500 text-white rounded-xl flex items-center justify-center text-lg shrink-0 shadow-lg shadow-indigo-500/20"><i class="fa-solid fa-vault"></i></div>
                                 <div>
@@ -748,68 +818,147 @@
                             </div>
                         </div>
 
-                        <!-- KPIs CARDS (Optimizados Mobile) -->
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                        <!-- INVENTARIO ESTIMADO -->
+                        <div class="bg-white rounded-2xl p-3 md:p-4 shadow-sm border border-slate-200">
+                            <h3 class="font-bold text-slate-800 flex gap-2 items-center text-sm mb-3">
+                                <i class="fa-solid fa-warehouse text-orange-500"></i> Inventario Estimado
+                                <span class="text-[9px] font-medium text-slate-400 ml-1">vs. insumos comprados</span>
+                            </h3>
+                            <div id="rp-inventario" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <p class="col-span-2 text-xs text-slate-400 text-center py-3">Sin datos de insumos para este período</p>
+                            </div>
+                        </div>
+
+                        <!-- KPIs FINANCIEROS -->
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+                            <!-- Ventas Brutas -->
                             <div class="col-span-2 md:col-span-1 relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 p-4 md:p-6 text-white shadow-xl">
                                 <i class="fa-solid fa-coins absolute -right-4 -bottom-4 text-[80px] md:text-[100px] opacity-10 rotate-12 text-white"></i>
-                                <p class="text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Ventas Hoy</p>
+                                <p class="text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Ventas Brutas</p>
                                 <p id="rp-tot" class="font-display font-black text-3xl md:text-4xl">$0.00</p>
                             </div>
+                            <!-- Efectivo -->
                             <div class="rounded-2xl bg-white border border-slate-200 p-4 md:p-6 relative shadow-sm">
                                 <div class="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-green-50 text-green-600 flex items-center justify-center absolute top-4 md:top-6 right-4 md:right-6 text-sm md:text-base"><i class="fa-solid fa-money-bill-wave"></i></div>
                                 <p class="text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Efectivo</p>
                                 <p id="rp-cash" class="font-display font-black text-2xl md:text-3xl text-slate-800">$0.00</p>
                             </div>
+                            <!-- Tarjeta -->
                             <div class="rounded-2xl bg-white border border-slate-200 p-4 md:p-6 relative shadow-sm">
                                 <div class="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center absolute top-4 md:top-6 right-4 md:right-6 text-sm md:text-base"><i class="fa-regular fa-credit-card"></i></div>
                                 <p class="text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Tarjeta</p>
                                 <p id="rp-card" class="font-display font-black text-2xl md:text-3xl text-slate-800">$0.00</p>
                             </div>
+                            <!-- Costo Insumos -->
+                            <div class="rounded-2xl bg-blue-50 border border-blue-200 p-4 md:p-6 relative shadow-sm">
+                                <div class="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center absolute top-4 md:top-6 right-4 md:right-6 text-sm md:text-base"><i class="fa-solid fa-scale-balanced"></i></div>
+                                <p class="text-[10px] md:text-xs font-bold uppercase tracking-widest text-blue-400 mb-1">Costo Insumos</p>
+                                <p id="rp-insumos-total" class="font-display font-black text-2xl md:text-3xl text-blue-600">$0.00</p>
+                            </div>
+                            <!-- Total Gastos -->
                             <div class="rounded-2xl bg-red-50 border border-red-200 p-4 md:p-6 relative shadow-sm">
                                 <div class="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-red-100 text-red-600 flex items-center justify-center absolute top-4 md:top-6 right-4 md:right-6 text-sm md:text-base"><i class="fa-solid fa-arrow-trend-down"></i></div>
-                                <p class="text-[10px] md:text-xs font-bold uppercase tracking-widest text-red-400 mb-1">Gastos</p>
+                                <p class="text-[10px] md:text-xs font-bold uppercase tracking-widest text-red-400 mb-1">Gastos Totales</p>
                                 <p id="rp-gastos" class="font-display font-black text-2xl md:text-3xl text-red-600">$0.00</p>
+                            </div>
+                            <!-- GANANCIA NETA - Destacada -->
+                            <div class="col-span-2 md:col-span-1 relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 p-4 md:p-6 text-white shadow-xl shadow-green-500/30">
+                                <i class="fa-solid fa-chart-line absolute -right-4 -bottom-4 text-[80px] opacity-10 text-white rotate-12"></i>
+                                <p class="text-[10px] md:text-xs font-bold uppercase tracking-widest text-green-100 mb-1">Ganancia Neta Real</p>
+                                <p id="rp-ganancia-neta" class="font-display font-black text-3xl md:text-4xl drop-shadow">$0.00</p>
+                                <p class="text-[9px] text-green-200 mt-1">Ventas − Insumos − Gastos</p>
                             </div>
                         </div>
 
-                        <!-- Grids de Datos (Optimizado Mobile) -->
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-                             <!-- Productos List -->
-                             <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm flex flex-col h-[350px] md:h-[450px]">
-                                <div class="px-4 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-                                    <h3 class="font-bold text-slate-800 flex gap-2 items-center text-sm"><i class="fa-solid fa-chart-simple text-orange-500"></i> Mix Ventas</h3>
-                                </div>
-                                <div class="flex-1 overflow-auto hide-scroll">
-                                    <table class="w-full text-left text-sm">
-                                        <thead class="bg-white text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-wider sticky top-0 z-10 border-b border-slate-100 shadow-sm">
-                                            <tr><th class="px-3 md:px-6 py-2 md:py-3">Item</th><th class="px-3 md:px-6 py-2 md:py-3 text-center">#</th><th class="px-3 md:px-6 py-2 md:py-3 text-right">$</th></tr>
-                                        </thead>
-                                        <tbody id="rp-rows" class="divide-y divide-slate-100 text-slate-600 bg-white"></tbody>
-                                    </table>
-                                </div>
-                             </div>
+                        <!-- MIX DE VENTAS + MARGEN POR PLATO -->
+                        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                            <div class="px-4 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                                <h3 class="font-bold text-slate-800 flex gap-2 items-center text-sm"><i class="fa-solid fa-chart-simple text-orange-500"></i> Mix Ventas + Margen</h3>
+                                <span class="text-[9px] text-slate-400 font-medium">Gan/u = precio − costo carne</span>
+                            </div>
+                            <div class="overflow-auto hide-scroll max-h-[280px]">
+                                <table class="w-full text-left text-sm">
+                                    <thead class="bg-white text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-wider sticky top-0 z-10 border-b border-slate-100 shadow-sm">
+                                        <tr>
+                                            <th class="px-3 md:px-4 py-2 md:py-3">Item</th>
+                                            <th class="px-3 md:px-4 py-2 md:py-3 text-center">#</th>
+                                            <th class="px-3 md:px-4 py-2 md:py-3 text-right">Venta</th>
+                                            <th class="px-3 md:px-4 py-2 md:py-3 text-right">Gan/u</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="rp-rows" class="divide-y divide-slate-100 text-slate-600 bg-white"></tbody>
+                                </table>
+                            </div>
+                        </div>
 
-                             <!-- Transacciones y Descarga PDF -->
-                             <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm flex flex-col h-[350px] md:h-[450px]">
-                                <div class="px-3 md:px-4 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center gap-2">
-                                    <h3 class="font-bold text-slate-800 flex gap-2 items-center text-sm"><i class="fa-solid fa-list-ul text-blue-500"></i> Historial</h3>
-                                    <button onclick="UI.generatePDF()" class="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white px-3 py-1.5 rounded-lg text-[10px] md:text-xs font-bold transition-all shadow-lg shadow-orange-500/20 flex items-center justify-center gap-1.5 tap-effect">
-                                        <i class="fa-solid fa-file-pdf"></i> <span class="hidden md:inline">Reporte</span> PDF
-                                    </button>
-                                </div>
-                                <div class="flex-1 overflow-auto hide-scroll">
-                                     <table class="w-full text-left text-sm">
-                                        <thead class="bg-white text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-wider sticky top-0 z-10 border-b border-slate-100 shadow-sm">
-                                            <tr><th class="px-3 py-2 md:py-3">Detalle</th><th class="px-3 py-2 md:py-3 text-right">Monto</th><th class="px-3 py-2 md:py-3 text-center">Ctrl</th></tr>
-                                        </thead>
-                                        <tbody id="rp-trans" class="divide-y divide-slate-100 text-slate-600 bg-white"></tbody>
-                                    </table>
-                                </div>
-                             </div>
+                        <!-- INSUMOS REGISTRADOS -->
+                        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                            <div class="px-4 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center gap-2">
+                                <h3 class="font-bold text-slate-800 flex gap-2 items-center text-sm"><i class="fa-solid fa-scale-balanced text-blue-500"></i> Insumos del Período</h3>
+                                <button onclick="UI.openModalInsumo()" class="text-[10px] bg-blue-50 text-blue-600 border border-blue-200 font-bold px-3 py-1.5 rounded-lg tap-effect hover:bg-blue-100 transition-colors flex items-center gap-1">
+                                    <i class="fa-solid fa-plus"></i> Agregar
+                                </button>
+                            </div>
+                            <div class="overflow-auto hide-scroll max-h-[220px]">
+                                <table class="w-full text-left text-sm">
+                                    <thead class="bg-white text-[9px] font-black text-slate-400 uppercase tracking-wider sticky top-0 z-10 border-b border-slate-100">
+                                        <tr>
+                                            <th class="px-4 py-2">Tipo</th>
+                                            <th class="px-4 py-2 text-center">Kilos</th>
+                                            <th class="px-4 py-2 text-right">Costo</th>
+                                            <th class="px-4 py-2 text-right">$/kg</th>
+                                            <th class="px-4 py-2 text-center">Hora</th>
+                                            <th class="px-4 py-2"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="rp-insumos-rows" class="divide-y divide-slate-100 text-slate-600 bg-white"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- GASTOS OPERATIVOS ERP -->
+                        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                            <div class="px-4 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center gap-2">
+                                <h3 class="font-bold text-slate-800 flex gap-2 items-center text-sm"><i class="fa-solid fa-receipt text-red-500"></i> Gastos Operativos</h3>
+                                <button onclick="UI.openModalGastoERP()" class="text-[10px] bg-red-50 text-red-500 border border-red-200 font-bold px-3 py-1.5 rounded-lg tap-effect hover:bg-red-100 transition-colors flex items-center gap-1">
+                                    <i class="fa-solid fa-plus"></i> Agregar
+                                </button>
+                            </div>
+                            <div class="overflow-auto hide-scroll max-h-[220px]">
+                                <table class="w-full text-left text-sm">
+                                    <thead class="bg-white text-[9px] font-black text-slate-400 uppercase tracking-wider sticky top-0 z-10 border-b border-slate-100">
+                                        <tr>
+                                            <th class="px-4 py-2">Concepto</th>
+                                            <th class="px-4 py-2 text-right">Monto</th>
+                                            <th class="px-4 py-2 text-center">Hora</th>
+                                            <th class="px-4 py-2"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="rp-gastos-erp-rows" class="divide-y divide-slate-100 text-slate-600 bg-white"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- HISTORIAL VENTAS + PDF -->
+                        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm flex flex-col h-[320px] md:h-[400px]">
+                            <div class="px-3 md:px-4 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center gap-2">
+                                <h3 class="font-bold text-slate-800 flex gap-2 items-center text-sm"><i class="fa-solid fa-list-ul text-blue-500"></i> Historial</h3>
+                                <button onclick="UI.generatePDF()" class="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white px-3 py-1.5 rounded-lg text-[10px] md:text-xs font-bold transition-all shadow-lg shadow-orange-500/20 flex items-center justify-center gap-1.5 tap-effect">
+                                    <i class="fa-solid fa-file-pdf"></i> <span class="hidden md:inline">Reporte</span> PDF
+                                </button>
+                            </div>
+                            <div class="flex-1 overflow-auto hide-scroll">
+                                <table class="w-full text-left text-sm">
+                                    <thead class="bg-white text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-wider sticky top-0 z-10 border-b border-slate-100 shadow-sm">
+                                        <tr><th class="px-3 py-2 md:py-3">Detalle</th><th class="px-3 py-2 md:py-3 text-right">Monto</th><th class="px-3 py-2 md:py-3 text-center">Ctrl</th></tr>
+                                    </thead>
+                                    <tbody id="rp-trans" class="divide-y divide-slate-100 text-slate-600 bg-white"></tbody>
+                                </table>
+                            </div>
                         </div>
 
                         <div class="pt-6 pb-8 text-center border-t border-slate-200">
-                             <button onclick="LOGIC.resetAll()" class="text-[10px] text-red-300 hover:text-red-500 font-black uppercase tracking-[0.2em] transition hover:bg-red-50 px-4 py-2 rounded-lg">Reset Sistema (Cerrar Día)</button>
+                             <button onclick="LOGIC.resetAll()" class="text-[10px] text-red-300 hover:text-red-500 font-black uppercase tracking-[0.2em] transition hover:bg-red-50 px-4 py-2 rounded-lg">Reset Sistema (Borrar Todo)</button>
                         </div>
                     </div>
                 </div>
@@ -896,6 +1045,94 @@
         </div>
     </div>
 
+    <!-- MODAL ERP: REGISTRAR INSUMO (COMPRA DE CARNE) -->
+    <div id="modal-insumo" class="fixed inset-0 z-[110] hidden items-end justify-center md:items-center" role="dialog" aria-modal="true" aria-label="Registrar insumo">
+        <div class="absolute inset-0 note-modal-overlay" onclick="UI.closeModalInsumo()"></div>
+        <div class="relative z-20 bg-white w-full md:max-w-[440px] rounded-t-3xl md:rounded-3xl p-5 md:p-6 shadow-2xl animate-up safe-bottom">
+            <div class="w-10 h-1 bg-slate-200 rounded-full mx-auto mb-4 md:hidden"></div>
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-11 h-11 bg-gradient-to-br from-blue-400 to-blue-600 text-white rounded-xl flex items-center justify-center text-lg shrink-0 shadow-lg shadow-blue-500/20"><i class="fa-solid fa-scale-balanced"></i></div>
+                <div>
+                    <h3 class="font-display font-bold text-lg text-slate-800">Registrar Insumo</h3>
+                    <p class="text-xs text-slate-400">Compra de carne para el turno</p>
+                </div>
+            </div>
+            <div class="space-y-3">
+                <!-- Tipo de Carne -->
+                <div>
+                    <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1.5">Tipo de Carne</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="UI._selectTipoCarne('Menudo')" id="btn-tipo-menudo" class="tipo-carne-btn p-3 rounded-xl border-2 border-slate-200 bg-white text-slate-600 font-bold text-sm transition-all tap-effect hover:border-blue-400">
+                            <i class="fa-solid fa-bowl-rice block text-2xl mb-1 opacity-60"></i>Menudo
+                        </button>
+                        <button onclick="UI._selectTipoCarne('Barbacoa')" id="btn-tipo-barbacoa" class="tipo-carne-btn p-3 rounded-xl border-2 border-slate-200 bg-white text-slate-600 font-bold text-sm transition-all tap-effect hover:border-blue-400">
+                            <i class="fa-solid fa-fire-burner block text-2xl mb-1 opacity-60"></i>Barbacoa
+                        </button>
+                    </div>
+                    <input type="hidden" id="inp-tipo-carne" value="">
+                </div>
+                <!-- Kilos y Costo -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1">Kilos Comprados</label>
+                        <input type="number" id="inp-kilos" placeholder="ej. 5.5" step="0.1" min="0" oninput="UI._updateCostoKiloPreview()" class="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold text-slate-800 placeholder-slate-300 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-200 transition-colors">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1">Costo Total ($)</label>
+                        <input type="number" id="inp-costo-insumo" placeholder="ej. 650" step="1" min="0" oninput="UI._updateCostoKiloPreview()" class="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold text-slate-800 placeholder-slate-300 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-200 transition-colors">
+                    </div>
+                </div>
+                <!-- Preview costo/kg -->
+                <div id="costo-por-kilo-preview" class="text-center py-2.5 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-600 font-bold hidden">
+                    <i class="fa-solid fa-calculator mr-1"></i> Costo por kilo: <span id="costo-kg-val" class="text-blue-800"></span>
+                </div>
+            </div>
+            <div class="flex gap-2 mt-4">
+                <button onclick="UI.closeModalInsumo()" class="flex-1 py-3.5 rounded-xl bg-slate-100 text-slate-600 font-bold text-sm tap-effect hover:bg-slate-200 transition-colors touch-target">Cancelar</button>
+                <button onclick="LOGIC.erp.addInsumo()" class="flex-[2] py-3.5 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold text-sm tap-effect hover:from-blue-400 hover:to-blue-500 shadow-lg shadow-blue-500/30 transition-all flex items-center justify-center gap-2 touch-target">
+                    <i class="fa-solid fa-plus"></i> Registrar Insumo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ERP: AGREGAR GASTO OPERATIVO -->
+    <div id="modal-gasto-erp" class="fixed inset-0 z-[110] hidden items-end justify-center md:items-center" role="dialog" aria-modal="true" aria-label="Agregar gasto operativo">
+        <div class="absolute inset-0 note-modal-overlay" onclick="UI.closeModalGastoERP()"></div>
+        <div class="relative z-20 bg-white w-full md:max-w-[400px] rounded-t-3xl md:rounded-3xl p-5 md:p-6 shadow-2xl animate-up safe-bottom">
+            <div class="w-10 h-1 bg-slate-200 rounded-full mx-auto mb-4 md:hidden"></div>
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-11 h-11 bg-gradient-to-br from-red-400 to-red-600 text-white rounded-xl flex items-center justify-center text-lg shrink-0 shadow-lg shadow-red-500/20"><i class="fa-solid fa-receipt"></i></div>
+                <div>
+                    <h3 class="font-display font-bold text-lg text-slate-800">Agregar Gasto</h3>
+                    <p class="text-xs text-slate-400">Sueldo, gas, verdura u otros</p>
+                </div>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1.5">Concepto</label>
+                    <div class="flex flex-wrap gap-2 mb-2">
+                        <button onclick="document.getElementById('inp-concepto-gasto').value='Sueldo empleado'" class="px-3 py-1.5 bg-slate-100 rounded-xl text-xs font-bold text-slate-600 tap-effect hover:bg-red-100 hover:text-red-700 transition-colors">Sueldo</button>
+                        <button onclick="document.getElementById('inp-concepto-gasto').value='Gas'" class="px-3 py-1.5 bg-slate-100 rounded-xl text-xs font-bold text-slate-600 tap-effect hover:bg-red-100 hover:text-red-700 transition-colors">Gas</button>
+                        <button onclick="document.getElementById('inp-concepto-gasto').value='Verdura'" class="px-3 py-1.5 bg-slate-100 rounded-xl text-xs font-bold text-slate-600 tap-effect hover:bg-red-100 hover:text-red-700 transition-colors">Verdura</button>
+                        <button onclick="document.getElementById('inp-concepto-gasto').value='Tortillas'" class="px-3 py-1.5 bg-slate-100 rounded-xl text-xs font-bold text-slate-600 tap-effect hover:bg-red-100 hover:text-red-700 transition-colors">Tortillas</button>
+                    </div>
+                    <input type="text" id="inp-concepto-gasto" placeholder="ej. Sueldo empleado, Gas..." class="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold text-slate-800 placeholder-slate-300 focus:outline-none focus:border-red-400 focus:ring-2 focus:ring-red-200 transition-colors">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1">Monto ($)</label>
+                    <input type="number" id="inp-monto-gasto" placeholder="ej. 500" step="1" min="0" class="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold text-slate-800 placeholder-slate-300 focus:outline-none focus:border-red-400 focus:ring-2 focus:ring-red-200 transition-colors">
+                </div>
+            </div>
+            <div class="flex gap-2 mt-4">
+                <button onclick="UI.closeModalGastoERP()" class="flex-1 py-3.5 rounded-xl bg-slate-100 text-slate-600 font-bold text-sm tap-effect hover:bg-slate-200 transition-colors touch-target">Cancelar</button>
+                <button onclick="LOGIC.erp.addGastoERP()" class="flex-[2] py-3.5 rounded-xl bg-gradient-to-r from-red-500 to-red-600 text-white font-bold text-sm tap-effect shadow-lg shadow-red-500/30 transition-all flex items-center justify-center gap-2 touch-target">
+                    <i class="fa-solid fa-plus"></i> Registrar Gasto
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- LOGICA DEL SISTEMA -->
     <script>
         // 1. FIREBASE v8 INICIALIZACIÓN (compatible con Safari 10 / iOS 10)
@@ -910,6 +1147,9 @@
         var db = firebase.firestore();
         var auth = firebase.auth();
         var ORDERS_COL = db.collection('artifacts').doc('lacabana-progreso').collection('public').doc('data').collection('ordenes');
+        var INSUMOS_COL = db.collection('artifacts').doc('lacabana-progreso').collection('public').doc('data').collection('insumos');
+        var GASTOS_ERP_COL = db.collection('artifacts').doc('lacabana-progreso').collection('public').doc('data').collection('gastos_erp');
+        var TURNOS_COL = db.collection('artifacts').doc('lacabana-progreso').collection('public').doc('data').collection('turnos');
         // Helper functions matching previous modular API signatures
         function addDoc(colRef, data) { return colRef.add(data); }
         function updateDoc(ref, data) { return ref.update(data); }
@@ -952,6 +1192,25 @@
         // Precargar el sonido
         AUDIO_BELL.load();
 
+        // ESCANDALLO POR DEFECTO (gramos de carne por plato, editable en UI)
+        var ESCANDALLO_DEFAULT = [
+            {producto:'Menudo Rojo Chico',     tipo:'Menudo',   gramos:300},
+            {producto:'Menudo Rojo Mediano',   tipo:'Menudo',   gramos:400},
+            {producto:'Menudo Rojo Grande',    tipo:'Menudo',   gramos:500},
+            {producto:'Menudo Blanco Chico',   tipo:'Menudo',   gramos:300},
+            {producto:'Menudo Blanco Mediano', tipo:'Menudo',   gramos:400},
+            {producto:'Menudo Blanco Grande',  tipo:'Menudo',   gramos:500},
+            {producto:'Taco Suave',            tipo:'Barbacoa', gramos:100},
+            {producto:'Taco Dorado',           tipo:'Barbacoa', gramos:100},
+            {producto:'Orden Media (Carne)',   tipo:'Barbacoa', gramos:200},
+            {producto:'Orden Media (Caldo)',   tipo:'Barbacoa', gramos:150},
+            {producto:'Orden Grande (Carne)',  tipo:'Barbacoa', gramos:300},
+            {producto:'Orden Grande (Caldo)',  tipo:'Barbacoa', gramos:250},
+            {producto:'Quesabirria Sola',      tipo:'Barbacoa', gramos:120},
+            {producto:'Media Quesa (1 pza + Guarn)', tipo:'Barbacoa', gramos:150},
+            {producto:'Orden Quesa (2 pza + Guarn)', tipo:'Barbacoa', gramos:250},
+        ];
+
         // ESTADO GLOBAL DE LA APP
         let STATE = { 
             cart: [], 
@@ -960,7 +1219,11 @@
             payData: { id: null, amount: 0, table: '' }, 
             reportSummary: null,
             cashFund: 0, 
-            lastPendingCount: -1 // Detector de nuevas ordenes (-1 = carga inicial)
+            lastPendingCount: -1, // Detector de nuevas ordenes (-1 = carga inicial)
+            // ERP
+            insumos: [],
+            gastosERP: [],
+            filtroFinanzas: 'hoy'
         };
 
         window.UI = {
@@ -1467,52 +1730,8 @@
                             <span class="text-xs md:text-sm font-bold uppercase tracking-widest">Sin cuentas activas</span>
                         </div>`;
                     
-                    let t=0, c=0, cc=0, gastos=0, itMap={};
-                    // Filtrar gastos de las ventas
-                    const expenses = STATE.orders.filter(o => o.isExpense === true);
-                    const sales = paid.filter(o => !o.isExpense);
-                    
-                    // Calcular gastos
-                    expenses.forEach(e => { gastos += e.total; });
-                    
-                    // Calcular ventas
-                    sales.forEach(o=>{ t+=o.total; if(o.method==='Efectivo')c+=o.total; else cc+=o.total; o.items.forEach(i=>{ if(!itMap[i.n])itMap[i.n]={q:0,s:0}; itMap[i.n].q+=i.qty; itMap[i.n].s+=(i.qty*i.p); }); });
-                    STATE.reportSummary = {total:t, cash:c, card:cc, gastos:gastos, items:itMap, history: sales, expenses: expenses};
-
-                    document.getElementById('rp-tot').innerText=UI.format(t);
-                    document.getElementById('rp-cash').innerText=UI.format(c);
-                    document.getElementById('rp-card').innerText=UI.format(cc);
-                    document.getElementById('rp-gastos').innerText=UI.format(gastos);
-                    document.getElementById('rp-rows').innerHTML = Object.entries(itMap).sort((a,b)=>b[1].s-a[1].s).map(([n,d])=>`<tr><td class="px-6 py-2 text-xs font-bold text-slate-700">${n}</td><td class="px-6 py-2 text-center text-xs bg-slate-50 text-slate-500 font-mono">${d.q}</td><td class="px-6 py-2 text-right text-xs font-bold text-slate-800">${UI.format(d.s)}</td></tr>`).join('');
-                    
-                    // Combinar ventas y gastos, ordenar por timestamp
-                    const allTransactions = sales.concat(expenses).sort((a,b) => {
-                        const tsA = (a.ts && a.ts.seconds) || 0;
-                        const tsB = (b.ts && b.ts.seconds) || 0;
-                        return tsB - tsA;
-                    });
-                    
-                    document.getElementById('rp-trans').innerHTML = allTransactions.map(o=>{
-                        const isExpense = o.isExpense === true;
-                        return `
-                        <tr class="hover:bg-slate-50 transition ${isExpense ? 'bg-red-50/50' : ''}">
-                            <td class="px-4 py-3 text-xs text-slate-600">
-                                <div class="font-bold ${isExpense ? 'text-red-600' : 'text-slate-800'}">
-                                    ${isExpense ? '⚠️ GASTO: ' + o.items[0].n : (isNaN(o.mesa) ? 'Venta Caja' : `Mesa ${o.mesa}`)}
-                                </div>
-                                <div class="text-[9px] ${isExpense ? 'text-red-400' : 'text-slate-400'} uppercase">
-                                    ${isExpense ? 'Salida de efectivo' : `${o.method} • ${o.items.length} prod`}
-                                </div>
-                            </td>
-                            <td class="px-4 py-3 text-right text-xs font-black font-mono ${isExpense ? 'text-red-600' : 'text-slate-800'}">
-                                ${isExpense ? '-' : ''}${UI.format(o.total)}
-                            </td>
-                            <td class="px-4 py-3 text-center">
-                                <button onclick="LOGIC.adminEdit('${o.id}', ${o.total})" class="text-blue-400 hover:text-blue-600 text-sm mx-1 p-1 hover:bg-blue-50 rounded" title="Ajustar Total"><i class="fa-solid fa-pen-to-square"></i></button>
-                                <button onclick="LOGIC.adminDel('${o.id}')" class="text-slate-300 hover:text-red-500 text-sm mx-1 p-1 hover:bg-red-50 rounded" title="Eliminar Registro"><i class="fa-solid fa-trash"></i></button>
-                            </td>
-                        </tr>`;
-                    }).join('') || `<tr><td colspan="3" class="text-center py-6 text-xs text-slate-400">Sin movimientos</td></tr>`;
+                    // Render finance panel via dedicated function
+                    UI.renderFinance();
                 }
             },
             
@@ -1520,6 +1739,7 @@
                 const act=t==='active'; document.getElementById('p-active').classList.toggle('hidden',!act); document.getElementById('p-report').classList.toggle('hidden',act);
                 document.getElementById('btn-tab-act').classList.toggle('border-brand-accent',act); document.getElementById('btn-tab-act').classList.toggle('text-brand-accent',act); document.getElementById('btn-tab-act').classList.toggle('border-transparent',!act);
                 document.getElementById('btn-tab-rep').classList.toggle('border-brand-accent',!act); document.getElementById('btn-tab-rep').classList.toggle('text-brand-accent',!act); document.getElementById('btn-tab-rep').classList.toggle('border-transparent',act);
+                if(!act) UI.renderFinance();
             },
             
             // Selección de items para cobro parcial
@@ -1637,6 +1857,299 @@
                     el.classList.add('hidden'); 
                     el.classList.remove('flex');
                 }
+            },
+
+            // =====================================================
+            // ERP: MOTOR DE FINANZAS AVANZADO
+            // =====================================================
+
+            // Obtener rango(s) de fechas según el filtro seleccionado
+            _getDateRange: (filtro) => {
+                var today = new Date();
+                var d = today.getDay(); // 0=Dom, 1=Lun ... 6=Sab
+                if(filtro === 'hoy') {
+                    var s = new Date(today); s.setHours(0,0,0,0);
+                    var e = new Date(today); e.setHours(23,59,59,999);
+                    return [{start: s.getTime(), end: e.getTime()}];
+                }
+                if(filtro === 'sabado') {
+                    var diffToSat = d === 6 ? 0 : (d + 7 - 6) % 7;
+                    var sat = new Date(today); sat.setDate(today.getDate() - diffToSat);
+                    var ss = new Date(sat); ss.setHours(0,0,0,0);
+                    var se = new Date(sat); se.setHours(23,59,59,999);
+                    return [{start: ss.getTime(), end: se.getTime()}];
+                }
+                if(filtro === 'domingo') {
+                    var diffToSun = d === 0 ? 0 : d;
+                    var sun = new Date(today); sun.setDate(today.getDate() - diffToSun);
+                    var ds = new Date(sun); ds.setHours(0,0,0,0);
+                    var de = new Date(sun); de.setHours(23,59,59,999);
+                    return [{start: ds.getTime(), end: de.getTime()}];
+                }
+                if(filtro === 'finde') {
+                    var diffS = d === 6 ? 0 : (d + 7 - 6) % 7;
+                    var sat2 = new Date(today); sat2.setDate(today.getDate() - diffS);
+                    var ss2 = new Date(sat2); ss2.setHours(0,0,0,0);
+                    var se2 = new Date(sat2); se2.setHours(23,59,59,999);
+                    var diffSun2 = d === 0 ? 0 : d;
+                    var sun2 = new Date(today); sun2.setDate(today.getDate() - diffSun2);
+                    var ds2 = new Date(sun2); ds2.setHours(0,0,0,0);
+                    var de2 = new Date(sun2); de2.setHours(23,59,59,999);
+                    return [{start: ss2.getTime(), end: se2.getTime()}, {start: ds2.getTime(), end: de2.getTime()}];
+                }
+                return [{start: 0, end: Date.now() + 86400000}];
+            },
+
+            // Actualizar filtro activo y re-renderizar
+            setFiltroFinanzas: (filtro) => {
+                STATE.filtroFinanzas = filtro;
+                document.querySelectorAll('.filtro-btn').forEach(function(btn) {
+                    btn.classList.remove('bg-orange-500', 'text-white', 'shadow-sm');
+                    btn.classList.add('bg-slate-100', 'text-slate-600');
+                });
+                var activeBtn = document.getElementById('filtro-' + filtro);
+                if(activeBtn) {
+                    activeBtn.classList.remove('bg-slate-100', 'text-slate-600');
+                    activeBtn.classList.add('bg-orange-500', 'text-white', 'shadow-sm');
+                }
+                UI.renderFinance();
+            },
+
+            // Abrir/cerrar modal de Insumo
+            openModalInsumo: () => {
+                document.getElementById('inp-tipo-carne').value = '';
+                document.getElementById('inp-kilos').value = '';
+                document.getElementById('inp-costo-insumo').value = '';
+                document.getElementById('costo-por-kilo-preview').classList.add('hidden');
+                document.querySelectorAll('.tipo-carne-btn').forEach(function(b) {
+                    b.classList.remove('border-blue-500', 'bg-blue-500', 'text-white');
+                    b.classList.add('border-slate-200', 'bg-white', 'text-slate-600');
+                });
+                var el = document.getElementById('modal-insumo');
+                el.classList.remove('hidden'); el.classList.add('flex');
+            },
+            closeModalInsumo: () => {
+                var el = document.getElementById('modal-insumo');
+                el.classList.add('hidden'); el.classList.remove('flex');
+            },
+
+            // Seleccionar tipo de carne en el modal
+            _selectTipoCarne: (tipo) => {
+                document.getElementById('inp-tipo-carne').value = tipo;
+                document.querySelectorAll('.tipo-carne-btn').forEach(function(b) {
+                    b.classList.remove('border-blue-500', 'bg-blue-500', 'text-white');
+                    b.classList.add('border-slate-200', 'bg-white', 'text-slate-600');
+                });
+                var btnId = 'btn-tipo-' + tipo.toLowerCase();
+                var btn = document.getElementById(btnId);
+                if(btn) {
+                    btn.classList.remove('border-slate-200', 'bg-white', 'text-slate-600');
+                    btn.classList.add('border-blue-500', 'bg-blue-500', 'text-white');
+                }
+                UI._updateCostoKiloPreview();
+            },
+
+            // Preview en tiempo real del costo por kilo
+            _updateCostoKiloPreview: () => {
+                var kilos  = parseFloat(document.getElementById('inp-kilos').value);
+                var costo  = parseFloat(document.getElementById('inp-costo-insumo').value);
+                var preview = document.getElementById('costo-por-kilo-preview');
+                if(preview) {
+                    if(kilos > 0 && costo > 0) {
+                        document.getElementById('costo-kg-val').innerText = UI.format(costo / kilos);
+                        preview.classList.remove('hidden');
+                    } else {
+                        preview.classList.add('hidden');
+                    }
+                }
+            },
+
+            // Abrir/cerrar modal de Gasto ERP
+            openModalGastoERP: () => {
+                document.getElementById('inp-concepto-gasto').value = '';
+                document.getElementById('inp-monto-gasto').value = '';
+                var el = document.getElementById('modal-gasto-erp');
+                el.classList.remove('hidden'); el.classList.add('flex');
+            },
+            closeModalGastoERP: () => {
+                var el = document.getElementById('modal-gasto-erp');
+                el.classList.add('hidden'); el.classList.remove('flex');
+            },
+
+            // MOTOR PRINCIPAL: renderizar toda la sección de Finanzas ERP
+            renderFinance: () => {
+                if(STATE.role !== 'cajero') return;
+
+                var ranges = UI._getDateRange(STATE.filtroFinanzas || 'hoy');
+
+                // ¿timestamp cae en alguno de los rangos?
+                function inRange(ts) {
+                    if(!ts) return true;
+                    var ms = ts.seconds ? ts.seconds*1000 : (ts instanceof Date ? ts.getTime() : Number(ts));
+                    return ranges.some(function(r){ return ms >= r.start && ms <= r.end; });
+                }
+
+                // Filtrar datos por período
+                var salesFiltered   = STATE.orders.filter(function(o){ return o.status==='pagado' && !o.isExpense && !o.isKitchenTicket && inRange(o.ts); });
+                var oldExpenses     = STATE.orders.filter(function(o){ return o.isExpense && inRange(o.ts); });
+                var insumosFiltered = STATE.insumos.filter(function(i){ return inRange(i.fecha); });
+                var gastosFiltered  = STATE.gastosERP.filter(function(g){ return inRange(g.fecha); });
+
+                // Totales
+                var ventasBrutas   = salesFiltered.reduce(function(a,o){ return a+(o.total||0); },0);
+                var efectivo       = salesFiltered.filter(function(o){ return o.method==='Efectivo'; }).reduce(function(a,o){ return a+(o.total||0); },0);
+                var tarjeta        = salesFiltered.filter(function(o){ return o.method && o.method!=='Efectivo'; }).reduce(function(a,o){ return a+(o.total||0); },0);
+                var totalInsumos   = insumosFiltered.reduce(function(a,i){ return a+(i.costo_total||0); },0);
+                var totalGastosERP = gastosFiltered.reduce(function(a,g){ return a+(g.monto||0); },0);
+                var totalOldExp    = oldExpenses.reduce(function(a,e){ return a+(e.total||0); },0);
+                var totalGastos    = totalInsumos + totalGastosERP + totalOldExp;
+                var gananciaNeta   = ventasBrutas - totalGastos;
+
+                // Costo promedio ponderado por kilo por tipo de carne
+                var kilosPorTipo = {}, costoTotalPorTipo = {};
+                insumosFiltered.forEach(function(i) {
+                    if(!kilosPorTipo[i.tipo]) { kilosPorTipo[i.tipo]=0; costoTotalPorTipo[i.tipo]=0; }
+                    kilosPorTipo[i.tipo]      += (i.kilos_comprados||0);
+                    costoTotalPorTipo[i.tipo] += (i.costo_total||0);
+                });
+                var avgCostoPorKilo = {};
+                Object.keys(kilosPorTipo).forEach(function(tipo){
+                    avgCostoPorKilo[tipo] = kilosPorTipo[tipo] > 0 ? costoTotalPorTipo[tipo]/kilosPorTipo[tipo] : 0;
+                });
+
+                // Mapa de items vendidos
+                var itemMap = {};
+                salesFiltered.forEach(function(o){
+                    (o.items||[]).forEach(function(i){
+                        if(!itemMap[i.n]) itemMap[i.n]={q:0,s:0};
+                        itemMap[i.n].q += i.qty;
+                        itemMap[i.n].s += i.qty * i.p;
+                    });
+                });
+
+                // Gramos consumidos por tipo (basado en escandallo por defecto)
+                var gramosPorTipo = {};
+                Object.entries(itemMap).forEach(function(entry){
+                    var nombre=entry[0], data=entry[1];
+                    var esc = ESCANDALLO_DEFAULT.find(function(e){ return e.producto===nombre; });
+                    if(esc) {
+                        if(!gramosPorTipo[esc.tipo]) gramosPorTipo[esc.tipo]=0;
+                        gramosPorTipo[esc.tipo] += esc.gramos * data.q;
+                    }
+                });
+
+                // ── KPIs ─────────────────────────────────────────
+                document.getElementById('rp-tot').innerText    = UI.format(ventasBrutas);
+                document.getElementById('rp-cash').innerText   = UI.format(efectivo);
+                document.getElementById('rp-card').innerText   = UI.format(tarjeta);
+                document.getElementById('rp-gastos').innerText = UI.format(totalGastos);
+                var netEl = document.getElementById('rp-ganancia-neta');
+                if(netEl) netEl.innerText = UI.format(gananciaNeta);
+                var insEl = document.getElementById('rp-insumos-total');
+                if(insEl) insEl.innerText = UI.format(totalInsumos);
+
+                // ── INVENTARIO ESTIMADO ───────────────────────────
+                var invEl = document.getElementById('rp-inventario');
+                if(invEl) {
+                    var tiposTracked = Object.keys(kilosPorTipo);
+                    if(!tiposTracked.length) {
+                        invEl.innerHTML = '<p class="col-span-2 text-xs text-slate-400 text-center py-3">Sin insumos registrados para este período</p>';
+                    } else {
+                        invEl.innerHTML = tiposTracked.map(function(tipo){
+                            var consumidos = (gramosPorTipo[tipo]||0)/1000;
+                            var restantes  = kilosPorTipo[tipo] - consumidos;
+                            var pct        = kilosPorTipo[tipo]>0 ? Math.max(0,Math.min(1,restantes/kilosPorTipo[tipo])) : 0;
+                            var barColor   = restantes>1 ? 'bg-green-400' : (restantes>0.3 ? 'bg-yellow-400' : 'bg-red-400');
+                            var textColor  = restantes<0.3 ? 'text-red-600 font-black' : 'text-slate-800';
+                            return '<div class="flex flex-col gap-1.5 p-3 bg-slate-50 rounded-xl border border-slate-100">' +
+                                '<div class="flex justify-between items-center">' +
+                                '<span class="text-xs font-bold text-slate-700">' + tipo + '</span>' +
+                                '<span class="font-mono font-black text-sm ' + textColor + '">' + restantes.toFixed(2) + ' kg</span>' +
+                                '</div>' +
+                                '<div class="w-full bg-slate-200 rounded-full h-2"><div class="' + barColor + ' h-2 rounded-full transition-all" style="width:' + (pct*100).toFixed(0) + '%"></div></div>' +
+                                '<div class="text-[9px] text-slate-400">' + kilosPorTipo[tipo].toFixed(2) + ' kg comprados · ' + consumidos.toFixed(2) + ' kg consumidos</div>' +
+                                '</div>';
+                        }).join('');
+                    }
+                }
+
+                // ── MIX VENTAS + GANANCIA POR PLATO ──────────────
+                var mixRows = Object.entries(itemMap).sort(function(a,b){ return b[1].s-a[1].s; }).map(function(entry){
+                    var nombre=entry[0], data=entry[1];
+                    var esc = ESCANDALLO_DEFAULT.find(function(e){ return e.producto===nombre; });
+                    var ganHtml = '<span class="text-slate-300 text-[9px]">N/D</span>';
+                    if(esc && avgCostoPorKilo[esc.tipo]) {
+                        var costoCarne = avgCostoPorKilo[esc.tipo]*(esc.gramos/1000);
+                        var precioPromedio = data.s/data.q;
+                        var ganancia = precioPromedio - costoCarne;
+                        ganHtml = '<span class="font-mono font-bold ' + (ganancia>=0?'text-green-600':'text-red-600') + '">' + UI.format(ganancia) + '</span>';
+                    }
+                    return '<tr class="hover:bg-slate-50 transition-colors">' +
+                        '<td class="px-3 md:px-4 py-2.5 text-xs font-bold text-slate-700">' + nombre + '</td>' +
+                        '<td class="px-3 md:px-4 py-2.5 text-center text-xs bg-slate-50 text-slate-500 font-mono font-bold">' + data.q + '</td>' +
+                        '<td class="px-3 md:px-4 py-2.5 text-right text-xs font-bold text-slate-800">' + UI.format(data.s) + '</td>' +
+                        '<td class="px-3 md:px-4 py-2.5 text-right text-xs">' + ganHtml + '</td></tr>';
+                });
+                document.getElementById('rp-rows').innerHTML = mixRows.join('') ||
+                    '<tr><td colspan="4" class="text-center py-4 text-xs text-slate-400">Sin ventas en este período</td></tr>';
+
+                // ── INSUMOS ───────────────────────────────────────
+                var insumosEl = document.getElementById('rp-insumos-rows');
+                if(insumosEl) {
+                    insumosEl.innerHTML = insumosFiltered.slice().sort(function(a,b){
+                        return (b.fecha&&b.fecha.seconds?b.fecha.seconds:0)-(a.fecha&&a.fecha.seconds?a.fecha.seconds:0);
+                    }).map(function(i){
+                        var hora = i.fecha&&i.fecha.seconds ? new Date(i.fecha.seconds*1000).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}) : '--:--';
+                        return '<tr class="hover:bg-blue-50/50 transition-colors">' +
+                            '<td class="px-4 py-2.5 text-xs font-bold text-slate-700">' + i.tipo + '</td>' +
+                            '<td class="px-4 py-2.5 text-center text-xs font-mono text-slate-600">' + (i.kilos_comprados||0).toFixed(2) + ' kg</td>' +
+                            '<td class="px-4 py-2.5 text-right text-xs font-bold text-blue-700">' + UI.format(i.costo_total) + '</td>' +
+                            '<td class="px-4 py-2.5 text-right text-xs font-mono text-slate-500">' + UI.format(i.costo_por_kilo) + '/kg</td>' +
+                            '<td class="px-4 py-2.5 text-center text-[9px] text-slate-400">' + hora + '</td>' +
+                            '<td class="px-4 py-2.5 text-center"><button onclick="LOGIC.erp.delInsumo(\'' + i.id + '\')" class="text-slate-300 hover:text-red-500 text-sm p-1 hover:bg-red-50 rounded transition-colors"><i class="fa-solid fa-trash text-xs"></i></button></td>' +
+                            '</tr>';
+                    }).join('') || '<tr><td colspan="6" class="text-center py-4 text-xs text-slate-400">Sin insumos en este período</td></tr>';
+                }
+
+                // ── GASTOS OPERATIVOS ERP ─────────────────────────
+                var gastosERPEl = document.getElementById('rp-gastos-erp-rows');
+                if(gastosERPEl) {
+                    gastosERPEl.innerHTML = gastosFiltered.slice().sort(function(a,b){
+                        return (b.fecha&&b.fecha.seconds?b.fecha.seconds:0)-(a.fecha&&a.fecha.seconds?a.fecha.seconds:0);
+                    }).map(function(g){
+                        var hora = g.fecha&&g.fecha.seconds ? new Date(g.fecha.seconds*1000).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}) : '--:--';
+                        return '<tr class="hover:bg-red-50/50 transition-colors">' +
+                            '<td class="px-4 py-2.5 text-xs font-bold text-red-700">' + g.concepto + '</td>' +
+                            '<td class="px-4 py-2.5 text-right text-xs font-bold text-red-600">' + UI.format(g.monto) + '</td>' +
+                            '<td class="px-4 py-2.5 text-center text-[9px] text-slate-400">' + hora + '</td>' +
+                            '<td class="px-4 py-2.5 text-center"><button onclick="LOGIC.erp.delGastoERP(\'' + g.id + '\')" class="text-slate-300 hover:text-red-500 text-sm p-1 hover:bg-red-50 rounded transition-colors"><i class="fa-solid fa-trash text-xs"></i></button></td>' +
+                            '</tr>';
+                    }).join('') || '<tr><td colspan="4" class="text-center py-4 text-xs text-slate-400">Sin gastos operativos registrados</td></tr>';
+                }
+
+                // ── HISTORIAL (sales + old expenses) ─────────────
+                var allTrans = salesFiltered.concat(oldExpenses).sort(function(a,b){
+                    return (b.ts&&b.ts.seconds?b.ts.seconds:0)-(a.ts&&a.ts.seconds?a.ts.seconds:0);
+                });
+                document.getElementById('rp-trans').innerHTML = allTrans.map(function(o){
+                    var isExp = o.isExpense===true;
+                    return '<tr class="hover:bg-slate-50 transition ' + (isExp?'bg-red-50/50':'') + '">' +
+                        '<td class="px-4 py-3 text-xs text-slate-600">' +
+                        '<div class="font-bold ' + (isExp?'text-red-600':'text-slate-800') + '">' +
+                        (isExp ? '⚠️ GASTO: ' + (o.items[0]&&o.items[0].n||'') : (isNaN(o.mesa)?'Venta Caja':'Mesa '+o.mesa)) +
+                        '</div><div class="text-[9px] ' + (isExp?'text-red-400':'text-slate-400') + ' uppercase">' +
+                        (isExp ? 'Salida de efectivo' : (o.method||'') + ' · ' + (o.items?o.items.length:0) + ' prod') +
+                        '</div></td>' +
+                        '<td class="px-4 py-3 text-right text-xs font-black font-mono ' + (isExp?'text-red-600':'text-slate-800') + '">' +
+                        (isExp?'-':'') + UI.format(o.total) + '</td>' +
+                        '<td class="px-4 py-3 text-center">' +
+                        '<button onclick="LOGIC.adminEdit(\'' + o.id + '\',' + o.total + ')" class="text-blue-400 hover:text-blue-600 text-sm mx-1 p-1 hover:bg-blue-50 rounded"><i class="fa-solid fa-pen-to-square"></i></button>' +
+                        '<button onclick="LOGIC.adminDel(\'' + o.id + '\')" class="text-slate-300 hover:text-red-500 text-sm mx-1 p-1 hover:bg-red-50 rounded"><i class="fa-solid fa-trash"></i></button>' +
+                        '</td></tr>';
+                }).join('') || '<tr><td colspan="3" class="text-center py-6 text-xs text-slate-400">Sin movimientos en este período</td></tr>';
+
+                // Actualizar reportSummary para el generador de PDF
+                STATE.reportSummary = {total:ventasBrutas, cash:efectivo, card:tarjeta, gastos:totalGastos, items:itemMap, history:salesFiltered, expenses:oldExpenses};
             },
 
             // --- MOTOR DE REPORTES PDF PROFESIONAL ---
@@ -2167,6 +2680,84 @@
                     console.error(e);
                     UI.toast('Error al eliminar', 'error');
                 });
+            },
+
+            // ============================================================
+            // ERP: CONTROLADORES DE INSUMOS, GASTOS Y TURNOS
+            // ============================================================
+            erp: {
+                // ── Insumo (compra de carne) ──────────────────────────
+                addInsumo: () => {
+                    var tipo   = document.getElementById('inp-tipo-carne').value;
+                    var kilos  = parseFloat(document.getElementById('inp-kilos').value);
+                    var costo  = parseFloat(document.getElementById('inp-costo-insumo').value);
+                    if(!tipo)             return UI.toast('Selecciona el tipo de carne', 'error');
+                    if(!kilos || kilos<=0) return UI.toast('Ingresa los kilos comprados', 'error');
+                    if(!costo || costo<=0) return UI.toast('Ingresa el costo total', 'error');
+                    var costoPorKilo = costo / kilos;
+                    INSUMOS_COL.add({
+                        tipo: tipo,
+                        kilos_comprados: kilos,
+                        costo_total: costo,
+                        costo_por_kilo: costoPorKilo,
+                        fecha: serverTimestamp()
+                    }).then(function(){
+                        UI.toast('✓ ' + kilos.toFixed(2) + ' kg de ' + tipo + ' registrados', 'success');
+                        UI.closeModalInsumo();
+                    }).catch(function(e){ console.error(e); UI.toast('Error al registrar insumo', 'error'); });
+                },
+
+                delInsumo: (id) => {
+                    if(!confirm('¿Eliminar este insumo?')) return;
+                    INSUMOS_COL.doc(id).delete()
+                        .then(function(){ UI.toast('Insumo eliminado', 'info'); })
+                        .catch(function(){ UI.toast('Error', 'error'); });
+                },
+
+                // ── Gasto Operativo ───────────────────────────────────
+                addGastoERP: () => {
+                    var concepto = document.getElementById('inp-concepto-gasto').value.trim();
+                    var monto    = parseFloat(document.getElementById('inp-monto-gasto').value);
+                    if(!concepto)          return UI.toast('Escribe el concepto del gasto', 'error');
+                    if(!monto || monto<=0) return UI.toast('Ingresa un monto válido', 'error');
+                    GASTOS_ERP_COL.add({
+                        concepto: concepto,
+                        monto: monto,
+                        fecha: serverTimestamp()
+                    }).then(function(){
+                        UI.toast('✓ Gasto "' + concepto + '" — ' + UI.format(monto), 'success');
+                        UI.closeModalGastoERP();
+                    }).catch(function(e){ console.error(e); UI.toast('Error al registrar gasto', 'error'); });
+                },
+
+                delGastoERP: (id) => {
+                    if(!confirm('¿Eliminar este gasto?')) return;
+                    GASTOS_ERP_COL.doc(id).delete()
+                        .then(function(){ UI.toast('Gasto eliminado', 'info'); })
+                        .catch(function(){ UI.toast('Error', 'error'); });
+                },
+
+                // ── Cerrar Turno ──────────────────────────────────────
+                // Guarda un registro del cierre; NO borra datos.
+                // Usa los filtros de fecha para consultar períodos anteriores.
+                cerrarTurno: () => {
+                    if(!confirm('¿Cerrar el turno actual?\n\nSe guardará un registro del cierre con el resumen de hoy. Los datos permanecen accesibles mediante los filtros de fecha.')) return;
+                    var summary = STATE.reportSummary || {};
+                    TURNOS_COL.add({
+                        fecha_cierre: serverTimestamp(),
+                        estado: 'cerrado',
+                        resumen: {
+                            ventas:   summary.total   || 0,
+                            gastos:   summary.gastos  || 0,
+                            efectivo: summary.cash    || 0,
+                            tarjeta:  summary.card    || 0
+                        }
+                    }).then(function(){
+                        UI.toast('✓ Turno cerrado y guardado correctamente', 'success');
+                        // Resetear vista al filtro de hoy
+                        UI.setFiltroFinanzas('hoy');
+                    }).catch(function(e){ console.error(e); UI.toast('Error al cerrar turno', 'error'); });
+                }
             }
         };
 
@@ -2192,7 +2783,15 @@
                 if(STATE.role)UI.renderOrders();
                 // Notificación sonora para cocina cuando llega pedido nuevo
                 if(STATE.role==='cocina') s.docChanges().forEach(c=>{ var _d=c.doc.data(); if(c.type==='added' && _d.ts && (Date.now()/1000 - _d.ts.seconds)<30) UI.playSound(); });
-            }); 
+            });
+            INSUMOS_COL.onSnapshot(function(s) {
+                STATE.insumos = s.docs.map(function(d){ var data=d.data(); data.id=d.id; return data; });
+                if(STATE.role==='cajero') UI.renderFinance();
+            });
+            GASTOS_ERP_COL.onSnapshot(function(s) {
+                STATE.gastosERP = s.docs.map(function(d){ var data=d.data(); data.id=d.id; return data; });
+                if(STATE.role==='cajero') UI.renderFinance();
+            });
         } else auth.signInAnonymously().catch(e => {
             console.error('Error Firebase Auth:', e);
             document.getElementById('app-loader').classList.add('opacity-0','pointer-events-none');

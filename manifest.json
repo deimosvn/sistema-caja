@@ -2,14 +2,17 @@
   "name": "La Cabaña - Sistema POS",
   "short_name": "La Cabaña",
   "description": "Sistema de Punto de Venta para Restaurante La Cabaña",
+  "id": "/",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
   "orientation": "any",
-  "background_color": "#F8FAFC",
+  "background_color": "#1E293B",
   "theme_color": "#F97316",
   "lang": "es-MX",
   "categories": ["business", "food"],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "icons/icon-72x72.png",

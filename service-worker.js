@@ -1,15 +1,30 @@
-// Service Worker - La Cabaña POS v6.2
-const CACHE_NAME = 'lacabana-pos-v6.2';
-const STATIC_CACHE = 'lacabana-static-v6.2';
-const DYNAMIC_CACHE = 'lacabana-dynamic-v6.2';
+// Service Worker - La Cabaña POS v7.0
+const CACHE_NAME = 'lacabana-pos-v7.0';
+const STATIC_CACHE = 'lacabana-static-v7.0';
+const DYNAMIC_CACHE = 'lacabana-dynamic-v7.0';
 
 // Recursos que se cachean al instalar (App Shell)
 const APP_SHELL = [
   './',
   './index.html',
   './manifest.json',
+  './icons/icon-57x57.png',
+  './icons/icon-60x60.png',
+  './icons/icon-72x72.png',
+  './icons/icon-76x76.png',
+  './icons/icon-96x96.png',
+  './icons/icon-114x114.png',
+  './icons/icon-120x120.png',
+  './icons/icon-128x128.png',
+  './icons/icon-144x144.png',
+  './icons/icon-152x152.png',
+  './icons/icon-167x167.png',
+  './icons/icon-180x180.png',
   './icons/icon-192x192.png',
+  './icons/icon-384x384.png',
   './icons/icon-512x512.png',
+  './icons/icon-maskable-192x192.png',
+  './icons/icon-maskable-512x512.png',
 ];
 
 // CDN resources to cache on first use
