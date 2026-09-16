@@ -1,7 +1,7 @@
-// Service Worker - La Cabaña POS v7.0
-const CACHE_NAME = 'lacabana-pos-v7.0';
-const STATIC_CACHE = 'lacabana-static-v7.0';
-const DYNAMIC_CACHE = 'lacabana-dynamic-v7.0';
+// Service Worker - La Cabaña POS v8.0
+const CACHE_NAME = 'lacabana-pos-v8.0';
+const STATIC_CACHE = 'lacabana-static-v8.0';
+const DYNAMIC_CACHE = 'lacabana-dynamic-v8.0';
 
 // Recursos que se cachean al instalar (App Shell)
 const APP_SHELL = [

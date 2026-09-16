@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>POS La Cabaña | Enterprise System V6.2 (Mobile Fix + Audio)</title>
+    <title>POS La Cabaña | Sistema V8.0 · Comanda Rápida</title>
 
     <!-- PWA Meta Tags -->
     <link rel="manifest" href="./manifest.json">
@@ -305,70 +305,24 @@
         }
 
         /* === MESERO MOBILE OPTIMIZATION === */
-        @media (max-width: 768px) {
-            /* Menu grid: compacto en mobile */
+        @media (max-width: 767px) {
+            /* El menú deja espacio para la barra de acción inferior */
             #m-grid {
-                padding: 8px !important;
-                padding-bottom: 100px !important;
+                padding: 10px !important;
+                padding-bottom: 104px !important;
             }
-            /* Más espacio entre secciones de categoría */
-            #m-grid > section {
-                margin-bottom: 2rem !important;
-            }
-            #m-grid > section .grid {
-                gap: 10px !important;
-            }
-            /* Horizontal scroll for menu item rows on mobile */
-            #m-grid .menu-items-row {
-                display: -webkit-flex !important;
-                display: flex !important;
-                flex-wrap: nowrap !important;
-                -webkit-flex-wrap: nowrap !important;
-                overflow-x: auto !important;
-                -webkit-overflow-scrolling: touch;
-                gap: 10px !important;
-                padding-bottom: 8px !important;
-            }
-            #m-grid .menu-items-row .menu-card {
-                -webkit-flex-shrink: 0 !important;
-                flex-shrink: 0 !important;
-                width: 160px !important;
-                min-height: 110px !important;
-            }
-            /* Cart panel: full screen overlay en mobile */
-            #m-cart-panel {
-                border-radius: 0 !important;
-            }
-            /* Cart items spacing */
-            #m-cart-list {
-                padding: 8px !important;
-            }
-            #m-cart-list > div {
-                padding: 8px !important;
-            }
-            /* Botones del footer del carrito más compactos */
-            #v-mesero .safe-bottom {
-                padding: 12px !important;
-            }
-            /* Header principal en mobile */
-            #v-mesero .sticky-nav {
-                padding: 8px 12px !important;
-            }
-            /* Categories nav más compacta */
-            #m-cats-wrapper {
-                padding: 6px 8px !important;
-            }
-            /* En pantallas muy pequeñas, 1 columna */
-            @media (max-width: 400px) {
-                #m-grid > section .grid {
-                    grid-template-columns: 1fr !important;
-                }
-            }
-            /* Select mesa más compacto */
-            #sel-mesa {
-                padding-top: 10px !important;
-                padding-bottom: 10px !important;
-                font-size: 14px !important;
+            #m-grid > section { margin-bottom: 1.5rem !important; }
+            /* Comanda a pantalla completa */
+            #m-cart-panel { border-radius: 0 !important; }
+            #m-cart-list { padding: 8px !important; }
+            #m-cart-list > div { padding: 10px !important; }
+            #v-mesero .safe-bottom { padding: 12px !important; }
+            #m-cats-wrapper { padding: 6px 8px !important; }
+            /* Pantallas muy chicas: card a ancho completo */
+            @media (max-width: 359px) {
+                .lc-card { width: 100% !important; }
+                .lc-mesa-btn { width: calc(50% - 5px) !important; }
+                .lc-ab-send { width: 108px !important; }
             }
         }
 
@@ -376,11 +330,10 @@
         
         /* Categoría activa en el nav */
         .cat-btn-active {
-            background: #F97316 !important;
-            color: white !important;
+            background: linear-gradient(135deg, #F97316, #EA580C) !important;
+            color: #fff !important;
             border-color: #EA580C !important;
-            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
-            transform: scale(1.05);
+            box-shadow: 0 6px 14px rgba(249, 115, 22, 0.32);
         }
         
         /* Animación al agregar item */
@@ -423,26 +376,6 @@
             transform: translateY(0);
         }
         
-        /* Qty badge en menu card */
-        .menu-qty-badge {
-            position: absolute;
-            top: -6px;
-            right: -6px;
-            min-width: 26px;
-            height: 26px;
-            border-radius: 13px;
-            background: linear-gradient(135deg, #F97316, #EA580C);
-            color: white;
-            font-size: 12px;
-            font-weight: 900;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 8px rgba(249,115,22,0.5);
-            z-index: 20;
-            padding: 0 6px;
-        }
-        
         /* Swipe-to-delete hint */
         .cart-item-actions {
             transition: max-height 0.2s ease;
@@ -457,6 +390,460 @@
             align-items: center;
             justify-content: center;
         }
+
+        /* ==========================================================
+           V8 · COMANDA RÁPIDA (UI/UX MESERO)
+           Clases propias (lc-*) para no depender del build de Tailwind
+           ========================================================== */
+
+        :root {
+            --lc-accent: #F97316;
+            --lc-accent-dark: #EA580C;
+            --lc-ink: #0F172A;
+            --lc-muted: #64748B;
+            --lc-line: #E2E8F0;
+            --lc-radius: 18px;
+        }
+
+        /* ---------- Barra superior del mesero ---------- */
+        .lc-topbar {
+            display: -webkit-flex; display: flex;
+            -webkit-align-items: center; align-items: center;
+            gap: 8px;
+            padding: 10px 12px;
+            background: rgba(255,255,255,0.92);
+            -webkit-backdrop-filter: saturate(180%) blur(14px);
+            backdrop-filter: saturate(180%) blur(14px);
+            border-bottom: 1px solid rgba(226,232,240,0.7);
+        }
+        .lc-search {
+            position: relative;
+            -webkit-flex: 1; flex: 1;
+            min-width: 0;
+        }
+        .lc-search input {
+            width: 100%;
+            height: 48px;
+            padding: 0 40px;
+            border: 1.5px solid transparent;
+            border-radius: 14px;
+            background: #F1F5F9;
+            font-size: 16px; /* evita el zoom automático de iOS */
+            font-weight: 600;
+            color: var(--lc-ink);
+            outline: none;
+            -webkit-appearance: none;
+            transition: border-color .2s ease, background .2s ease;
+        }
+        .lc-search input:focus { background: #fff; border-color: var(--lc-accent); }
+        .lc-search .lc-search-ico {
+            position: absolute; left: 14px; top: 50%;
+            -webkit-transform: translateY(-50%); transform: translateY(-50%);
+            color: #94A3B8; font-size: 14px; pointer-events: none;
+        }
+        .lc-search .lc-search-clear {
+            position: absolute; right: 8px; top: 50%;
+            -webkit-transform: translateY(-50%); transform: translateY(-50%);
+            width: 30px; height: 30px; border-radius: 15px;
+            background: #E2E8F0; color: #64748B; font-size: 12px;
+            display: none; -webkit-align-items: center; align-items: center;
+            -webkit-justify-content: center; justify-content: center;
+        }
+        .lc-search.has-value .lc-search-clear { display: -webkit-flex; display: flex; }
+
+        /* ---------- Chip de mesa ---------- */
+        .lc-mesa-chip {
+            -webkit-flex: none; flex: none;
+            height: 48px;
+            padding: 0 14px;
+            border-radius: 14px;
+            border: 1.5px solid var(--lc-line);
+            background: #fff;
+            display: -webkit-flex; display: flex;
+            -webkit-align-items: center; align-items: center;
+            gap: 8px;
+            font-weight: 800;
+            font-size: 14px;
+            color: var(--lc-ink);
+            white-space: nowrap;
+            transition: all .2s ease;
+        }
+        .lc-mesa-chip .lc-mesa-ico { color: var(--lc-accent); font-size: 15px; }
+        .lc-mesa-chip b { display: block; line-height: 1.05; }
+        .lc-mesa-chip small {
+            display: block;
+            font-size: 9px;
+            line-height: 1;
+            font-weight: 800;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: #94A3B8;
+            margin-bottom: 3px;
+        }
+        .lc-mesa-chip.is-empty {
+            border-color: #FDBA74;
+            background: #FFF7ED;
+            color: var(--lc-accent-dark);
+        }
+        .lc-mesa-chip.is-empty small { color: #FB923C; }
+        .lc-mesa-chip.is-set {
+            border-color: var(--lc-accent);
+            background: linear-gradient(135deg, #F97316, #EA580C);
+            color: #fff;
+            box-shadow: 0 6px 16px rgba(249,115,22,.32);
+        }
+        .lc-mesa-chip.is-set small,
+        .lc-mesa-chip.is-set .lc-mesa-ico { color: rgba(255,255,255,.78); }
+
+        /* ---------- Fila de rápidos / favoritos ---------- */
+        .lc-quick {
+            padding: 10px 12px 0;
+            background: #fff;
+            border-bottom: 1px solid rgba(226,232,240,.6);
+        }
+        .lc-quick-head {
+            display: -webkit-flex; display: flex;
+            -webkit-align-items: center; align-items: center;
+            gap: 6px;
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            color: #94A3B8;
+            margin-bottom: 8px;
+        }
+        .lc-quick-head i { color: var(--lc-accent); }
+        .lc-quick-row {
+            display: -webkit-flex; display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 10px;
+        }
+        .lc-quick-row::-webkit-scrollbar { display: none; }
+        .lc-quick-chip {
+            -webkit-flex: none; flex: none;
+            padding: 9px 14px;
+            border-radius: 14px;
+            border: 1.5px solid var(--lc-line);
+            background: #F8FAFC;
+            text-align: left;
+            transition: all .18s ease;
+        }
+        .lc-quick-chip b {
+            display: block;
+            font-size: 13px;
+            font-weight: 800;
+            color: #1E293B;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 150px;
+        }
+        .lc-quick-chip span {
+            font-size: 11px;
+            font-weight: 900;
+            color: var(--lc-accent-dark);
+        }
+        .lc-quick-chip:active { -webkit-transform: scale(.94); transform: scale(.94); border-color: var(--lc-accent); }
+
+        /* ---------- Pills de categoría ---------- */
+        .lc-cats {
+            padding: 8px 12px;
+            background: rgba(255,255,255,.95);
+            -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(226,232,240,.7);
+        }
+        .lc-cats-row {
+            display: -webkit-flex; display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 2px 0;
+        }
+        .lc-cats-row::-webkit-scrollbar { display: none; }
+        .lc-cat-pill {
+            -webkit-flex: 0 0 auto; flex: 0 0 auto;
+            white-space: nowrap;
+            height: 42px;
+            padding: 0 14px;
+            border-radius: 12px;
+            border: 1.5px solid var(--lc-line);
+            background: #fff;
+            font-size: 13px; font-weight: 800; color: #64748B;
+            display: -webkit-flex; display: flex;
+            -webkit-align-items: center; align-items: center;
+            gap: 7px;
+            transition: all .18s ease;
+        }
+        .lc-cat-pill i { font-size: 12px; color: #94A3B8; }
+        .lc-cat-pill.cat-btn-active i { color: #fff; }
+        .lc-cat-pill:active { -webkit-transform: scale(.95); transform: scale(.95); }
+
+        /* ---------- Cards del menú ---------- */
+        .lc-menu-grid {
+            display: -webkit-flex; display: flex;
+            -webkit-flex-wrap: wrap; flex-wrap: wrap;
+            gap: 10px;
+        }
+        .lc-card {
+            position: relative;
+            width: calc(50% - 5px);
+            min-height: 116px;
+            padding: 12px;
+            border-radius: var(--lc-radius);
+            border: 1.5px solid #EEF2F6;
+            background: #fff;
+            box-shadow: 0 1px 2px rgba(15,23,42,.04);
+            display: -webkit-flex; display: flex;
+            -webkit-flex-direction: column; flex-direction: column;
+            -webkit-justify-content: space-between; justify-content: space-between;
+            overflow: hidden;
+            text-align: left;
+            -webkit-user-select: none; user-select: none;
+            cursor: pointer;
+            transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+        }
+        .lc-card:active { -webkit-transform: scale(.97); transform: scale(.97); }
+        .lc-card.is-active { border-color: var(--lc-accent); box-shadow: 0 6px 18px rgba(249,115,22,.16); }
+        .lc-card-ghost {
+            position: absolute; right: -10px; bottom: -14px;
+            font-size: 62px; color: #F8FAFC;
+            -webkit-transform: rotate(-12deg); transform: rotate(-12deg);
+            pointer-events: none;
+        }
+        .lc-card.is-active .lc-card-ghost { color: #FFF7ED; }
+        .lc-card-name {
+            position: relative; z-index: 2;
+            font-size: 13.5px; font-weight: 800; line-height: 1.25;
+            color: #1E293B;
+            padding-right: 6px;
+        }
+        .lc-card-foot {
+            position: relative; z-index: 2;
+            display: -webkit-flex; display: flex;
+            -webkit-align-items: center; align-items: center;
+            -webkit-justify-content: space-between; justify-content: space-between;
+            margin-top: 10px;
+        }
+        .lc-card-price { font-size: 17px; font-weight: 900; color: var(--lc-ink); letter-spacing: -.02em; white-space: nowrap; }
+        .lc-card.is-active .lc-card-price { font-size: 14px; color: var(--lc-accent-dark); }
+        .lc-card-add {
+            width: 38px; height: 38px; border-radius: 12px;
+            background: #F1F5F9; color: var(--lc-accent);
+            display: -webkit-flex; display: flex;
+            -webkit-align-items: center; align-items: center;
+            -webkit-justify-content: center; justify-content: center;
+            font-size: 14px;
+        }
+        .lc-card.is-active .lc-card-add { background: var(--lc-accent); color: #fff; }
+
+        /* Stepper dentro de la card (aparece al tener cantidad) */
+        .lc-stepper {
+            position: relative; z-index: 3;
+            display: -webkit-flex; display: flex;
+            -webkit-align-items: center; align-items: center;
+            gap: 2px;
+            background: var(--lc-accent);
+            border-radius: 12px;
+            padding: 2px;
+            box-shadow: 0 4px 12px rgba(249,115,22,.34);
+        }
+        .lc-stepper button {
+            width: 32px; height: 32px;
+            border-radius: 10px;
+            background: rgba(255,255,255,.18);
+            color: #fff; font-size: 16px; font-weight: 900;
+            line-height: 1;
+            display: -webkit-flex; display: flex;
+            -webkit-align-items: center; align-items: center;
+            -webkit-justify-content: center; justify-content: center;
+        }
+        .lc-stepper button:active { background: rgba(255,255,255,.35); }
+        .lc-stepper .lc-step-qty {
+            min-width: 20px; text-align: center;
+            color: #fff; font-weight: 900; font-size: 15px;
+        }
+
+        /* ---------- Barra inferior de acción ---------- */
+        .lc-actionbar {
+            position: absolute;
+            left: 10px; right: 10px;
+            bottom: 10px;
+            bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+            z-index: 45;
+            display: -webkit-flex; display: flex;
+            gap: 8px;
+            -webkit-transform: translateY(160%); transform: translateY(160%);
+            transition: -webkit-transform .28s cubic-bezier(.16,1,.3,1);
+            transition: transform .28s cubic-bezier(.16,1,.3,1);
+        }
+        .lc-actionbar.show { -webkit-transform: translateY(0); transform: translateY(0); }
+        .lc-ab-cart {
+            -webkit-flex: 1; flex: 1;
+            min-width: 0;
+            height: 62px;
+            padding: 0 14px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #0F172A, #1E293B);
+            color: #fff;
+            display: -webkit-flex; display: flex;
+            -webkit-align-items: center; align-items: center;
+            gap: 10px;
+            box-shadow: 0 10px 28px rgba(15,23,42,.28);
+        }
+        .lc-ab-badge {
+            -webkit-flex: none; flex: none;
+            width: 32px; height: 32px; border-radius: 11px;
+            background: linear-gradient(135deg, #F97316, #EA580C);
+            font-size: 14px; font-weight: 900;
+            display: -webkit-flex; display: flex;
+            -webkit-align-items: center; align-items: center;
+            -webkit-justify-content: center; justify-content: center;
+            box-shadow: 0 4px 10px rgba(249,115,22,.45);
+        }
+        .lc-ab-info { min-width: 0; text-align: left; -webkit-flex: 1; flex: 1; }
+        .lc-ab-total { display: block; font-size: 19px; font-weight: 900; letter-spacing: -.02em; line-height: 1.15; }
+        .lc-ab-desc {
+            display: block; font-size: 10px; font-weight: 600; color: #94A3B8;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .lc-ab-send {
+            -webkit-flex: none; flex: none;
+            width: 126px; height: 62px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #F97316, #EA580C);
+            color: #fff;
+            font-size: 14px; font-weight: 900;
+            display: -webkit-flex; display: flex;
+            -webkit-flex-direction: column; flex-direction: column;
+            -webkit-align-items: center; align-items: center;
+            -webkit-justify-content: center; justify-content: center;
+            gap: 2px;
+            box-shadow: 0 10px 26px rgba(249,115,22,.4);
+        }
+        .lc-ab-send small { font-size: 9px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; opacity: .85; }
+        .lc-ab-send:active, .lc-ab-cart:active { -webkit-transform: scale(.97); transform: scale(.97); }
+
+        /* ---------- Sheet genérico ---------- */
+        .lc-sheet {
+            position: fixed; top: 0; right: 0; bottom: 0; left: 0;
+            z-index: 115;
+            display: none;
+        }
+        .lc-sheet.open { display: block; }
+        .lc-sheet-overlay {
+            position: absolute; top: 0; right: 0; bottom: 0; left: 0;
+            background: rgba(15,23,42,.55);
+            -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+            opacity: 0; transition: opacity .25s ease;
+        }
+        .lc-sheet.open .lc-sheet-overlay { opacity: 1; }
+        .lc-sheet-panel {
+            position: absolute; left: 0; right: 0; bottom: 0;
+            max-height: 92%;
+            background: #fff;
+            border-radius: 26px 26px 0 0;
+            display: -webkit-flex; display: flex;
+            -webkit-flex-direction: column; flex-direction: column;
+            -webkit-transform: translateY(100%); transform: translateY(100%);
+            transition: -webkit-transform .32s cubic-bezier(.16,1,.3,1);
+            transition: transform .32s cubic-bezier(.16,1,.3,1);
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+        }
+        .lc-sheet.open .lc-sheet-panel { -webkit-transform: translateY(0); transform: translateY(0); }
+        .lc-sheet-grab { width: 42px; height: 4px; border-radius: 2px; background: #E2E8F0; margin: 10px auto 2px; }
+        .lc-sheet-head { padding: 8px 20px 12px; }
+        .lc-sheet-head h3 { font-size: 20px; font-weight: 900; color: var(--lc-ink); letter-spacing: -.02em; }
+        .lc-sheet-head p { font-size: 12px; color: var(--lc-muted); font-weight: 600; margin-top: 2px; }
+        .lc-sheet-body { -webkit-flex: 1; flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 16px 20px; }
+
+        /* ---------- Grid de mesas ---------- */
+        .lc-zone-title {
+            display: -webkit-flex; display: flex;
+            -webkit-align-items: center; align-items: center;
+            gap: 8px;
+            font-size: 11px; font-weight: 900; letter-spacing: .12em;
+            text-transform: uppercase; color: #94A3B8;
+            margin: 16px 0 10px;
+        }
+        .lc-zone-title i { color: var(--lc-accent); }
+        .lc-mesa-grid {
+            display: -webkit-flex; display: flex;
+            -webkit-flex-wrap: wrap; flex-wrap: wrap;
+            gap: 10px;
+        }
+        .lc-mesa-btn {
+            position: relative;
+            width: calc(33.333% - 7px);
+            height: 84px;
+            border-radius: 16px;
+            border: 2px solid #E8EDF3;
+            background: #fff;
+            display: -webkit-flex; display: flex;
+            -webkit-flex-direction: column; flex-direction: column;
+            -webkit-align-items: center; align-items: center;
+            -webkit-justify-content: center; justify-content: center;
+            gap: 3px;
+            transition: all .16s ease;
+        }
+        .lc-mesa-btn:active { -webkit-transform: scale(.95); transform: scale(.95); }
+        .lc-mesa-btn b { font-size: 24px; font-weight: 900; color: var(--lc-ink); line-height: 1; }
+        .lc-mesa-btn span { font-size: 10px; font-weight: 800; color: #94A3B8; text-transform: uppercase; letter-spacing: .08em; }
+        .lc-mesa-btn.is-busy { border-color: #FCD34D; background: #FFFBEB; }
+        .lc-mesa-btn.is-busy span { color: #B45309; }
+        .lc-mesa-btn.is-selected {
+            border-color: var(--lc-accent-dark);
+            background: linear-gradient(135deg, #F97316, #EA580C);
+            box-shadow: 0 8px 20px rgba(249,115,22,.36);
+        }
+        .lc-mesa-btn.is-selected b, .lc-mesa-btn.is-selected span { color: #fff; }
+        .lc-mesa-btn.is-wide { width: 100%; height: 66px; -webkit-flex-direction: row; flex-direction: row; gap: 10px; }
+        .lc-mesa-btn.is-wide b { font-size: 17px; }
+        .lc-mesa-dot {
+            position: absolute; top: 7px; right: 8px;
+            font-size: 9px; font-weight: 900;
+            color: #B45309; background: #FDE68A;
+            padding: 2px 6px; border-radius: 8px;
+        }
+        .lc-mesa-btn.is-selected .lc-mesa-dot { background: rgba(255,255,255,.25); color: #fff; }
+
+        /* ---------- Cabecera de categoría ---------- */
+        .lc-cat-head {
+            display: -webkit-flex; display: flex;
+            -webkit-align-items: center; align-items: center;
+            gap: 10px;
+            margin: 0 2px 12px;
+        }
+        .lc-cat-head .lc-cat-bar { width: 5px; height: 22px; border-radius: 3px; background: var(--lc-accent); }
+        .lc-cat-head h3 { font-size: 17px; font-weight: 900; color: #1E293B; letter-spacing: -.02em; }
+        .lc-cat-head em { font-style: normal; font-size: 11px; font-weight: 700; color: #CBD5E1; }
+
+        /* Estado vacío de búsqueda */
+        .lc-empty { padding: 46px 20px; text-align: center; color: #94A3B8; }
+        .lc-empty i { font-size: 34px; opacity: .35; display: block; margin-bottom: 10px; }
+        .lc-empty b { display: block; font-size: 14px; font-weight: 800; color: #64748B; }
+        .lc-empty span { font-size: 12px; }
+
+        @media (min-width: 768px) {
+            .lc-card { width: calc(33.333% - 7px); min-height: 128px; }
+            .lc-card:hover { border-color: #FDBA74; box-shadow: 0 8px 22px rgba(15,23,42,.07); }
+            .lc-mesa-btn { width: calc(25% - 8px); }
+            .lc-actionbar { display: none; }
+            .lc-sheet-panel {
+                left: 50%; right: auto; bottom: auto; top: 50%;
+                width: 560px; max-height: 84%;
+                border-radius: 26px;
+                -webkit-transform: translate(-50%, -46%); transform: translate(-50%, -46%);
+                opacity: 0;
+                transition: opacity .2s ease, -webkit-transform .28s cubic-bezier(.16,1,.3,1);
+                transition: opacity .2s ease, transform .28s cubic-bezier(.16,1,.3,1);
+            }
+            .lc-sheet.open .lc-sheet-panel {
+                -webkit-transform: translate(-50%, -50%); transform: translate(-50%, -50%);
+                opacity: 1;
+            }
+        }
     </style>
 </head>
 <body class="h-screen flex flex-col text-slate-800 bg-brand-base">
@@ -469,7 +856,7 @@
             <div class="absolute inset-0 flex items-center justify-center text-slate-300 text-2xl"><i class="fa-solid fa-utensils"></i></div>
         </div>
         <h1 class="text-3xl font-display font-black text-slate-900 tracking-tight">La Cabaña</h1>
-        <p class="text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mt-2">Enterprise POS V6.2</p>
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mt-2">Enterprise POS V8.0</p>
     </div>
 
     <!-- 0.5 CONTENEDOR DE NOTIFICACIONES TOAST -->
@@ -477,7 +864,7 @@
 
     <!-- 1. HEADER SUPERIOR - MODERNO -->
     <header class="flex-none h-14 md:h-16 bg-white/80 backdrop-blur-xl border-b border-slate-200/50 flex items-center justify-between px-4 lg:px-8 z-50 shadow-sm">
-        <div class="flex items-center gap-3">
+        <button onclick="APP.backToRoles()" class="flex items-center gap-3 tap-effect text-left" aria-label="Cambiar de estación">
             <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 text-white flex items-center justify-center shadow-lg shadow-orange-500/30 shine-effect">
                 <i class="fa-solid fa-fire-burner text-lg"></i>
             </div>
@@ -485,7 +872,7 @@
                 <h2 class="font-display font-bold text-base md:text-lg text-slate-800">La Cabaña</h2>
                 <span id="txt-role" class="text-[8px] md:text-[9px] font-black uppercase text-brand-accent tracking-widest">Iniciando...</span>
             </div>
-        </div>
+        </button>
         <div class="flex items-center gap-2">
             <!-- Indicador de conexión Firebase -->
             <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200">
@@ -563,7 +950,7 @@
                 </div>
                 
                 <!-- Footer info -->
-                <p class="text-center text-[10px] text-slate-300 mt-8 font-medium tracking-wider">MENUDERÍA DE LA PROGRESO • SISTEMA V7.0</p>
+                <p class="text-center text-[10px] text-slate-300 mt-8 font-medium tracking-wider">MENUDERÍA DE LA PROGRESO • SISTEMA V8.0</p>
             </div>
         </div>
 
@@ -571,34 +958,48 @@
         <div id="v-mesero" class="hidden absolute inset-0 z-30 flex-col md:flex-row bg-slate-50" role="main" aria-label="Interfaz de mesero">
             <!-- Lado Izquierdo: Menú -->
             <div class="flex-1 flex flex-col relative h-full overflow-hidden">
-                <div class="sticky-nav px-3 py-2.5 z-30">
-                    <div class="relative max-w-xl mx-auto">
-                        <i class="fa-solid fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm" aria-hidden="true"></i>
-                        <input type="search" id="m-search" onkeyup="UI.filterMenu(this.value)" placeholder="Buscar platillo..." aria-label="Buscar platillo en el menú" autocomplete="off" class="w-full pl-10 pr-10 py-3.5 bg-slate-100/80 rounded-2xl text-base font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:bg-white transition-all border border-transparent focus:border-orange-200">
-                        <button onclick="document.getElementById('m-search').value='';UI.filterMenu('')" class="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-slate-200/80 text-slate-400 flex items-center justify-center text-xs hover:bg-slate-300 transition-colors hidden" id="m-search-clear" aria-label="Limpiar búsqueda"><i class="fa-solid fa-xmark"></i></button>
+                <!-- BARRA SUPERIOR: mesa + búsqueda (1 sólo toque para cada cosa) -->
+                <div class="lc-topbar z-30">
+                    <button id="m-mesa-chip" onclick="UI.openMesaPicker()" class="lc-mesa-chip is-empty" aria-label="Seleccionar mesa">
+                        <i class="fa-solid fa-location-dot lc-mesa-ico" aria-hidden="true"></i>
+                        <span>
+                            <small>Mesa</small>
+                            <b id="m-mesa-chip-txt">Elegir</b>
+                        </span>
+                        <i class="fa-solid fa-angle-down text-[11px] opacity-60" aria-hidden="true"></i>
+                    </button>
+                    <div class="lc-search" id="m-search-wrap">
+                        <i class="fa-solid fa-magnifying-glass lc-search-ico" aria-hidden="true"></i>
+                        <input type="search" id="m-search" oninput="UI.filterMenu(this.value)" placeholder="Buscar platillo…" aria-label="Buscar platillo en el menú" autocomplete="off" enterkeyhint="search">
+                        <button type="button" class="lc-search-clear" onclick="UI.clearSearch()" aria-label="Limpiar búsqueda"><i class="fa-solid fa-xmark"></i></button>
                     </div>
                 </div>
 
-                <nav id="m-cats-wrapper" class="px-3 py-2 bg-white/90 backdrop-blur-lg z-20 border-b border-slate-100/50" aria-label="Categorías del menú">
-                    <div id="m-cat-nav" class="flex gap-2 overflow-x-auto hide-scroll py-1 snap-x" role="tablist"></div>
+                <!-- ACCESO RÁPIDO: los platillos que este mesero más manda -->
+                <div id="m-quick" class="lc-quick" style="display:none">
+                    <div class="lc-quick-head"><i class="fa-solid fa-bolt" aria-hidden="true"></i> Los más pedidos</div>
+                    <div class="lc-quick-row" id="m-quick-row"></div>
+                </div>
+
+                <nav id="m-cats-wrapper" class="lc-cats z-20" aria-label="Categorías del menú">
+                    <div id="m-cat-nav" class="lc-cats-row" role="tablist"></div>
                 </nav>
 
                 <div id="m-grid" class="flex-1 overflow-y-auto p-3 md:p-6 pb-28 md:pb-8 w-full max-w-7xl mx-auto scroll-smooth hide-scroll" role="list" aria-label="Menú de platillos"></div>
 
-                <!-- Botón flotante Mobile - MEJORADO con items count -->
-                <div id="m-float-btn-wrapper" class="md:hidden absolute bottom-4 left-3 right-3 z-40 animate-up" style="display:none">
-                    <button onclick="UI.toggleCartMobile(true)" class="w-full bg-gradient-to-r from-slate-900 to-slate-800 text-white h-[64px] rounded-2xl shadow-floating flex items-center justify-between px-5 tap-effect border border-slate-700/50 shine-effect" aria-label="Ver pedido actual">
-                        <div class="flex items-center gap-3">
-                            <span id="m-badge-float" class="w-8 h-8 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 text-sm font-bold flex items-center justify-center shadow-lg shadow-orange-500/40" aria-live="polite">0</span>
-                            <div class="text-left">
-                                <span class="font-semibold text-sm block">Ver Pedido</span>
-                                <span id="m-items-desc-float" class="text-[10px] text-slate-400 font-medium"></span>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span id="m-total-float" class="font-display font-black text-xl" aria-live="polite">$0.00</span>
-                            <i class="fa-solid fa-chevron-up text-slate-400 text-xs" aria-hidden="true"></i>
-                        </div>
+                <!-- BARRA DE ACCIÓN MÓVIL: ver comanda + enviar a cocina sin abrir nada -->
+                <div id="m-actionbar" class="lc-actionbar md:hidden">
+                    <button onclick="UI.toggleCartMobile(true)" class="lc-ab-cart" aria-label="Ver y editar la comanda">
+                        <span id="m-badge-float" class="lc-ab-badge" aria-live="polite">0</span>
+                        <span class="lc-ab-info">
+                            <span id="m-total-float" class="lc-ab-total" aria-live="polite">$0.00</span>
+                            <span id="m-items-desc-float" class="lc-ab-desc">Ver comanda</span>
+                        </span>
+                        <i class="fa-solid fa-chevron-up text-slate-500 text-[11px]" aria-hidden="true"></i>
+                    </button>
+                    <button onclick="LOGIC.confirmSendOrder()" class="lc-ab-send" aria-label="Enviar orden a cocina">
+                        <i class="fa-solid fa-paper-plane text-base" aria-hidden="true"></i>
+                        <small>Enviar</small>
                     </button>
                 </div>
             </div>
@@ -620,32 +1021,37 @@
                 </div>
 
                 <div class="px-4 py-3 bg-slate-50/80">
-                    <label for="sel-mesa" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Ubicación de la mesa</label>
-                    <div class="relative">
-                        <i class="fa-solid fa-location-dot absolute left-3.5 top-1/2 -translate-y-1/2 text-orange-500" aria-hidden="true"></i>
-                        <select id="sel-mesa" aria-label="Seleccionar mesa o ubicación" class="w-full pl-10 pr-8 py-3.5 bg-white border-2 border-slate-200 rounded-xl text-base font-bold text-slate-700 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-200 appearance-none shadow-sm cursor-pointer hover:border-orange-300 transition-colors">
-                            <option value="" disabled selected>Selecciona Ubicación...</option>
-                            <optgroup label="Sala">
-                                <option value="1">Mesa 1</option><option value="2">Mesa 2</option>
-                                <option value="3">Mesa 3</option><option value="4">Mesa 4</option>
-                            </optgroup>
-                            <optgroup label="Jardín">
-                                <option value="5">Mesa 5</option><option value="6">Mesa 6</option>
-                            </optgroup>
-                            <optgroup label="VIP">
-                                <option value="7">Mesa 7</option><option value="8">Mesa 8</option>
-                                <option value="9">Mesa 9</option><option value="10">Mesa 10</option><option value="11">Mesa 11</option>
-                            </optgroup>
-                            <optgroup label="Afuera">
-                                <option value="12">Mesa 12</option><option value="13">Mesa 13</option>
-                                <option value="14">Mesa 14</option><option value="15">Mesa 15</option>
-                            </optgroup>
-                            <optgroup label="Otros">
-                                <option value="LLEVAR">📦 PARA LLEVAR</option>
-                            </optgroup>
-                        </select>
-                        <i class="fa-solid fa-angle-down absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" aria-hidden="true"></i>
-                    </div>
+                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 block">Ubicación de la mesa</span>
+                    <button type="button" id="m-mesa-big" onclick="UI.openMesaPicker()" class="w-full flex items-center gap-3 px-4 py-3.5 bg-white border-2 border-slate-200 rounded-xl text-left hover:border-orange-300 transition-colors tap-effect" aria-label="Seleccionar mesa o ubicación">
+                        <i class="fa-solid fa-location-dot text-orange-500" aria-hidden="true"></i>
+                        <span class="flex-1 min-w-0">
+                            <span id="m-mesa-big-txt" class="block text-base font-bold text-slate-700 truncate">Selecciona ubicación…</span>
+                            <span id="m-mesa-big-sub" class="block text-[11px] font-semibold text-slate-400"></span>
+                        </span>
+                        <i class="fa-solid fa-angle-right text-slate-300" aria-hidden="true"></i>
+                    </button>
+                    <!-- Fuente de verdad de la mesa (la UI de arriba la escribe) -->
+                    <select id="sel-mesa" class="hidden" aria-hidden="true" tabindex="-1">
+                        <option value="" disabled selected>Selecciona Ubicación...</option>
+                        <optgroup label="Sala">
+                            <option value="1">Mesa 1</option><option value="2">Mesa 2</option>
+                            <option value="3">Mesa 3</option><option value="4">Mesa 4</option>
+                        </optgroup>
+                        <optgroup label="Jardín">
+                            <option value="5">Mesa 5</option><option value="6">Mesa 6</option>
+                        </optgroup>
+                        <optgroup label="VIP">
+                            <option value="7">Mesa 7</option><option value="8">Mesa 8</option>
+                            <option value="9">Mesa 9</option><option value="10">Mesa 10</option><option value="11">Mesa 11</option>
+                        </optgroup>
+                        <optgroup label="Afuera">
+                            <option value="12">Mesa 12</option><option value="13">Mesa 13</option>
+                            <option value="14">Mesa 14</option><option value="15">Mesa 15</option>
+                        </optgroup>
+                        <optgroup label="Otros">
+                            <option value="LLEVAR">📦 PARA LLEVAR</option>
+                        </optgroup>
+                    </select>
                 </div>
 
                 <div id="m-cart-list" class="flex-1 overflow-y-auto p-3 space-y-2 bg-slate-50/50 hide-scroll" role="list" aria-label="Productos en la orden"></div>
@@ -669,6 +1075,22 @@
                         <i class="fa-solid fa-paper-plane group-hover:translate-x-1 transition-transform" aria-hidden="true"></i>
                     </button>
                 </div>
+            </div>
+        </div>
+
+        <!-- SHEET: SELECTOR DE MESA (botones grandes, 1 toque) -->
+        <div id="sheet-mesa" class="lc-sheet" role="dialog" aria-modal="true" aria-label="Seleccionar mesa">
+            <div class="lc-sheet-overlay" onclick="UI.closeMesaPicker()"></div>
+            <div class="lc-sheet-panel">
+                <div class="lc-sheet-grab" aria-hidden="true"></div>
+                <div class="lc-sheet-head flex items-start justify-between gap-3">
+                    <div>
+                        <h3>¿Para qué mesa?</h3>
+                        <p>Amarillo = mesa con cuenta abierta</p>
+                    </div>
+                    <button onclick="UI.closeMesaPicker()" class="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center tap-effect" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="lc-sheet-body" id="sheet-mesa-body"></div>
             </div>
         </div>
 
@@ -1274,7 +1696,8 @@
                 {n: 'Menudo Rojo Chico', p: 140}, {n: 'Menudo Rojo Mediano', p: 160}, {n: 'Menudo Rojo Grande', p: 200},
                 {n: 'Menudo Blanco Chico', p: 140}, {n: 'Menudo Blanco Mediano', p: 160}, {n: 'Menudo Blanco Grande', p: 200},
                 {n: 'Consomé Vaso', p: 20},
-                {n: 'Pata Extra', p: 40} // AGREGADO
+                {n: 'Pata Extra', p: 40},
+                {n: 'Pozole Mediano', p: 160}, {n: 'Pozole Grande', p: 200}
             ]},
             { id: 'barba', name: 'Barbacoa', icon: 'fa-fire-burner', items: [
                 {n: 'Taco Suave', p: 30}, {n: 'Taco Dorado', p: 30},
@@ -1285,6 +1708,13 @@
                 {n: 'Quesabirria Sola', p: 80}, {n: 'Media Quesa (1 pza + Guarn)', p: 130}, {n: 'Orden Quesa (2 pza + Guarn)', p: 180}
             ]},
             // PAQUETES (COMBOS) ELIMINADO
+            { id: 'antojitos', name: 'Antojitos', icon: 'fa-pepper-hot', items: [
+                {n: 'Orden de 3 Sopes', p: 150}, {n: 'Orden de 3 Tostadas', p: 150}, {n: 'Orden de 5 Tacos', p: 150},
+                {n: 'Tamal', p: 30}, {n: 'Docena de Tamales', p: 300}
+            ]},
+            { id: 'fuertes', name: 'Platillos Fuertes', icon: 'fa-drumstick-bite', items: [
+                {n: 'Costillas de Puerco', p: 180}, {n: 'Chiles Rellenos', p: 180}
+            ]},
             { id: 'especial', name: 'Especiales', icon: 'fa-star', items: [
                 {n: 'Platillo del Día', p: 180}, // AGREGADO
                 {n: 'Orden de Pan', p: 20}, // AGREGADO
@@ -1294,6 +1724,17 @@
                 {n: 'Refresco Lata', p: 30}, {n: 'Café de Olla', p: 30}, {n: 'Agua Fresca 1L', p: 45}, {n: 'Botella Agua', p: 25}
             ]}
         ];
+
+        // 3.1 MAPA DE MESAS (usado por el selector rápido del mesero)
+        const MESAS_DB = [
+            { zone: 'Sala',   icon: 'fa-couch',          tables: ['1','2','3','4'] },
+            { zone: 'Jardín', icon: 'fa-tree',           tables: ['5','6'] },
+            { zone: 'VIP',    icon: 'fa-crown',          tables: ['7','8','9','10','11'] },
+            { zone: 'Afuera', icon: 'fa-umbrella-beach', tables: ['12','13','14','15'] }
+        ];
+
+        // Platillos sugeridos al arrancar (antes de tener historial propio)
+        const QUICK_DEFAULTS = ['Menudo Rojo Mediano','Taco Suave','Orden de 5 Tacos','Quesabirria Sola','Tamal','Refresco Lata','Pozole Mediano','Consomé Vaso'];
 
         // *** SONIDO (Campana agradable) ***
         const AUDIO_BELL = new Audio('https://cdn.freesound.org/previews/411/411089_5121236-lq.mp3'); 
@@ -1449,129 +1890,314 @@
             
             initMesero: () => {
                 // Categorías con scroll-spy
-                document.getElementById('m-cat-nav').innerHTML = MENU_DB.map((c, ci) => 
-                    `<button data-cat="${c.id}" onclick="UI.scrollToCat('${c.id}')" role="tab" aria-selected="${ci===0}" aria-controls="cat-${c.id}" class="cat-btn whitespace-nowrap px-4 py-3 bg-white border border-slate-200 text-sm font-bold text-slate-500 rounded-xl hover:bg-brand-accent hover:text-white transition-all shadow-sm flex items-center gap-2 snap-start active:scale-95 select-none touch-target ${ci===0?'cat-btn-active':''}">
-                        <i class="fa-solid ${c.icon}" aria-hidden="true"></i> ${c.name}
+                document.getElementById('m-cat-nav').innerHTML = MENU_DB.map((c, ci) =>
+                    `<button data-cat="${c.id}" onclick="UI.scrollToCat('${c.id}')" role="tab" aria-selected="${ci===0}" aria-controls="cat-${c.id}" class="cat-btn lc-cat-pill ${ci===0?'cat-btn-active':''}">
+                        <i class="fa-solid ${c.icon}" aria-hidden="true"></i>${c.name}
                      </button>`
                 ).join('');
-                
+
                 document.getElementById('m-grid').innerHTML = MENU_DB.map(c => `
-                    <section id="cat-${c.id}" class="mb-8 scroll-mt-36" role="listitem" aria-label="Categoría ${c.name}">
-                        <div class="flex items-center gap-3 mb-4 px-1">
-                            <span class="w-1.5 h-7 rounded-full bg-brand-accent" aria-hidden="true"></span>
-                            <h3 class="text-xl font-display font-black text-slate-800">${c.name}</h3>
-                            <span class="text-xs text-slate-400 font-medium">${c.items.length} items</span>
+                    <section id="cat-${c.id}" class="mb-7 scroll-mt-36" role="listitem" aria-label="Categoría ${c.name}">
+                        <div class="lc-cat-head">
+                            <span class="lc-cat-bar" aria-hidden="true"></span>
+                            <h3>${c.name}</h3>
+                            <em>${c.items.length}</em>
                         </div>
-                        <div class="menu-items-row flex gap-3 overflow-x-auto hide-scroll snap-x pb-2 md:grid md:grid-cols-3 md:overflow-x-visible md:flex-wrap">
-                            ${c.items.map(i => `
-                                <button data-item-name="${i.n}" onclick="LOGIC.cartAdd('${i.n.replace(/'/g, "\\'") }',${i.p})" class="menu-card bg-white p-4 rounded-2xl shadow-sm border-2 border-slate-100 hover:border-brand-accent cursor-pointer transition-all duration-200 tap-effect group min-h-[120px] flex flex-col justify-between relative overflow-hidden select-none text-left snap-start flex-shrink-0 w-[160px] md:w-auto" aria-label="${i.n}, ${UI.format(i.p)}. Toca para agregar">
-                                    <div class="absolute -right-3 -bottom-3 text-6xl text-slate-50 group-hover:text-orange-50 transition-colors -rotate-12" aria-hidden="true"><i class="fa-solid ${c.icon}"></i></div>
-                                    <div class="relative z-10 pr-4"><p class="font-bold text-slate-700 text-sm leading-snug">${i.n}</p></div>
-                                    <div class="relative z-10 flex justify-between items-end mt-2">
-                                        <p class="font-display font-black text-xl text-slate-900">${UI.format(i.p)}</p>
-                                        <div class="w-11 h-11 rounded-full bg-slate-50 text-brand-accent flex items-center justify-center shadow-sm group-hover:bg-brand-accent group-hover:text-white transition-colors touch-target" aria-hidden="true"><i class="fa-solid fa-plus"></i></div>
-                                    </div>
-                                </button>
-                            `).join('')}
+                        <div class="lc-menu-grid">
+                            ${c.items.map(i => UI.menuCardHTML(i, c.icon)).join('')}
                         </div>
                     </section>
-                `).join('');
-                
-                // Intersection Observer para resaltar categoría activa
+                `).join('') + `<div id="m-empty" class="lc-empty" style="display:none">
+                        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                        <b>Sin resultados</b>
+                        <span>Prueba con otra palabra o usa + Platillo Especial</span>
+                    </div>`;
+
+                UI._lockShell();
+                UI.renderQuickRow();
+                UI.syncMesaUI();
+                UI.updateMenuBadges();
                 UI._setupCategoryObserver();
             },
-            
-            _setupCategoryObserver: () => {
-                var grid = document.getElementById('m-grid');
-                if(typeof IntersectionObserver !== 'undefined') {
-                    var observer = new IntersectionObserver((entries) => {
-                        entries.forEach(entry => {
-                            if(entry.isIntersecting) {
-                                var catId = entry.target.id.replace('cat-', '');
-                                document.querySelectorAll('.cat-btn').forEach(b => {
-                                    var isActive = b.dataset.cat === catId;
-                                    b.classList.toggle('cat-btn-active', isActive);
-                                    b.setAttribute('aria-selected', isActive);
-                                });
-                                var activeBtn = document.querySelector('.cat-btn[data-cat="' + catId + '"]');
-                                if(activeBtn) activeBtn.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
-                            }
-                        });
-                    }, { root: grid, threshold: 0.3 });
-                    MENU_DB.forEach(c => {
-                        var el = document.getElementById('cat-' + c.id);
-                        if(el) observer.observe(el);
-                    });
-                } else {
-                    // Fallback scroll-spy para Safari 10 sin IntersectionObserver
-                    grid.addEventListener('scroll', () => {
-                        var scrollTop = grid.scrollTop;
-                        var closest = null;
-                        var closestDist = Infinity;
-                        MENU_DB.forEach(c => {
-                            var el = document.getElementById('cat-' + c.id);
-                            if(el) {
-                                var dist = Math.abs(el.offsetTop - scrollTop - 150);
-                                if(dist < closestDist) { closestDist = dist; closest = c.id; }
-                            }
-                        });
-                        if(closest && closest !== UI._lastActiveCat) {
-                            UI._lastActiveCat = closest;
-                            document.querySelectorAll('.cat-btn').forEach(b => {
-                                var isActive = b.dataset.cat === closest;
-                                b.classList.toggle('cat-btn-active', isActive);
-                                b.setAttribute('aria-selected', isActive);
-                            });
-                        }
-                    });
+
+            // Card de platillo: un toque = agregar, stepper inline para ajustar
+            menuCardHTML: (i, icon) => {
+                const safe = UI.escAttr(i.n);
+                return `<div class="lc-card" role="button" tabindex="0" data-item-name="${safe}" data-item-price="${i.p}"
+                        onclick="UI.tapItem(this)" onkeypress="if(event.key==='Enter'||event.key===' '){event.preventDefault();UI.tapItem(this);}"
+                        aria-label="${safe}, ${UI.format(i.p)}. Toca para agregar">
+                        <i class="fa-solid ${icon} lc-card-ghost" aria-hidden="true"></i>
+                        <p class="lc-card-name">${safe}</p>
+                        <div class="lc-card-foot">
+                            <span class="lc-card-price">${UI.format(i.p)}</span>
+                            <div class="lc-card-act">
+                                <span class="lc-card-add" aria-hidden="true"><i class="fa-solid fa-plus"></i></span>
+                            </div>
+                        </div>
+                    </div>`;
+            },
+
+            escAttr: (t) => String(t).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'),
+
+            tapItem: (el) => {
+                LOGIC.cartAdd(el.dataset.itemName, parseFloat(el.dataset.itemPrice));
+            },
+
+            // ---------- ACCESO RÁPIDO (aprende del uso real) ----------
+            getFavCounts: () => {
+                try { return JSON.parse(localStorage.getItem('lc_fav_v1') || '{}') || {}; }
+                catch(e) { return {}; }
+            },
+            bumpFav: (name) => {
+                try {
+                    const f = UI.getFavCounts();
+                    f[name] = (f[name] || 0) + 1;
+                    localStorage.setItem('lc_fav_v1', JSON.stringify(f));
+                } catch(e) {}
+            },
+            renderQuickRow: () => {
+                const wrap = document.getElementById('m-quick');
+                const row = document.getElementById('m-quick-row');
+                if(!wrap || !row) return;
+
+                // Índice plano del menú para resolver precios
+                const flat = {};
+                MENU_DB.forEach(c => c.items.forEach(i => { flat[i.n] = i.p; }));
+
+                const counts = UI.getFavCounts();
+                let names = Object.keys(counts)
+                    .filter(n => flat[n] !== undefined)
+                    .sort((a, b) => counts[b] - counts[a])
+                    .slice(0, 8);
+
+                // Completar con sugeridos hasta llegar a 8
+                QUICK_DEFAULTS.forEach(n => {
+                    if(names.length < 8 && flat[n] !== undefined && names.indexOf(n) === -1) names.push(n);
+                });
+
+                if(!names.length) { wrap.style.display = 'none'; return; }
+                wrap.style.display = '';
+                row.innerHTML = names.map(n =>
+                    `<button class="lc-quick-chip" data-item-name="${UI.escAttr(n)}" data-item-price="${flat[n]}" onclick="UI.tapItem(this)" aria-label="Agregar ${UI.escAttr(n)}">
+                        <b>${UI.escAttr(n)}</b><span>${UI.format(flat[n])}</span>
+                     </button>`
+                ).join('');
+            },
+
+            // ---------- SELECTOR DE MESA ----------
+            openMesaPicker: (intent) => {
+                UI._pickerIntent = intent || '';
+                UI.renderMesaPicker();
+                const sh = document.getElementById('sheet-mesa');
+                sh.classList.add('open');
+                document.body.style.overflow = 'hidden';
+            },
+            closeMesaPicker: () => {
+                document.getElementById('sheet-mesa').classList.remove('open');
+                document.body.style.overflow = '';
+            },
+            renderMesaPicker: () => {
+                const current = document.getElementById('sel-mesa').value;
+                // Mesas con cuenta abierta (sin contar tickets de cocina)
+                const busy = {};
+                STATE.orders.forEach(o => {
+                    if(o.status !== 'pagado' && !o.isKitchenTicket) busy[String(o.mesa)] = (busy[String(o.mesa)] || 0) + 1;
+                });
+
+                let html = MESAS_DB.map(z => `
+                    <div class="lc-zone-title"><i class="fa-solid ${z.icon}" aria-hidden="true"></i> ${z.zone}</div>
+                    <div class="lc-mesa-grid">
+                        ${z.tables.map(t => `
+                            <button class="lc-mesa-btn ${current === t ? 'is-selected' : (busy[t] ? 'is-busy' : '')}" onclick="UI.selectMesa('${t}')" aria-label="Mesa ${t}${busy[t] ? ', tiene cuenta abierta' : ''}">
+                                ${busy[t] ? '<span class="lc-mesa-dot">Abierta</span>' : ''}
+                                <b>${t}</b><span>Mesa</span>
+                            </button>`).join('')}
+                    </div>`).join('');
+
+                html += `
+                    <div class="lc-zone-title"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i> Otros</div>
+                    <div class="lc-mesa-grid">
+                        <button class="lc-mesa-btn is-wide ${current === 'LLEVAR' ? 'is-selected' : ''}" onclick="UI.selectMesa('LLEVAR')" aria-label="Pedido para llevar">
+                            <b>📦 Para llevar</b><span>Sin mesa</span>
+                        </button>
+                    </div>`;
+
+                document.getElementById('sheet-mesa-body').innerHTML = html;
+            },
+            selectMesa: (v) => {
+                document.getElementById('sel-mesa').value = v;
+                if(window.navigator.vibrate) window.navigator.vibrate(12);
+                UI.syncMesaUI();
+                UI.closeMesaPicker();
+                UI.renderCart();
+                // Si venía del botón Enviar, encadena directo a la confirmación
+                if(UI._pickerIntent === 'send' && STATE.cart.length) {
+                    UI._pickerIntent = '';
+                    setTimeout(UI.openConfirmModal, 260);
                 }
             },
-            
+            // Refleja la mesa elegida en el chip superior y en el panel de comanda
+            syncMesaUI: () => {
+                const sel = document.getElementById('sel-mesa');
+                if(!sel) return;
+                const v = sel.value;
+                const chip = document.getElementById('m-mesa-chip');
+                const chipTxt = document.getElementById('m-mesa-chip-txt');
+                const bigTxt = document.getElementById('m-mesa-big-txt');
+                const bigSub = document.getElementById('m-mesa-big-sub');
+
+                let label = 'Elegir', sub = '', zone = '';
+                if(v) {
+                    const opt = sel.selectedOptions ? sel.selectedOptions[0] : null;
+                    zone = (opt && opt.parentElement && opt.parentElement.label) || '';
+                    label = v === 'LLEVAR' ? 'Llevar' : v;
+                    sub = v === 'LLEVAR' ? 'Pedido para llevar' : (zone ? 'Zona ' + zone : '');
+                }
+                if(chip) {
+                    chip.classList.toggle('is-set', !!v);
+                    chip.classList.toggle('is-empty', !v);
+                }
+                if(chipTxt) chipTxt.textContent = label;
+                if(bigTxt) bigTxt.textContent = v ? (v === 'LLEVAR' ? '📦 Para llevar' : 'Mesa ' + v) : 'Selecciona ubicación…';
+                if(bigSub) bigSub.textContent = sub;
+            },
+
+            clearSearch: () => {
+                const input = document.getElementById('m-search');
+                input.value = '';
+                UI.filterMenu('');
+                input.focus();
+            },
+
+            _setupCategoryObserver: () => {
+                const grid = document.getElementById('m-grid');
+                if(!grid || grid._spyOn) return;
+                grid._spyOn = true;
+                var ticking = false;
+                grid.addEventListener('scroll', function() {
+                    if(ticking) return;
+                    ticking = true;
+                    var run = function() { ticking = false; UI._syncActiveCat(); };
+                    if(window.requestAnimationFrame) window.requestAnimationFrame(run); else setTimeout(run, 60);
+                });
+            },
+
+            // Marca la categoría cuya sección está más arriba dentro del menú visible
+            _syncActiveCat: () => {
+                const grid = document.getElementById('m-grid');
+                if(!grid) return;
+                const gridTop = grid.getBoundingClientRect().top;
+                let active = null, bestDist = Infinity;
+                MENU_DB.forEach(c => {
+                    const el = document.getElementById('cat-' + c.id);
+                    if(!el || el.style.display === 'none') return;
+                    const d = el.getBoundingClientRect().top - gridTop;
+                    // Prioriza la sección que ya cruzó el borde superior
+                    const score = d <= 24 ? Math.abs(d) : d + 1000;
+                    if(score < bestDist) { bestDist = score; active = c.id; }
+                });
+                if(!active || active === UI._lastActiveCat) return;
+                UI._lastActiveCat = active;
+                let btn = null;
+                document.querySelectorAll('.cat-btn').forEach(b => {
+                    const isActive = b.dataset.cat === active;
+                    b.classList.toggle('cat-btn-active', isActive);
+                    b.setAttribute('aria-selected', isActive);
+                    if(isActive) btn = b;
+                });
+                UI._centerCatPill(btn);
+            },
+
             scrollToCat: (catId) => {
-                document.getElementById(`cat-${catId}`).scrollIntoView({behavior:'smooth', block:'start'});
+                const grid = document.getElementById('m-grid');
+                const sec = document.getElementById('cat-' + catId);
+                if(!grid || !sec) return;
+                const top = grid.scrollTop + (sec.getBoundingClientRect().top - grid.getBoundingClientRect().top) - 6;
+                if(grid.scrollTo) { try { grid.scrollTo({top: top, behavior: 'smooth'}); } catch(e) { grid.scrollTop = top; } }
+                else grid.scrollTop = top;
+                UI._lastActiveCat = null;
+                document.querySelectorAll('.cat-btn').forEach(b => {
+                    const isActive = b.dataset.cat === catId;
+                    b.classList.toggle('cat-btn-active', isActive);
+                    b.setAttribute('aria-selected', isActive);
+                    if(isActive) UI._centerCatPill(b);
+                });
+                UI._lastActiveCat = catId;
+                UI._lockShell();
+            },
+
+            // El <main> nunca debe desplazarse: mantiene la barra de mesa siempre visible
+            _lockShell: () => {
+                const main = document.querySelector('main');
+                if(main && main.scrollTop) main.scrollTop = 0;
+                if(document.body.scrollTop) document.body.scrollTop = 0;
+            },
+
+            // Centra la pill activa sin mover el resto de la interfaz
+            _centerCatPill: (btn) => {
+                const row = document.getElementById('m-cat-nav');
+                if(!row || !btn) return;
+                const target = btn.offsetLeft - (row.clientWidth - btn.offsetWidth) / 2;
+                if(row.scrollTo) { try { row.scrollTo({left: target, behavior: 'smooth'}); } catch(e) { row.scrollLeft = target; } }
+                else row.scrollLeft = target;
             },
             
-            // Actualizar badges de cantidad en los cards del menú
+            // Refleja la cantidad de cada platillo sobre su card (stepper inline)
             updateMenuBadges: () => {
-                document.querySelectorAll('.menu-card').forEach(card => {
+                const qty = {};
+                STATE.cart.forEach(i => { qty[i.n] = (qty[i.n] || 0) + i.qty; });
+
+                document.querySelectorAll('#m-grid .lc-card').forEach(card => {
                     const name = card.dataset.itemName;
-                    const item = STATE.cart.find(i => i.n === name);
-                    let badge = card.querySelector('.menu-qty-badge');
-                    if(item && item.qty > 0) {
-                        if(!badge) {
-                            badge = document.createElement('span');
-                            badge.className = 'menu-qty-badge';
-                            card.appendChild(badge);
-                        }
-                        badge.textContent = item.qty;
-                        badge.classList.add('badge-pop');
-                        setTimeout(() => badge.classList.remove('badge-pop'), 300);
-                    } else if(badge) {
-                        badge.remove();
+                    const act = card.querySelector('.lc-card-act');
+                    const n = qty[name] || 0;
+                    const was = card.getAttribute('data-qty') || '0';
+                    if(String(n) === was) return;
+                    card.setAttribute('data-qty', n);
+                    card.classList.toggle('is-active', n > 0);
+                    if(!act) return;
+                    if(n > 0) {
+                        act.innerHTML = `<div class="lc-stepper" onclick="event.stopPropagation()">
+                                <button type="button" onclick="event.stopPropagation();LOGIC.cartStep('${UI.escAttr(name).replace(/'/g, "\\'")}',-1)" aria-label="Quitar uno de ${UI.escAttr(name)}">−</button>
+                                <span class="lc-step-qty badge-pop">${n}</span>
+                                <button type="button" onclick="event.stopPropagation();LOGIC.cartStep('${UI.escAttr(name).replace(/'/g, "\\'")}',1)" aria-label="Agregar uno de ${UI.escAttr(name)}">+</button>
+                            </div>`;
+                    } else {
+                        act.innerHTML = `<span class="lc-card-add" aria-hidden="true"><i class="fa-solid fa-plus"></i></span>`;
                     }
                 });
             },
 
             filterMenu: (q) => {
-                const term = q.toLowerCase();
-                const clearBtn = document.getElementById('m-search-clear');
-                clearBtn.classList.toggle('hidden', !q);
-                // Show/hide individual items
-                document.querySelectorAll('#m-grid .menu-card').forEach(el => {
-                    el.style.display = el.innerText.toLowerCase().includes(term) ? 'flex' : 'none';
+                const term = (q || '').toLowerCase().trim();
+                const wrap = document.getElementById('m-search-wrap');
+                if(wrap) wrap.classList.toggle('has-value', !!term);
+
+                // Con búsqueda activa se ocultan los rápidos y el nav de categorías
+                const quick = document.getElementById('m-quick');
+                const cats = document.getElementById('m-cats-wrapper');
+                if(quick) quick.style.display = term ? 'none' : (document.getElementById('m-quick-row').innerHTML ? '' : 'none');
+                if(cats) cats.style.display = term ? 'none' : '';
+
+                let found = 0;
+                document.querySelectorAll('#m-grid .lc-card').forEach(el => {
+                    const hit = !term || (el.dataset.itemName || '').toLowerCase().indexOf(term) !== -1;
+                    el.style.display = hit ? '' : 'none';
+                    if(hit) found++;
                 });
-                // Hide empty categories
                 document.querySelectorAll('#m-grid section').forEach(sec => {
-                    const visible = sec.querySelectorAll('.menu-card:not([style*="display: none"])');
+                    const visible = sec.querySelectorAll('.lc-card:not([style*="display: none"])');
                     sec.style.display = visible.length ? '' : 'none';
                 });
+                const empty = document.getElementById('m-empty');
+                if(empty) empty.style.display = found ? 'none' : '';
             },
 
             renderCart: () => {
                 const list = document.getElementById('m-cart-list');
                 const sendBtn = document.getElementById('btn-send-order');
                 const clearBtn = document.getElementById('m-clear-cart-btn');
-                const floatWrapper = document.getElementById('m-float-btn-wrapper');
+                const actionBar = document.getElementById('m-actionbar');
                 let total = 0, totalQty = 0, html = '';
                 
                 if(STATE.cart.length === 0) {
@@ -1582,7 +2208,7 @@
                     </div>`;
                     sendBtn.disabled = true;
                     clearBtn.classList.add('hidden');
-                    floatWrapper.style.display = 'none';
+                    if(actionBar) actionBar.classList.remove('show');
                 } else {
                     STATE.cart.forEach((item, idx) => {
                         const subtotal = item.p * item.qty;
@@ -1608,7 +2234,7 @@
                     });
                     sendBtn.disabled = false;
                     clearBtn.classList.remove('hidden');
-                    floatWrapper.style.display = '';
+                    if(actionBar) actionBar.classList.add('show');
                 }
                 
                 list.innerHTML = html;
@@ -1619,14 +2245,17 @@
                 document.getElementById('m-cart-count-label').innerText = `${totalQty} producto${totalQty !== 1 ? 's' : ''} · ${STATE.cart.length} línea${STATE.cart.length !== 1 ? 's' : ''}`;
                 document.getElementById('m-cart-items-total').innerText = `${totalQty} producto${totalQty !== 1 ? 's' : ''}`;
                 // Descripción breve en botón flotante
-                const desc = STATE.cart.slice(0, 2).map(i => i.n.length > 15 ? i.n.slice(0,15) + '…' : i.n).join(', ');
-                document.getElementById('m-items-desc-float').innerText = STATE.cart.length > 2 ? desc + ` +${STATE.cart.length - 2}` : desc;
+                const mesaVal = (document.getElementById('sel-mesa') || {}).value;
+                const mesaTxt = mesaVal ? (mesaVal === 'LLEVAR' ? '📦 Llevar' : 'Mesa ' + mesaVal) : '⚠ Elige mesa';
+                const desc = STATE.cart.slice(0, 2).map(i => i.n.length > 14 ? i.n.slice(0,14) + '…' : i.n).join(', ');
+                document.getElementById('m-items-desc-float').innerText = mesaTxt + ' · ' + (STATE.cart.length > 2 ? desc + ` +${STATE.cart.length - 2}` : desc);
                 
                 // Actualizar badges en menú
                 UI.updateMenuBadges();
             },
 
             toggleCartMobile: (show) => {
+                UI._lockShell();
                 const el = document.getElementById('m-cart-panel');
                 if(show) { el.classList.remove('translate-y-full','md:translate-y-0'); void el.offsetWidth; }
                 else el.classList.add('translate-y-full');
@@ -1673,7 +2302,8 @@
                 const mesaText = mesa === 'LLEVAR' ? '📦 Para Llevar' : `Mesa ${mesa}`;
                 const selOption = document.getElementById('sel-mesa').selectedOptions[0];
                 const group = (selOption && selOption.parentElement && selOption.parentElement.label) || '';
-                document.getElementById('confirm-mesa-label').textContent = group ? `${mesaText} (${group})` : mesaText;
+                const showGroup = group && group !== 'Otros';
+                document.getElementById('confirm-mesa-label').textContent = showGroup ? `${mesaText} · ${group}` : mesaText;
                 
                 let total = 0;
                 document.getElementById('confirm-items-list').innerHTML = STATE.cart.map(item => {
@@ -2996,16 +3626,38 @@
             }
         };
         window.LOGIC = {
-            cartAdd: (n, p) => { 
+            cartAdd: (n, p) => {
                 if(window.navigator.vibrate) window.navigator.vibrate(15);
-                const x = STATE.cart.find(i => i.n === n); 
-                if(x) x.qty++; 
-                else STATE.cart.push({n, p, qty: 1, note: ''}); 
+                const x = STATE.cart.find(i => i.n === n);
+                if(x) x.qty++;
+                else STATE.cart.push({n, p, qty: 1, note: ''});
+                UI.bumpFav(n);
                 UI.renderCart();
                 // Animar la card del menú
-                const card = document.querySelector(`.menu-card[data-item-name="${n}"]`);
+                const card = document.querySelector(`.lc-card[data-item-name="${n}"]`);
                 if(card) { card.classList.remove('add-bounce'); void card.offsetWidth; card.classList.add('add-bounce'); }
-                UI.toast(`${n} agregado`, 'success'); 
+                // Sin mesa todavía: recordarlo una sola vez, sin bloquear el flujo
+                if(!document.getElementById('sel-mesa').value && !UI._mesaHinted) {
+                    UI._mesaHinted = true;
+                    UI.toast('Falta elegir la mesa', 'info');
+                } else if(!x) {
+                    UI.toast(`${n} agregado`, 'success');
+                }
+            },
+
+            // +/- desde la card del menú, sin abrir la comanda
+            cartStep: (n, d) => {
+                const idx = STATE.cart.findIndex(i => i.n === n);
+                if(idx === -1) { if(d > 0) { const it = LOGIC._findMenuItem(n); if(it) LOGIC.cartAdd(n, it.p); } return; }
+                LOGIC.cartUpd(idx, d);
+            },
+            _findMenuItem: (n) => {
+                for(var c = 0; c < MENU_DB.length; c++) {
+                    for(var i = 0; i < MENU_DB[c].items.length; i++) {
+                        if(MENU_DB[c].items[i].n === n) return MENU_DB[c].items[i];
+                    }
+                }
+                return null;
             },
             cartUpd: (i, d) => { 
                 if(!STATE.cart[i]) return;
@@ -3031,8 +3683,10 @@
             },
             cartNote: (i) => { UI.openNoteModal(i); },
             confirmSendOrder: () => {
+                if(!STATE.cart.length) return UI.toast('Agrega al menos un platillo', 'error');
                 const m = document.getElementById('sel-mesa').value;
-                if(!m || !STATE.cart.length) return UI.toast('Selecciona mesa y agrega productos', 'error');
+                // Sin mesa no se frena al mesero: se abre el selector directo
+                if(!m) { UI.toast('Elige la mesa para enviar', 'info'); return UI.openMesaPicker('send'); }
                 UI.openConfirmModal();
             },
             
@@ -3082,9 +3736,15 @@
                     });
                 }
                 p.then(() => {
-                    STATE.cart = []; UI.renderCart(); UI.toggleCartMobile(false); 
+                    STATE.cart = []; UI.toggleCartMobile(false);
                     UI.closeConfirmModal();
                     document.getElementById('sel-mesa').value = '';
+                    UI._mesaHinted = false;
+                    UI.syncMesaUI();
+                    UI.renderCart();
+                    UI.renderQuickRow();
+                    var grid = document.getElementById('m-grid');
+                    if(grid) grid.scrollTop = 0;
                     if(window.navigator.vibrate) window.navigator.vibrate([100, 50, 100]);
                 }).catch(e => { console.error(e); UI.toast('Error al enviar orden', 'error'); })
                 .then(() => { btn.disabled = false; btn.innerHTML = html; });
@@ -3306,7 +3966,19 @@
             }
         };
 
-        window.APP = { setRole:(r)=>{STATE.role=r; document.getElementById('v-role').style.display='none'; document.getElementById('txt-role').innerText=r.toUpperCase(); document.querySelectorAll('main > div:not(#v-role)').forEach(d=>d.classList.add('hidden')); const v=document.getElementById(`v-${r}`); v.classList.remove('hidden'); v.classList.add('flex'); if(r==='mesero')UI.initMesero(); if(STATE.orders.length)UI.renderOrders();} };
+        window.APP = {
+            // Volver al selector de estación sin perder la comanda en curso
+            backToRoles: () => {
+                if(!STATE.role) return;
+                UI.closeMesaPicker();
+                document.querySelectorAll('main > div:not(#v-role)').forEach(d => { d.classList.add('hidden'); d.classList.remove('flex'); });
+                const rv = document.getElementById('v-role');
+                rv.style.display = '';
+                rv.classList.remove('hidden');
+                STATE.role = null;
+                document.getElementById('txt-role').innerText = 'SELECCIONA';
+            },
+            setRole:(r)=>{STATE.role=r; document.getElementById('v-role').style.display='none'; document.getElementById('txt-role').innerText=r.toUpperCase(); document.querySelectorAll('main > div:not(#v-role)').forEach(d=>d.classList.add('hidden')); const v=document.getElementById(`v-${r}`); v.classList.remove('hidden'); v.classList.add('flex'); if(r==='mesero'){UI.initMesero(); if(!document.getElementById('sel-mesa').value) setTimeout(UI.openMesaPicker, 260);} if(STATE.orders.length)UI.renderOrders();} };
         
         // TIMEOUT: Si no conecta en 5 segundos, quitar loader y mostrar aviso
         let firebaseConnected = false;
