@@ -65,8 +65,12 @@
     <!-- 1. DEPENDENCIAS EXTERNAS -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://firestore.googleapis.com">
     <!-- Fuentes modernas para mejor legibilidad -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;700;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;700;900&display=swap" rel="stylesheet"></noscript>
     <!-- Iconos FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     
@@ -78,9 +82,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     
-    <!-- Motores PDF (Reportes) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <!-- Motores PDF: se cargan bajo demanda desde UI._ensurePDF() para no pesar en el arranque -->
 
     <!-- Polyfills para Safari 10 / iOS 10 -->
     <script>
@@ -825,6 +827,336 @@
         .lc-empty b { display: block; font-size: 14px; font-weight: 800; color: #64748B; }
         .lc-empty span { font-size: 12px; }
 
+        /* ==========================================================
+           V8 · FINANZAS (panel de caja)
+           ========================================================== */
+        .lc-fin { max-width: 1180px; margin: 0 auto; padding: 12px; }
+        .lc-fin > * + * { margin-top: 12px; }
+
+        /* Tarjeta base */
+        .lc-fc {
+            background: #fff;
+            border: 1px solid #E8EDF3;
+            border-radius: 18px;
+            box-shadow: 0 1px 2px rgba(15,23,42,.04);
+            overflow: hidden;
+        }
+        .lc-fc-head {
+            display: -webkit-flex; display: flex;
+            -webkit-align-items: center; align-items: center;
+            gap: 10px;
+            padding: 13px 16px;
+            border-bottom: 1px solid #F1F5F9;
+            width: 100%;
+            text-align: left;
+        }
+        .lc-fc-head .lc-fc-ico {
+            width: 30px; height: 30px; border-radius: 9px;
+            display: -webkit-flex; display: flex;
+            -webkit-align-items: center; align-items: center;
+            -webkit-justify-content: center; justify-content: center;
+            font-size: 13px; color: #fff; -webkit-flex: none; flex: none;
+        }
+        .lc-fc-head h3 { font-size: 14px; font-weight: 900; color: #1E293B; letter-spacing: -.01em; }
+        .lc-fc-head p { font-size: 10px; color: #94A3B8; font-weight: 600; margin-top: 1px; }
+        .lc-fc-head .lc-fc-chev { margin-left: auto; color: #CBD5E1; font-size: 13px; transition: transform .22s ease; }
+        .lc-fc.is-open .lc-fc-chev { -webkit-transform: rotate(180deg); transform: rotate(180deg); }
+        .lc-fc-body { padding: 14px 16px; }
+        .lc-fc-body.is-flush { padding: 0; }
+        .lc-fc.is-collapsible .lc-fc-body { display: none; }
+        .lc-fc.is-collapsible.is-open .lc-fc-body { display: block; }
+
+        /* Barra de período pegajosa */
+        .lc-fin-bar {
+            position: -webkit-sticky; position: sticky; top: 0; z-index: 25;
+            background: rgba(248,250,252,.94);
+            -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+            margin: -12px -12px 0; padding: 10px 12px;
+            border-bottom: 1px solid #E8EDF3;
+        }
+        .lc-fin-chips {
+            display: -webkit-flex; display: flex;
+            gap: 7px; overflow-x: auto; -webkit-overflow-scrolling: touch;
+            padding-bottom: 2px;
+        }
+        .lc-fin-chips::-webkit-scrollbar { display: none; }
+        .lc-chip {
+            -webkit-flex: 0 0 auto; flex: 0 0 auto;
+            height: 38px; padding: 0 14px;
+            border-radius: 11px; border: 1.5px solid #E2E8F0;
+            background: #fff; color: #64748B;
+            font-size: 12.5px; font-weight: 800; white-space: nowrap;
+            display: -webkit-flex; display: flex;
+            -webkit-align-items: center; align-items: center; gap: 6px;
+            transition: all .16s ease;
+        }
+        .lc-chip:active { -webkit-transform: scale(.95); transform: scale(.95); }
+        .lc-chip.is-on {
+            background: linear-gradient(135deg, #0F172A, #1E293B);
+            border-color: #0F172A; color: #fff;
+            box-shadow: 0 5px 14px rgba(15,23,42,.24);
+        }
+        .lc-fin-tools { display: -webkit-flex; display: flex; gap: 7px; margin-top: 8px; }
+        .lc-tool {
+            -webkit-flex: 1; flex: 1;
+            height: 38px; border-radius: 11px;
+            border: 1.5px solid #E2E8F0; background: #fff;
+            font-size: 11.5px; font-weight: 800; color: #475569;
+            display: -webkit-flex; display: flex;
+            -webkit-align-items: center; align-items: center;
+            -webkit-justify-content: center; justify-content: center; gap: 6px;
+        }
+        .lc-tool:active { -webkit-transform: scale(.96); transform: scale(.96); }
+        .lc-tool.is-pdf { background: #0F172A; border-color: #0F172A; color: #fff; }
+        .lc-tool.is-pdf i { color: #FB923C; }
+
+        /* Resumen ejecutivo */
+        .lc-resumen {
+            background: linear-gradient(135deg, #0F172A, #1E293B);
+            border-radius: 18px; padding: 16px; color: #fff;
+            position: relative; overflow: hidden;
+        }
+        .lc-resumen .lc-res-tag {
+            font-size: 9px; font-weight: 900; letter-spacing: .16em;
+            text-transform: uppercase; color: #FB923C;
+            display: -webkit-flex; display: flex;
+            -webkit-align-items: center; align-items: center; gap: 6px; margin-bottom: 8px;
+        }
+        .lc-resumen p { font-size: 13.5px; line-height: 1.55; color: #E2E8F0; }
+        .lc-resumen p + p { margin-top: 7px; }
+        .lc-resumen b { color: #fff; font-weight: 800; }
+        .lc-resumen .up { color: #4ADE80; font-weight: 800; }
+        .lc-resumen .down { color: #FCA5A5; font-weight: 800; }
+
+        /* Alertas */
+        .lc-alert {
+            display: -webkit-flex; display: flex;
+            gap: 11px; padding: 12px 14px;
+            border-radius: 14px; border: 1px solid;
+            -webkit-align-items: flex-start; align-items: flex-start;
+        }
+        .lc-alert + .lc-alert { margin-top: 8px; }
+        .lc-alert i { font-size: 15px; margin-top: 1px; -webkit-flex: none; flex: none; }
+        .lc-alert b { display: block; font-size: 12.5px; font-weight: 900; margin-bottom: 2px; }
+        .lc-alert span { font-size: 11.5px; line-height: 1.45; display: block; }
+        .lc-alert.is-bad  { background: #FEF2F2; border-color: #FECACA; color: #B91C1C; }
+        .lc-alert.is-warn { background: #FFFBEB; border-color: #FDE68A; color: #B45309; }
+        .lc-alert.is-good { background: #F0FDF4; border-color: #BBF7D0; color: #15803D; }
+        .lc-alert.is-info { background: #F8FAFC; border-color: #E2E8F0; color: #475569; }
+        .lc-alert span { opacity: .92; }
+
+        /* KPIs */
+        .lc-kpis {
+            display: -webkit-flex; display: flex;
+            -webkit-flex-wrap: wrap; flex-wrap: wrap; gap: 10px;
+        }
+        .lc-kpi {
+            width: calc(50% - 5px);
+            background: #fff; border: 1px solid #E8EDF3; border-radius: 16px;
+            padding: 13px 14px; position: relative; overflow: hidden;
+            box-shadow: 0 1px 2px rgba(15,23,42,.04);
+        }
+        .lc-kpi-label {
+            font-size: 9px; font-weight: 900; letter-spacing: .12em;
+            text-transform: uppercase; color: #94A3B8;
+            display: block; margin-bottom: 5px;
+        }
+        .lc-kpi-val { font-size: 21px; font-weight: 900; color: #0F172A; letter-spacing: -.03em; display: block; line-height: 1.1; }
+        .lc-kpi-sub { font-size: 10.5px; font-weight: 600; color: #94A3B8; display: block; margin-top: 3px; }
+        .lc-kpi-ico {
+            position: absolute; top: 12px; right: 12px;
+            width: 26px; height: 26px; border-radius: 8px;
+            display: -webkit-flex; display: flex;
+            -webkit-align-items: center; align-items: center;
+            -webkit-justify-content: center; justify-content: center;
+            font-size: 11px;
+        }
+        .lc-kpi.is-hero {
+            width: 100%;
+            background: linear-gradient(135deg, #0F172A, #1E293B);
+            border-color: #0F172A;
+        }
+        .lc-kpi.is-hero .lc-kpi-label { color: #94A3B8; }
+        .lc-kpi.is-hero .lc-kpi-val { color: #fff; font-size: 30px; }
+        .lc-kpi.is-hero .lc-kpi-sub { color: #94A3B8; }
+        .lc-kpi.is-net {
+            width: 100%;
+            background: linear-gradient(135deg, #059669, #10B981);
+            border-color: #059669;
+        }
+        .lc-kpi.is-net.is-loss { background: linear-gradient(135deg, #DC2626, #EF4444); border-color: #DC2626; }
+        .lc-kpi.is-net .lc-kpi-label, .lc-kpi.is-net .lc-kpi-sub { color: rgba(255,255,255,.8); }
+        .lc-kpi.is-net .lc-kpi-val { color: #fff; font-size: 30px; }
+        .lc-delta { font-size: 10.5px; font-weight: 900; }
+        .lc-delta.up { color: #16A34A; }
+        .lc-delta.down { color: #DC2626; }
+        .lc-kpi.is-hero .lc-delta.up, .lc-kpi.is-net .lc-delta.up { color: #86EFAC; }
+        .lc-kpi.is-hero .lc-delta.down, .lc-kpi.is-net .lc-delta.down { color: #FCA5A5; }
+
+        /* Gráficas */
+        .lc-chart { width: 100%; display: block; }
+        .lc-legend {
+            display: -webkit-flex; display: flex;
+            -webkit-flex-wrap: wrap; flex-wrap: wrap; gap: 6px 14px; margin-top: 12px;
+        }
+        .lc-legend span {
+            display: -webkit-flex; display: flex;
+            -webkit-align-items: center; align-items: center; gap: 6px;
+            font-size: 11px; font-weight: 700; color: #64748B;
+        }
+        .lc-legend i { width: 9px; height: 9px; border-radius: 3px; display: block; }
+        .lc-empty-sm { padding: 26px 12px; text-align: center; font-size: 12px; color: #94A3B8; font-weight: 600; }
+
+        /* Barras horizontales (top platillos) */
+        .lc-hbar + .lc-hbar { margin-top: 11px; }
+        .lc-hbar-top {
+            display: -webkit-flex; display: flex;
+            -webkit-align-items: baseline; align-items: baseline; gap: 8px; margin-bottom: 5px;
+        }
+        .lc-hbar-name { font-size: 12.5px; font-weight: 800; color: #334155; -webkit-flex: 1; flex: 1; min-width: 0;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .lc-hbar-val { font-size: 12.5px; font-weight: 900; color: #0F172A; font-variant-numeric: tabular-nums; }
+        .lc-hbar-track { height: 9px; background: #F1F5F9; border-radius: 5px; overflow: hidden; }
+        .lc-hbar-fill { height: 9px; border-radius: 5px; transition: width .5s cubic-bezier(.16,1,.3,1); }
+        .lc-hbar-sub { font-size: 10px; color: #94A3B8; font-weight: 600; margin-top: 3px; }
+
+        /* Tablas del panel */
+        .lc-tbl-wrap { overflow: auto; -webkit-overflow-scrolling: touch; max-height: 300px; }
+        .lc-tbl { width: 100%; border-collapse: collapse; }
+        .lc-tbl thead th {
+            position: -webkit-sticky; position: sticky; top: 0; z-index: 2;
+            background: #fff; border-bottom: 1px solid #F1F5F9;
+            font-size: 9px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase;
+            color: #94A3B8; padding: 9px 12px; text-align: left; white-space: nowrap;
+        }
+        .lc-tbl tbody td { padding: 10px 12px; font-size: 12px; border-bottom: 1px solid #F8FAFC; color: #475569; }
+        .lc-tbl tbody tr:last-child td { border-bottom: 0; }
+        .lc-tbl .num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 800; color: #1E293B; }
+        .lc-tbl .mid { text-align: center; }
+        .lc-tbl .nm { font-weight: 800; color: #334155; }
+        .lc-icon-btn { width: 30px; height: 30px; border-radius: 8px; color: #CBD5E1; font-size: 12px; }
+        .lc-icon-btn:active { background: #FEF2F2; color: #EF4444; }
+
+        /* Inventario */
+        .lc-inv + .lc-inv { margin-top: 10px; }
+        .lc-inv-top {
+            display: -webkit-flex; display: flex;
+            -webkit-align-items: center; align-items: center;
+            -webkit-justify-content: space-between; justify-content: space-between; margin-bottom: 6px;
+        }
+        .lc-inv-name { font-size: 12.5px; font-weight: 800; color: #334155; }
+        .lc-inv-kg { font-size: 13px; font-weight: 900; font-variant-numeric: tabular-nums; }
+        .lc-inv-track { height: 8px; background: #F1F5F9; border-radius: 4px; overflow: hidden; }
+        .lc-inv-fill { height: 8px; border-radius: 4px; }
+        .lc-inv-sub { font-size: 10px; color: #94A3B8; font-weight: 600; margin-top: 4px; }
+
+        /* Acciones ERP */
+        .lc-erp-acts { display: -webkit-flex; display: flex; gap: 10px; }
+        .lc-erp-btn {
+            -webkit-flex: 1; flex: 1;
+            border-radius: 16px; padding: 14px 8px;
+            display: -webkit-flex; display: flex;
+            -webkit-flex-direction: column; flex-direction: column;
+            -webkit-align-items: center; align-items: center; gap: 7px;
+            font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: .04em;
+            border: 1.5px dashed #CBD5E1; background: #fff; color: #64748B; text-align: center;
+        }
+        .lc-erp-btn i { font-size: 19px; }
+        .lc-erp-btn:active { -webkit-transform: scale(.96); transform: scale(.96); }
+        .lc-erp-btn.is-blue { border-color: #BFDBFE; color: #2563EB; }
+        .lc-erp-btn.is-red { border-color: #FECACA; color: #DC2626; }
+        .lc-erp-btn.is-dark { border: 0; background: linear-gradient(135deg, #0F172A, #1E293B); color: #fff; }
+
+        /* Cabecera de caja */
+        .lc-caja-top {
+            -webkit-flex: none; flex: none;
+            display: -webkit-flex; display: flex;
+            -webkit-align-items: center; align-items: center;
+            gap: 8px; padding: 8px 10px;
+            background: rgba(255,255,255,.96);
+            -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+            border-bottom: 1px solid #E8EDF3; z-index: 20;
+        }
+        .lc-caja-tabs { display: -webkit-flex; display: flex; gap: 6px; -webkit-flex: 1; flex: 1; min-width: 0; }
+        .lc-caja-tab {
+            height: 40px; padding: 0 14px; border-radius: 11px;
+            background: #F1F5F9; color: #64748B;
+            font-size: 12.5px; font-weight: 800;
+            display: -webkit-flex; display: flex;
+            -webkit-align-items: center; align-items: center; gap: 7px;
+            transition: all .16s ease;
+        }
+        .lc-caja-tab i { font-size: 12px; }
+        .lc-caja-tab.is-on {
+            background: linear-gradient(135deg, #F97316, #EA580C); color: #fff;
+            box-shadow: 0 5px 13px rgba(249,115,22,.3);
+        }
+        .lc-caja-acts { display: -webkit-flex; display: flex; gap: 6px; -webkit-flex: none; flex: none; }
+        .lc-caja-act {
+            height: 40px; padding: 0 12px; border-radius: 11px;
+            font-size: 11.5px; font-weight: 800;
+            display: -webkit-flex; display: flex;
+            -webkit-align-items: center; align-items: center; gap: 6px;
+            border: 1.5px solid transparent;
+        }
+        .lc-caja-act:active { -webkit-transform: scale(.95); transform: scale(.95); }
+        .lc-caja-act.is-red { background: #FEF2F2; color: #DC2626; border-color: #FECACA; }
+        .lc-caja-act.is-dark { background: #0F172A; color: #fff; }
+        @media (max-width: 400px) {
+            .lc-caja-act span { display: none; }
+            .lc-caja-act { padding: 0 13px; }
+        }
+
+        /* Candado del panel */
+        .lc-lock { padding: 40px 20px; text-align: center; max-width: 340px; margin: 0 auto; }
+        .lc-lock-ico {
+            width: 68px; height: 68px; border-radius: 22px; margin: 0 auto 16px;
+            background: linear-gradient(135deg, #0F172A, #1E293B); color: #FB923C;
+            display: -webkit-flex; display: flex;
+            -webkit-align-items: center; align-items: center;
+            -webkit-justify-content: center; justify-content: center;
+            font-size: 26px; box-shadow: 0 12px 28px rgba(15,23,42,.24);
+        }
+        .lc-lock h3 { font-size: 19px; font-weight: 900; color: #0F172A; letter-spacing: -.02em; }
+        .lc-lock p { font-size: 12.5px; color: #94A3B8; font-weight: 600; margin-top: 4px; }
+        .lc-pin-dots {
+            display: -webkit-flex; display: flex;
+            -webkit-justify-content: center; justify-content: center; gap: 12px; margin: 22px 0;
+        }
+        .lc-pin-dot {
+            width: 15px; height: 15px; border-radius: 8px;
+            background: #E2E8F0; transition: all .18s ease;
+        }
+        .lc-pin-dot.is-on { background: #F97316; -webkit-transform: scale(1.18); transform: scale(1.18); }
+        .lc-pin-dots.is-bad .lc-pin-dot { background: #FCA5A5; }
+        .lc-keys {
+            display: -webkit-flex; display: flex;
+            -webkit-flex-wrap: wrap; flex-wrap: wrap; gap: 10px;
+            max-width: 280px; margin: 0 auto;
+        }
+        .lc-key {
+            width: calc(33.333% - 7px); height: 58px;
+            border-radius: 15px; border: 1.5px solid #E2E8F0; background: #fff;
+            font-size: 22px; font-weight: 800; color: #1E293B;
+        }
+        .lc-key:active { background: #F1F5F9; -webkit-transform: scale(.95); transform: scale(.95); }
+        .lc-key.is-muted { border-color: transparent; background: transparent; color: #94A3B8; font-size: 16px; }
+        .lc-pin-msg { font-size: 12px; font-weight: 800; color: #DC2626; height: 16px; margin-top: 14px; }
+        @-webkit-keyframes lcShake { 0%,100%{-webkit-transform:translateX(0)} 25%{-webkit-transform:translateX(-7px)} 75%{-webkit-transform:translateX(7px)} }
+        @keyframes lcShake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-7px)} 75%{transform:translateX(7px)} }
+        .lc-shake { -webkit-animation: lcShake .3s ease; animation: lcShake .3s ease; }
+
+        @media (min-width: 768px) {
+            .lc-fin { padding: 18px; }
+            .lc-kpi { width: calc(25% - 8px); }
+            .lc-kpi.is-hero, .lc-kpi.is-net { width: calc(50% - 5px); }
+            .lc-fin-bar { margin: -18px -18px 0; padding: 12px 18px; }
+            .lc-fin-tools { margin-top: 0; margin-left: auto; -webkit-flex: none; flex: none; }
+            .lc-fin-bar-inner { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; gap: 14px; }
+            .lc-fin-chips { -webkit-flex: 1; flex: 1; }
+            .lc-tool { width: 104px; -webkit-flex: none; flex: none; }
+        }
+
         @media (min-width: 768px) {
             .lc-card { width: calc(33.333% - 7px); min-height: 128px; }
             .lc-card:hover { border-color: #FDBA74; box-shadow: 0 8px 22px rgba(15,23,42,.07); }
@@ -1171,21 +1503,21 @@
         <!-- VISTA 3: CAJERO (DISEÑO OPTIMIZADO MÓVIL) -->
         <div id="v-cajero" class="hidden absolute inset-0 z-30 flex-col bg-slate-50">
             <!-- Header Tabs - Compacto y moderno -->
-            <div class="flex-none h-14 border-b border-slate-200/50 flex items-center justify-between px-3 md:px-6 bg-white/95 backdrop-blur-xl z-20 sticky top-0 shadow-sm">
-                <div class="flex gap-1 md:gap-2 h-full">
-                    <button onclick="UI.cajaTab('active')" id="btn-tab-act" class="h-full px-3 md:px-4 transition-all flex items-center gap-1.5 text-xs md:text-sm font-semibold rounded-none border-b-2 border-orange-500 text-orange-600 bg-orange-50/50">
-                        <i class="fa-solid fa-receipt"></i> <span>Activas</span>
+            <div class="lc-caja-top">
+                <div class="lc-caja-tabs">
+                    <button onclick="UI.cajaTab('active')" id="btn-tab-act" class="lc-caja-tab is-on">
+                        <i class="fa-solid fa-receipt"></i><span>Activas</span>
                     </button>
-                    <button onclick="UI.cajaTab('report')" id="btn-tab-rep" class="h-full px-3 md:px-4 transition-all flex items-center gap-1.5 text-xs md:text-sm font-semibold rounded-none border-b-2 border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50">
-                        <i class="fa-solid fa-chart-pie"></i> <span>Finanzas</span>
+                    <button onclick="UI.cajaTab('report')" id="btn-tab-rep" class="lc-caja-tab">
+                        <i class="fa-solid fa-chart-pie"></i><span>Finanzas</span>
                     </button>
                 </div>
-                <div class="flex gap-1.5">
-                    <button onclick="LOGIC.addExpense()" class="text-[10px] md:text-xs bg-red-50 text-red-600 font-semibold px-2.5 py-2 rounded-lg hover:bg-red-100 border border-red-200/50 transition-all tap-effect flex items-center gap-1">
-                        <i class="fa-solid fa-minus-circle"></i> <span class="hidden md:inline">Gasto</span>
+                <div class="lc-caja-acts">
+                    <button onclick="LOGIC.addExpense()" class="lc-caja-act is-red" aria-label="Registrar gasto rápido">
+                        <i class="fa-solid fa-minus"></i><span>Gasto</span>
                     </button>
-                    <button onclick="LOGIC.manualSale()" class="text-[10px] md:text-xs bg-slate-100 text-slate-600 font-semibold px-2.5 py-2 rounded-lg hover:bg-slate-200 border border-slate-200/50 transition-all tap-effect flex items-center gap-1">
-                        <i class="fa-solid fa-plus-circle"></i> <span class="hidden md:inline">Venta</span>
+                    <button onclick="LOGIC.manualSale()" class="lc-caja-act is-dark" aria-label="Registrar venta manual">
+                        <i class="fa-solid fa-plus"></i><span>Venta</span>
                     </button>
                 </div>
             </div>
@@ -1194,303 +1526,283 @@
                 <!-- Panel 1: Mesas Activas -->
                 <div id="p-active" class="absolute inset-0 overflow-y-auto p-3 md:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4 content-start pb-32 hide-scroll"></div>
 
-                <!-- Panel 2: Reporte Financiero ERP -->
-                <div id="p-report" class="hidden absolute inset-0 overflow-y-auto p-3 md:p-5 bg-gradient-to-b from-slate-50 to-slate-100 pb-32 hide-scroll">
-                    <div class="max-w-7xl mx-auto space-y-4">
+                <!-- Panel 2: FINANZAS (protegido por clave) -->
+                <div id="p-report" class="hidden absolute inset-0 overflow-y-auto hide-scroll pb-24" style="background:#F8FAFC">
 
-                        <!-- SELECTOR DE TURNO/FECHA + PDF EXPORT -->
-                        <div class="bg-white rounded-2xl p-3 md:p-4 shadow-sm border border-slate-200">
-                            <p class="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-2.5">Vista de período</p>
-                            <div class="flex gap-2 overflow-x-auto hide-scroll pb-1">
-                                <button onclick="UI.setFiltroFinanzas('hoy')" id="filtro-hoy" class="filtro-btn whitespace-nowrap px-4 py-2.5 rounded-xl bg-orange-500 text-white text-xs font-bold transition-all tap-effect shadow-sm">Hoy</button>
-                                <button onclick="UI.setFiltroFinanzas('sabado')" id="filtro-sabado" class="filtro-btn whitespace-nowrap px-4 py-2.5 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold transition-all tap-effect hover:bg-slate-200">Sábado</button>
-                                <button onclick="UI.setFiltroFinanzas('domingo')" id="filtro-domingo" class="filtro-btn whitespace-nowrap px-4 py-2.5 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold transition-all tap-effect hover:bg-slate-200">Domingo</button>
-                                <button onclick="UI.setFiltroFinanzas('finde')" id="filtro-finde" class="filtro-btn whitespace-nowrap px-4 py-2.5 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold transition-all tap-effect hover:bg-slate-200">Fin de Semana</button>
-                            </div>
-                            <!-- Descargar PDF por período -->
-                            <div class="mt-3 pt-3 border-t border-slate-100">
-                                <p class="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-1.5"><i class="fa-solid fa-file-pdf text-orange-400"></i> Descargar Reporte PDF</p>
-                                <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                                    <button onclick="UI.generatePDF('hoy')" class="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-white text-[10px] font-bold transition-all shadow tap-effect">
-                                        <i class="fa-solid fa-file-pdf text-orange-400 text-sm"></i>
-                                        <span>Hoy</span>
-                                    </button>
-                                    <button onclick="UI.generatePDF('sabado')" class="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-white text-[10px] font-bold transition-all shadow tap-effect">
-                                        <i class="fa-solid fa-file-pdf text-orange-400 text-sm"></i>
-                                        <span>Sábado</span>
-                                    </button>
-                                    <button onclick="UI.generatePDF('domingo')" class="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-white text-[10px] font-bold transition-all shadow tap-effect">
-                                        <i class="fa-solid fa-file-pdf text-orange-400 text-sm"></i>
-                                        <span>Domingo</span>
-                                    </button>
-                                    <button onclick="UI.generatePDF('finde')" class="flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 active:scale-95 text-white text-[10px] font-bold transition-all shadow-lg shadow-orange-500/30 tap-effect">
-                                        <i class="fa-solid fa-file-pdf text-sm"></i>
-                                        <span>Fin de Semana</span>
-                                    </button>
+                    <!-- ══════════ CANDADO ══════════ -->
+                    <div id="fin-lock" class="lc-lock">
+                        <div class="lc-lock-ico"><i class="fa-solid fa-lock"></i></div>
+                        <h3>Finanzas protegidas</h3>
+                        <p>Ingresa la clave para ver ventas, costos y ganancias</p>
+                        <div class="lc-pin-dots" id="fin-pin-dots">
+                            <span class="lc-pin-dot"></span><span class="lc-pin-dot"></span><span class="lc-pin-dot"></span><span class="lc-pin-dot"></span>
+                        </div>
+                        <div class="lc-keys">
+                            <button type="button" class="lc-key" onclick="UI.finance.pin('1')">1</button><button type="button" class="lc-key" onclick="UI.finance.pin('2')">2</button><button type="button" class="lc-key" onclick="UI.finance.pin('3')">3</button><button type="button" class="lc-key" onclick="UI.finance.pin('4')">4</button><button type="button" class="lc-key" onclick="UI.finance.pin('5')">5</button><button type="button" class="lc-key" onclick="UI.finance.pin('6')">6</button><button type="button" class="lc-key" onclick="UI.finance.pin('7')">7</button><button type="button" class="lc-key" onclick="UI.finance.pin('8')">8</button><button type="button" class="lc-key" onclick="UI.finance.pin('9')">9</button>
+                            <button type="button" class="lc-key is-muted" onclick="UI.finance.pinClear()" aria-label="Limpiar">C</button>
+                            <button type="button" class="lc-key" onclick="UI.finance.pin('0')">0</button>
+                            <button type="button" class="lc-key is-muted" onclick="UI.finance.pinBack()" aria-label="Borrar"><i class="fa-solid fa-delete-left"></i></button>
+                        </div>
+                        <p class="lc-pin-msg" id="fin-pin-msg"></p>
+                    </div>
+
+                    <!-- ══════════ CONTENIDO ══════════ -->
+                    <div id="fin-content" class="lc-fin hidden">
+
+                        <!-- Barra de período + exportar -->
+                        <div class="lc-fin-bar">
+                            <div class="lc-fin-bar-inner">
+                                <div class="lc-fin-chips" id="fin-chips">
+                                    <button onclick="UI.setFiltroFinanzas('hoy')" id="filtro-hoy" class="lc-chip filtro-btn is-on"><i class="fa-solid fa-sun"></i>Hoy</button>
+                                    <button onclick="UI.setFiltroFinanzas('ayer')" id="filtro-ayer" class="lc-chip filtro-btn">Ayer</button>
+                                    <button onclick="UI.setFiltroFinanzas('sabado')" id="filtro-sabado" class="lc-chip filtro-btn">Sábado</button>
+                                    <button onclick="UI.setFiltroFinanzas('domingo')" id="filtro-domingo" class="lc-chip filtro-btn">Domingo</button>
+                                    <button onclick="UI.setFiltroFinanzas('finde')" id="filtro-finde" class="lc-chip filtro-btn"><i class="fa-solid fa-calendar-week"></i>Fin de semana</button>
+                                    <button onclick="UI.setFiltroFinanzas('semana')" id="filtro-semana" class="lc-chip filtro-btn">7 días</button>
+                                    <button onclick="UI.setFiltroFinanzas('mes')" id="filtro-mes" class="lc-chip filtro-btn">30 días</button>
+                                </div>
+                                <div class="lc-fin-tools">
+                                    <button class="lc-tool" onclick="UI.finance.exportCSV()"><i class="fa-solid fa-file-csv"></i>CSV</button>
+                                    <button class="lc-tool is-pdf" onclick="UI.generatePDF()"><i class="fa-solid fa-file-pdf"></i>PDF</button>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- ACCIONES ERP -->
-                        <div class="grid grid-cols-3 gap-3">
-                            <button onclick="UI.openModalInsumo()" class="bg-white border-2 border-dashed border-blue-200 hover:border-blue-400 hover:bg-blue-50 text-blue-600 rounded-2xl p-3 md:p-4 flex flex-col items-center gap-1.5 tap-effect transition-all shadow-sm">
-                                <i class="fa-solid fa-scale-balanced text-xl md:text-2xl"></i>
-                                <span class="text-[9px] md:text-[10px] font-black uppercase tracking-wide text-center">Comprar Insumo</span>
+                        <!-- Resumen ejecutivo automático -->
+                        <div class="lc-resumen" id="fin-resumen">
+                            <div class="lc-res-tag"><i class="fa-solid fa-wand-magic-sparkles"></i> Resumen del período</div>
+                            <p>Cargando…</p>
+                        </div>
+
+                        <!-- Alertas automáticas -->
+                        <div id="fin-alerts"></div>
+
+                        <!-- KPIs -->
+                        <div class="lc-kpis" id="fin-kpis"></div>
+
+                        <section class="lc-fc" id="fin-c-trend">
+                            <div class="lc-fc-head">
+                                <span class="lc-fc-ico" style="background:#0F172A"><i class="fa-solid fa-chart-line"></i></span>
+                                <span>
+                                    <h3>Tendencia</h3>
+                                    <p>Ventas y ganancia de los últimos períodos</p>
+                                </span>
+                                
+                            </div>
+                            <div class="lc-fc-body">
+                                <div id="fin-trend"></div>
+                            </div>
+                        </section>
+
+                        <section class="lc-fc" id="fin-c-hours">
+                            <div class="lc-fc-head">
+                                <span class="lc-fc-ico" style="background:#3B82F6"><i class="fa-solid fa-clock"></i></span>
+                                <span>
+                                    <h3>Ventas por hora</h3>
+                                    <p>Cuándo entra el dinero — detecta tus horas fuertes</p>
+                                </span>
+                                
+                            </div>
+                            <div class="lc-fc-body">
+                                <div id="fin-hours"></div>
+                            </div>
+                        </section>
+
+                        <section class="lc-fc" id="fin-c-costs">
+                            <div class="lc-fc-head">
+                                <span class="lc-fc-ico" style="background:#14B8A6"><i class="fa-solid fa-chart-pie"></i></span>
+                                <span>
+                                    <h3>Estructura de costos</h3>
+                                    <p>A dónde se va cada peso que vendes</p>
+                                </span>
+                                
+                            </div>
+                            <div class="lc-fc-body">
+                                <div id="fin-costs"></div>
+                            </div>
+                        </section>
+
+                        <section class="lc-fc" id="fin-c-top">
+                            <div class="lc-fc-head">
+                                <span class="lc-fc-ico" style="background:#F59E0B"><i class="fa-solid fa-trophy"></i></span>
+                                <span>
+                                    <h3>Platillos más rentables</h3>
+                                    <p>Por ganancia neta generada, no por volumen</p>
+                                </span>
+                                
+                            </div>
+                            <div class="lc-fc-body">
+                                <div id="fin-top"></div>
+                            </div>
+                        </section>
+
+                        <section class="lc-fc" id="fin-c-pay">
+                            <div class="lc-fc-head">
+                                <span class="lc-fc-ico" style="background:#8B5CF6"><i class="fa-solid fa-wallet"></i></span>
+                                <span>
+                                    <h3>Cobros y arqueo de caja</h3>
+                                    <p>Efectivo vs tarjeta y cuánto debe haber en la caja</p>
+                                </span>
+                                
+                            </div>
+                            <div class="lc-fc-body">
+                                <div id="fin-pay"></div>
+                            </div>
+                        </section>
+
+                        <section class="lc-fc" id="fin-c-inv">
+                            <div class="lc-fc-head">
+                                <span class="lc-fc-ico" style="background:#F97316"><i class="fa-solid fa-warehouse"></i></span>
+                                <span>
+                                    <h3>Inventario estimado</h3>
+                                    <p>Kilos comprados menos consumo calculado por receta</p>
+                                </span>
+                                
+                            </div>
+                            <div class="lc-fc-body">
+                                <div id="fin-inv"></div>
+                            </div>
+                        </section>
+
+                        <section class="lc-fc" id="fin-c-comp">
+                            <div class="lc-fc-head">
+                                <span class="lc-fc-ico" style="background:#6366F1"><i class="fa-solid fa-arrow-right-arrow-left"></i></span>
+                                <span>
+                                    <h3>Comparativa entre fines de semana</h3>
+                                    <p>Este fin de semana contra el anterior</p>
+                                </span>
+                                
+                            </div>
+                            <div class="lc-fc-body">
+                                <div id="fin-comp"></div>
+                            </div>
+                        </section>
+
+                        <!-- Fondo de caja -->
+                        <section class="lc-fc">
+                            <div class="lc-fc-head">
+                                <span class="lc-fc-ico" style="background:#6366F1"><i class="fa-solid fa-vault"></i></span>
+                                <span>
+                                    <h3>Fondo de caja</h3>
+                                    <p>Dinero con el que abriste el turno</p>
+                                </span>
+                                <span style="margin-left:auto;display:flex;align-items:center;gap:4px">
+                                    <span style="font-size:17px;font-weight:900;color:#CBD5E1">$</span>
+                                    <input type="number" id="inp-fondo" inputmode="decimal" onchange="UI.finance.setFondo(this.value)" placeholder="0" style="width:88px;border:0;border-bottom:2px solid #C7D2FE;outline:none;font-size:19px;font-weight:900;color:#1E293B;text-align:center;padding:2px 0;background:transparent">
+                                </span>
+                            </div>
+                        </section>
+
+                        <!-- Acciones ERP -->
+                        <div class="lc-erp-acts">
+                            <button onclick="UI.openModalInsumo()" class="lc-erp-btn is-blue">
+                                <i class="fa-solid fa-scale-balanced"></i><span>Comprar insumo</span>
                             </button>
-                            <button onclick="UI.openModalGastoERP()" class="bg-white border-2 border-dashed border-red-200 hover:border-red-400 hover:bg-red-50 text-red-500 rounded-2xl p-3 md:p-4 flex flex-col items-center gap-1.5 tap-effect transition-all shadow-sm">
-                                <i class="fa-solid fa-receipt text-xl md:text-2xl"></i>
-                                <span class="text-[9px] md:text-[10px] font-black uppercase tracking-wide text-center">Agregar Gasto</span>
+                            <button onclick="UI.openModalGastoERP()" class="lc-erp-btn is-red">
+                                <i class="fa-solid fa-receipt"></i><span>Agregar gasto</span>
                             </button>
-                            <button onclick="LOGIC.erp.cerrarTurno()" class="bg-gradient-to-br from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 text-white rounded-2xl p-3 md:p-4 flex flex-col items-center gap-1.5 tap-effect transition-all shadow-lg">
-                                <i class="fa-solid fa-flag-checkered text-xl md:text-2xl"></i>
-                                <span class="text-[9px] md:text-[10px] font-black uppercase tracking-wide text-center">Cerrar Turno</span>
+                            <button onclick="LOGIC.erp.cerrarTurno()" class="lc-erp-btn is-dark">
+                                <i class="fa-solid fa-flag-checkered"></i><span>Cerrar turno</span>
                             </button>
                         </div>
 
-                        <!-- FONDO CAJA -->
-                        <div class="bg-white rounded-2xl p-3 md:p-5 shadow-sm border border-slate-200 flex items-center justify-between gap-3">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-indigo-400 to-violet-500 text-white rounded-xl flex items-center justify-center text-lg shrink-0 shadow-lg shadow-indigo-500/20"><i class="fa-solid fa-vault"></i></div>
-                                <div>
-                                    <h3 class="font-bold text-slate-800 text-sm md:text-base">Fondo Caja</h3>
-                                    <p class="text-[10px] md:text-xs text-slate-400">Inversión inicial</p>
+                        <section class="lc-fc is-collapsible" id="fin-c-mix">
+                            <button class="lc-fc-head" onclick="UI.finance.toggleCard(this)">
+                                <span class="lc-fc-ico" style="background:#0EA5E9"><i class="fa-solid fa-chart-simple"></i></span>
+                                <span>
+                                    <h3>Mix de ventas y margen</h3>
+                                    <p>Cuánto deja cada platillo por unidad</p>
+                                </span>
+                                <i class="fa-solid fa-chevron-down lc-fc-chev" aria-hidden="true"></i>
+                            </button>
+                            <div class="lc-fc-body is-flush">
+                                <div class="lc-tbl-wrap">
+                                    <table class="lc-tbl">
+                                        <thead><tr><th>Platillo</th><th class="mid">#</th><th class="num">Venta</th><th class="num">Gana/u</th></tr></thead>
+                                        <tbody id="rp-rows"><tr><td colspan="4" class="lc-empty-sm">Sin ventas en este período</td></tr></tbody>
+                                    </table>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-2 bg-slate-50 p-2 rounded-xl">
-                                <span class="font-display font-black text-lg md:text-xl text-slate-400">$</span>
-                                <input type="number" id="inp-fondo" onchange="STATE.cashFund = parseFloat(this.value)||0; UI.toast('Fondo Actualizado')" placeholder="0.00" class="w-20 md:w-28 bg-transparent border-b-2 border-indigo-200 focus:border-indigo-500 outline-none text-lg md:text-xl font-black text-slate-800 text-center py-1 transition-colors" />
-                            </div>
-                        </div>
+                        </section>
 
-                        <!-- INVENTARIO ESTIMADO -->
-                        <div class="bg-white rounded-2xl p-3 md:p-4 shadow-sm border border-slate-200">
-                            <h3 class="font-bold text-slate-800 flex gap-2 items-center text-sm mb-3">
-                                <i class="fa-solid fa-warehouse text-orange-500"></i> Inventario Estimado
-                                <span class="text-[9px] font-medium text-slate-400 ml-1">vs. insumos comprados</span>
-                            </h3>
-                            <div id="rp-inventario" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                <p class="col-span-2 text-xs text-slate-400 text-center py-3">Sin datos de insumos para este período</p>
-                            </div>
-                        </div>
-
-                        <!-- KPIs FINANCIEROS -->
-                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-                            <!-- Ventas Brutas -->
-                            <div class="col-span-2 md:col-span-1 relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 p-4 md:p-6 text-white shadow-xl">
-                                <i class="fa-solid fa-coins absolute -right-4 -bottom-4 text-[80px] md:text-[100px] opacity-10 rotate-12 text-white"></i>
-                                <p class="text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Ventas Brutas</p>
-                                <p id="rp-tot" class="font-display font-black text-3xl md:text-4xl">$0.00</p>
-                            </div>
-                            <!-- Efectivo -->
-                            <div class="rounded-2xl bg-white border border-slate-200 p-4 md:p-6 relative shadow-sm">
-                                <div class="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-green-50 text-green-600 flex items-center justify-center absolute top-4 md:top-6 right-4 md:right-6 text-sm md:text-base"><i class="fa-solid fa-money-bill-wave"></i></div>
-                                <p class="text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Efectivo</p>
-                                <p id="rp-cash" class="font-display font-black text-2xl md:text-3xl text-slate-800">$0.00</p>
-                            </div>
-                            <!-- Tarjeta -->
-                            <div class="rounded-2xl bg-white border border-slate-200 p-4 md:p-6 relative shadow-sm">
-                                <div class="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center absolute top-4 md:top-6 right-4 md:right-6 text-sm md:text-base"><i class="fa-regular fa-credit-card"></i></div>
-                                <p class="text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Tarjeta</p>
-                                <p id="rp-card" class="font-display font-black text-2xl md:text-3xl text-slate-800">$0.00</p>
-                            </div>
-                            <!-- Costo Insumos -->
-                            <div class="rounded-2xl bg-blue-50 border border-blue-200 p-4 md:p-6 relative shadow-sm">
-                                <div class="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center absolute top-4 md:top-6 right-4 md:right-6 text-sm md:text-base"><i class="fa-solid fa-scale-balanced"></i></div>
-                                <p class="text-[10px] md:text-xs font-bold uppercase tracking-widest text-blue-400 mb-1">Costo Insumos</p>
-                                <p id="rp-insumos-total" class="font-display font-black text-2xl md:text-3xl text-blue-600">$0.00</p>
-                            </div>
-                            <!-- Total Gastos -->
-                            <div class="rounded-2xl bg-red-50 border border-red-200 p-4 md:p-6 relative shadow-sm">
-                                <div class="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-red-100 text-red-600 flex items-center justify-center absolute top-4 md:top-6 right-4 md:right-6 text-sm md:text-base"><i class="fa-solid fa-arrow-trend-down"></i></div>
-                                <p class="text-[10px] md:text-xs font-bold uppercase tracking-widest text-red-400 mb-1">Gastos Totales</p>
-                                <p id="rp-gastos" class="font-display font-black text-2xl md:text-3xl text-red-600">$0.00</p>
-                            </div>
-                            <!-- GANANCIA NETA - Destacada -->
-                            <div class="col-span-2 md:col-span-1 relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 p-4 md:p-6 text-white shadow-xl shadow-green-500/30">
-                                <i class="fa-solid fa-chart-line absolute -right-4 -bottom-4 text-[80px] opacity-10 text-white rotate-12"></i>
-                                <p class="text-[10px] md:text-xs font-bold uppercase tracking-widest text-green-100 mb-1">Ganancia Neta Real</p>
-                                <p id="rp-ganancia-neta" class="font-display font-black text-3xl md:text-4xl drop-shadow">$0.00</p>
-                                <p class="text-[9px] text-green-200 mt-1">Ventas − Insumos − Gastos</p>
-                            </div>
-                        </div>
-
-                        <!-- MIX DE VENTAS + MARGEN POR PLATO -->
-                        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-                            <div class="px-4 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-                                <h3 class="font-bold text-slate-800 flex gap-2 items-center text-sm"><i class="fa-solid fa-chart-simple text-orange-500"></i> Mix Ventas + Margen</h3>
-                                <span class="text-[9px] text-slate-400 font-medium">Gan/u = precio − costo carne</span>
-                            </div>
-                            <div class="overflow-auto hide-scroll max-h-[280px]">
-                                <table class="w-full text-left text-sm">
-                                    <thead class="bg-white text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-wider sticky top-0 z-10 border-b border-slate-100 shadow-sm">
-                                        <tr>
-                                            <th class="px-3 md:px-4 py-2 md:py-3">Item</th>
-                                            <th class="px-3 md:px-4 py-2 md:py-3 text-center">#</th>
-                                            <th class="px-3 md:px-4 py-2 md:py-3 text-right">Venta</th>
-                                            <th class="px-3 md:px-4 py-2 md:py-3 text-right">Gan/u</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="rp-rows" class="divide-y divide-slate-100 text-slate-600 bg-white"></tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <!-- INSUMOS REGISTRADOS -->
-                        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-                            <div class="px-4 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center gap-2">
-                                <h3 class="font-bold text-slate-800 flex gap-2 items-center text-sm"><i class="fa-solid fa-scale-balanced text-blue-500"></i> Insumos del Período</h3>
-                                <button onclick="UI.openModalInsumo()" class="text-[10px] bg-blue-50 text-blue-600 border border-blue-200 font-bold px-3 py-1.5 rounded-lg tap-effect hover:bg-blue-100 transition-colors flex items-center gap-1">
-                                    <i class="fa-solid fa-plus"></i> Agregar
-                                </button>
-                            </div>
-                            <div class="overflow-auto hide-scroll max-h-[220px]">
-                                <table class="w-full text-left text-sm">
-                                    <thead class="bg-white text-[9px] font-black text-slate-400 uppercase tracking-wider sticky top-0 z-10 border-b border-slate-100">
-                                        <tr>
-                                            <th class="px-4 py-2">Tipo</th>
-                                            <th class="px-4 py-2 text-center">Kilos</th>
-                                            <th class="px-4 py-2 text-right">Costo</th>
-                                            <th class="px-4 py-2 text-right">$/kg</th>
-                                            <th class="px-4 py-2 text-center">Hora</th>
-                                            <th class="px-4 py-2"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="rp-insumos-rows" class="divide-y divide-slate-100 text-slate-600 bg-white"></tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <!-- GASTOS OPERATIVOS ERP -->
-                        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-                            <div class="px-4 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center gap-2">
-                                <h3 class="font-bold text-slate-800 flex gap-2 items-center text-sm"><i class="fa-solid fa-receipt text-red-500"></i> Gastos Operativos</h3>
-                                <button onclick="UI.openModalGastoERP()" class="text-[10px] bg-red-50 text-red-500 border border-red-200 font-bold px-3 py-1.5 rounded-lg tap-effect hover:bg-red-100 transition-colors flex items-center gap-1">
-                                    <i class="fa-solid fa-plus"></i> Agregar
-                                </button>
-                            </div>
-                            <div class="overflow-auto hide-scroll max-h-[220px]">
-                                <table class="w-full text-left text-sm">
-                                    <thead class="bg-white text-[9px] font-black text-slate-400 uppercase tracking-wider sticky top-0 z-10 border-b border-slate-100">
-                                        <tr>
-                                            <th class="px-4 py-2">Concepto</th>
-                                            <th class="px-4 py-2 text-right">Monto</th>
-                                            <th class="px-4 py-2 text-center">Hora</th>
-                                            <th class="px-4 py-2"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="rp-gastos-erp-rows" class="divide-y divide-slate-100 text-slate-600 bg-white"></tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <!-- HISTORIAL VENTAS + PDF -->
-                        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm flex flex-col h-[320px] md:h-[400px]">
-                            <div class="px-3 md:px-4 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center gap-2">
-                                <h3 class="font-bold text-slate-800 flex gap-2 items-center text-sm"><i class="fa-solid fa-list-ul text-blue-500"></i> Historial</h3>
-                                <button onclick="UI.generatePDF()" class="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white px-3 py-1.5 rounded-lg text-[10px] md:text-xs font-bold transition-all shadow-lg shadow-orange-500/20 flex items-center justify-center gap-1.5 tap-effect">
-                                    <i class="fa-solid fa-file-pdf"></i> <span class="hidden md:inline">Reporte</span> PDF
-                                </button>
-                            </div>
-                            <div class="flex-1 overflow-auto hide-scroll">
-                                <table class="w-full text-left text-sm">
-                                    <thead class="bg-white text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-wider sticky top-0 z-10 border-b border-slate-100 shadow-sm">
-                                        <tr><th class="px-3 py-2 md:py-3">Detalle</th><th class="px-3 py-2 md:py-3 text-right">Monto</th><th class="px-3 py-2 md:py-3 text-center">Ctrl</th></tr>
-                                    </thead>
-                                    <tbody id="rp-trans" class="divide-y divide-slate-100 text-slate-600 bg-white"></tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <!-- ══════════════ INSIGHTS ══════════════ -->
-
-                        <!-- TOP 3 PLATILLOS MÁS RENTABLES -->
-                        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-                            <div class="px-4 py-3 border-b border-slate-100 bg-gradient-to-r from-amber-50 to-orange-50 flex items-center gap-2">
-                                <div class="w-7 h-7 rounded-lg bg-amber-400 text-white flex items-center justify-center text-sm shrink-0"><i class="fa-solid fa-trophy"></i></div>
-                                <div>
-                                    <h3 class="font-bold text-slate-800 text-sm">Top 3 Platillos más Rentables</h3>
-                                    <p class="text-[9px] text-slate-400">Por ganancia neta total generada (precio − costo carne × cantidad)</p>
+                        <section class="lc-fc is-collapsible" id="fin-c-insumos">
+                            <button class="lc-fc-head" onclick="UI.finance.toggleCard(this)">
+                                <span class="lc-fc-ico" style="background:#2563EB"><i class="fa-solid fa-scale-balanced"></i></span>
+                                <span>
+                                    <h3>Insumos del período</h3>
+                                    <p>Compras de carne registradas</p>
+                                </span>
+                                <i class="fa-solid fa-chevron-down lc-fc-chev" aria-hidden="true"></i>
+                            </button>
+                            <div class="lc-fc-body is-flush">
+                                <div class="lc-tbl-wrap">
+                                    <table class="lc-tbl">
+                                        <thead><tr><th>Tipo</th><th class="mid">Kilos</th><th class="num">Costo</th><th class="num">$/kg</th><th class="mid">Hora</th><th></th></tr></thead>
+                                        <tbody id="rp-insumos-rows"><tr><td colspan="6" class="lc-empty-sm">Sin insumos en este período</td></tr></tbody>
+                                    </table>
                                 </div>
                             </div>
-                            <div id="rp-top3" class="p-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                <p class="col-span-3 text-xs text-slate-400 text-center py-4">Sin datos de ventas para este período</p>
-                            </div>
-                        </div>
+                        </section>
 
-                        <!-- HORAS PICO DE VENTAS -->
-                        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-                            <div class="px-4 py-3 border-b border-slate-100 bg-gradient-to-r from-blue-50 to-indigo-50 flex items-center gap-2">
-                                <div class="w-7 h-7 rounded-lg bg-blue-500 text-white flex items-center justify-center text-sm shrink-0"><i class="fa-solid fa-clock"></i></div>
-                                <div>
-                                    <h3 class="font-bold text-slate-800 text-sm">Horas Pico de Ventas</h3>
-                                    <p class="text-[9px] text-slate-400">Número de órdenes cobradas por hora del día</p>
+                        <section class="lc-fc is-collapsible" id="fin-c-gastos">
+                            <button class="lc-fc-head" onclick="UI.finance.toggleCard(this)">
+                                <span class="lc-fc-ico" style="background:#DC2626"><i class="fa-solid fa-receipt"></i></span>
+                                <span>
+                                    <h3>Gastos operativos</h3>
+                                    <p>Todo lo que no es materia prima</p>
+                                </span>
+                                <i class="fa-solid fa-chevron-down lc-fc-chev" aria-hidden="true"></i>
+                            </button>
+                            <div class="lc-fc-body is-flush">
+                                <div class="lc-tbl-wrap">
+                                    <table class="lc-tbl">
+                                        <thead><tr><th>Concepto</th><th class="num">Monto</th><th class="mid">Hora</th><th></th></tr></thead>
+                                        <tbody id="rp-gastos-erp-rows"><tr><td colspan="4" class="lc-empty-sm">Sin gastos registrados</td></tr></tbody>
+                                    </table>
                                 </div>
                             </div>
-                            <div id="rp-horas-pico" class="p-4">
-                                <p class="text-xs text-slate-400 text-center py-4">Sin datos de ventas para este período</p>
-                            </div>
-                        </div>
+                        </section>
 
-                        <!-- COMPARATIVA SEMANA VS SEMANA ANTERIOR -->
-                        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-                            <div class="px-4 py-3 border-b border-slate-100 bg-gradient-to-r from-violet-50 to-purple-50 flex items-center gap-2">
-                                <div class="w-7 h-7 rounded-lg bg-violet-500 text-white flex items-center justify-center text-sm shrink-0"><i class="fa-solid fa-arrow-right-arrow-left"></i></div>
-                                <div>
-                                    <h3 class="font-bold text-slate-800 text-sm">Comparativa vs Fin de Semana Anterior</h3>
-                                    <p class="text-[9px] text-slate-400">Este fin de semana vs el anterior</p>
+                        <section class="lc-fc is-collapsible" id="fin-c-hist">
+                            <button class="lc-fc-head" onclick="UI.finance.toggleCard(this)">
+                                <span class="lc-fc-ico" style="background:#64748B"><i class="fa-solid fa-list-ul"></i></span>
+                                <span>
+                                    <h3>Movimientos del período</h3>
+                                    <p>Cada cobro y cada salida de dinero</p>
+                                </span>
+                                <i class="fa-solid fa-chevron-down lc-fc-chev" aria-hidden="true"></i>
+                            </button>
+                            <div class="lc-fc-body is-flush">
+                                <div class="lc-tbl-wrap">
+                                    <table class="lc-tbl">
+                                        <thead><tr><th>Detalle</th><th class="num">Monto</th><th class="mid"></th></tr></thead>
+                                        <tbody id="rp-trans"><tr><td colspan="3" class="lc-empty-sm">Sin movimientos en este período</td></tr></tbody>
+                                    </table>
                                 </div>
                             </div>
-                            <div id="rp-comparativa" class="p-3">
-                                <p class="text-xs text-slate-400 text-center py-4">Selecciona "Fin de Semana" para ver la comparativa</p>
-                            </div>
-                        </div>
+                        </section>
 
-                        <!-- GASTOS SOBRE VENTAS (DONUT) -->
-                        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-                            <div class="px-4 py-3 border-b border-slate-100 bg-gradient-to-r from-teal-50 to-cyan-50 flex items-center gap-2">
-                                <div class="w-7 h-7 rounded-lg bg-teal-500 text-white flex items-center justify-center text-sm shrink-0"><i class="fa-solid fa-chart-pie"></i></div>
-                                <div>
-                                    <h3 class="font-bold text-slate-800 text-sm">Estructura de Costos</h3>
-                                    <p class="text-[9px] text-slate-400">Porcentaje de gastos sobre ventas — insumos, operativos y ganancia neta</p>
+                        <section class="lc-fc is-collapsible" id="fin-c-fines">
+                            <button class="lc-fc-head" onclick="UI.finance.toggleCard(this)">
+                                <span class="lc-fc-ico" style="background:#059669"><i class="fa-solid fa-calendar-week"></i></span>
+                                <span>
+                                    <h3>Historial de fines de semana</h3>
+                                    <p>Últimas 8 semanas — toca una fila para verla</p>
+                                </span>
+                                <i class="fa-solid fa-chevron-down lc-fc-chev" aria-hidden="true"></i>
+                            </button>
+                            <div class="lc-fc-body is-flush">
+                                <div class="lc-tbl-wrap">
+                                    <table class="lc-tbl">
+                                        <thead><tr><th>Fecha</th><th class="num">Ventas</th><th class="num">Gastos</th><th class="num">Ganancia</th><th class="mid">Órd.</th></tr></thead>
+                                        <tbody id="rp-historial-fines-rows"><tr><td colspan="5" class="lc-empty-sm">Calculando…</td></tr></tbody>
+                                    </table>
                                 </div>
                             </div>
-                            <div id="rp-gastos-ventas" class="p-4">
-                                <p class="text-xs text-slate-400 text-center py-4">Sin datos de ventas para este período</p>
-                            </div>
-                        </div>
+                        </section>
 
-                        <!-- HISTORIAL DE FINES DE SEMANA ANTERIORES -->
-                        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-                            <div class="px-4 py-3 border-b border-slate-100 bg-gradient-to-r from-emerald-50 to-green-50 flex items-center justify-between gap-2">
-                                <div class="flex items-center gap-2">
-                                    <div class="w-7 h-7 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-sm shrink-0"><i class="fa-solid fa-calendar-week"></i></div>
-                                    <div>
-                                        <h3 class="font-bold text-slate-800 text-sm">Historial de Fines de Semana</h3>
-                                        <p class="text-[9px] text-slate-400">Últimas 8 semanas — haz clic en una fila para verla</p>
-                                    </div>
-                                </div>
-                                <button onclick="UI.renderHistorialFines()" class="text-[10px] text-emerald-600 border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 tap-effect transition-colors"><i class="fa-solid fa-rotate-right"></i> Actualizar</button>
-                            </div>
-                            <div id="rp-historial-fines" class="overflow-auto hide-scroll max-h-[340px]">
-                                <table class="w-full text-left text-sm">
-                                    <thead class="bg-white text-[9px] font-black text-slate-400 uppercase tracking-wider sticky top-0 z-10 border-b border-slate-100">
-                                        <tr>
-                                            <th class="px-4 py-2.5">Fecha</th>
-                                            <th class="px-4 py-2.5 text-right">Ventas</th>
-                                            <th class="px-4 py-2.5 text-right">Gastos</th>
-                                            <th class="px-4 py-2.5 text-right">Ganancia</th>
-                                            <th class="px-4 py-2.5 text-center">Órdenes</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="rp-historial-fines-rows" class="divide-y divide-slate-100 text-slate-600 bg-white">
-                                        <tr><td colspan="5" class="text-center py-5 text-xs text-slate-400">Presiona "Actualizar" para cargar el historial</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <div class="pt-6 pb-8 text-center border-t border-slate-200">
-                             <button onclick="LOGIC.resetAll()" class="text-[10px] text-red-300 hover:text-red-500 font-black uppercase tracking-[0.2em] transition hover:bg-red-50 px-4 py-2 rounded-lg">Reset Sistema (Borrar Todo)</button>
+                        <div style="padding:22px 0 10px;text-align:center;border-top:1px solid #E2E8F0">
+                            <button onclick="LOGIC.resetAll()" style="font-size:10px;letter-spacing:.2em;font-weight:900;text-transform:uppercase;color:#FCA5A5;padding:8px 14px;border-radius:9px">Reset Sistema (Borrar Todo)</button>
                         </div>
                     </div>
                 </div>
@@ -2341,7 +2653,16 @@
                 setTimeout(()=>{div.classList.add('opacity-0','translate-x-full');setTimeout(()=>div.remove(),300)},3000);
             },
 
+            // Los snapshots de Firestore llegan en ráfagas: se agrupan en un solo repintado
             renderOrders: () => {
+                if(UI._ordTimer) return;
+                UI._ordTimer = setTimeout(function() {
+                    UI._ordTimer = null;
+                    UI._renderOrdersNow();
+                }, 90);
+            },
+
+            _renderOrdersNow: () => {
                 // RENDER VISTA COCINA (KDS MEJORADO CON SCROLL INFINITO Y AUDIO)
                 // Cocina ve: tickets de cocina adicionales (isKitchenTicket=true) O ordenes principales nuevas (sin parentOrder y sin isKitchenTicket)
                 if(STATE.role==='cocina'){
@@ -2476,10 +2797,22 @@
             },
             
             cajaTab: (t) => {
-                const act=t==='active'; document.getElementById('p-active').classList.toggle('hidden',!act); document.getElementById('p-report').classList.toggle('hidden',act);
-                document.getElementById('btn-tab-act').classList.toggle('border-brand-accent',act); document.getElementById('btn-tab-act').classList.toggle('text-brand-accent',act); document.getElementById('btn-tab-act').classList.toggle('border-transparent',!act);
-                document.getElementById('btn-tab-rep').classList.toggle('border-brand-accent',!act); document.getElementById('btn-tab-rep').classList.toggle('text-brand-accent',!act); document.getElementById('btn-tab-rep').classList.toggle('border-transparent',act);
-                if(!act) { UI.renderFinance(); UI.renderHistorialFines(); }
+                var act = t === 'active';
+                document.getElementById('p-active').classList.toggle('hidden', !act);
+                document.getElementById('p-report').classList.toggle('hidden', act);
+                document.getElementById('btn-tab-act').classList.toggle('is-on', act);
+                document.getElementById('btn-tab-rep').classList.toggle('is-on', !act);
+                if(act) return;
+                // Finanzas: pedir clave la primera vez de cada sesión
+                if(UI.finance.isUnlocked()) UI.finance.reveal();
+                else {
+                    var lock = document.getElementById('fin-lock');
+                    var cont = document.getElementById('fin-content');
+                    if(lock) lock.style.display = '';
+                    if(cont) cont.classList.add('hidden');
+                    UI.finance._pin = '';
+                    UI.finance._dots();
+                }
             },
             
             // Selección de items para cobro parcial
@@ -2612,6 +2945,18 @@
                     var e = new Date(today); e.setHours(23,59,59,999);
                     return [{start: s.getTime(), end: e.getTime()}];
                 }
+                if(filtro === 'ayer') {
+                    var y = new Date(today); y.setDate(today.getDate() - 1);
+                    var ys = new Date(y); ys.setHours(0,0,0,0);
+                    var ye = new Date(y); ye.setHours(23,59,59,999);
+                    return [{start: ys.getTime(), end: ye.getTime()}];
+                }
+                if(filtro === 'semana' || filtro === 'mes') {
+                    var dias = filtro === 'semana' ? 6 : 29;
+                    var ws = new Date(today); ws.setDate(today.getDate() - dias); ws.setHours(0,0,0,0);
+                    var we = new Date(today); we.setHours(23,59,59,999);
+                    return [{start: ws.getTime(), end: we.getTime()}];
+                }
                 if(filtro === 'sabado') {
                     var diffToSat = d === 6 ? 0 : (d + 7 - 6) % 7;
                     var sat = new Date(today); sat.setDate(today.getDate() - diffToSat);
@@ -2644,15 +2989,9 @@
             setFiltroFinanzas: (filtro) => {
                 STATE.filtroFinanzas = filtro;
                 document.querySelectorAll('.filtro-btn').forEach(function(btn) {
-                    btn.classList.remove('bg-orange-500', 'text-white', 'shadow-sm');
-                    btn.classList.add('bg-slate-100', 'text-slate-600');
+                    btn.classList.toggle('is-on', btn.id === 'filtro-' + filtro);
                 });
-                var activeBtn = document.getElementById('filtro-' + filtro);
-                if(activeBtn) {
-                    activeBtn.classList.remove('bg-slate-100', 'text-slate-600');
-                    activeBtn.classList.add('bg-orange-500', 'text-white', 'shadow-sm');
-                }
-                UI.renderFinance();
+                UI.finance.render();
             },
 
             // Abrir/cerrar modal de Insumo
@@ -2716,501 +3055,882 @@
                 el.classList.add('hidden'); el.classList.remove('flex');
             },
 
-            // MOTOR PRINCIPAL: renderizar toda la sección de Finanzas ERP
-            renderFinance: () => {
-                if(STATE.role !== 'cajero') return;
-
-                var ranges = UI._getDateRange(STATE.filtroFinanzas || 'hoy');
-
-                // ¿timestamp cae en alguno de los rangos?
-                function inRange(ts) {
-                    if(!ts) return true;
-                    var ms = ts.seconds ? ts.seconds*1000 : (ts instanceof Date ? ts.getTime() : Number(ts));
-                    return ranges.some(function(r){ return ms >= r.start && ms <= r.end; });
-                }
-
-                // Filtrar datos por período
-                var salesFiltered   = STATE.orders.filter(function(o){ return o.status==='pagado' && !o.isExpense && !o.isKitchenTicket && inRange(o.ts); });
-                var oldExpenses     = STATE.orders.filter(function(o){ return o.isExpense && inRange(o.ts); });
-                var insumosFiltered = STATE.insumos.filter(function(i){ return inRange(i.fecha); });
-                var gastosFiltered  = STATE.gastosERP.filter(function(g){ return inRange(g.fecha); });
-
-                // Totales
-                var ventasBrutas   = salesFiltered.reduce(function(a,o){ return a+(o.total||0); },0);
-                var efectivo       = salesFiltered.filter(function(o){ return o.method==='Efectivo'; }).reduce(function(a,o){ return a+(o.total||0); },0);
-                var tarjeta        = salesFiltered.filter(function(o){ return o.method && o.method!=='Efectivo'; }).reduce(function(a,o){ return a+(o.total||0); },0);
-                var totalInsumos   = insumosFiltered.reduce(function(a,i){ return a+(i.costo_total||0); },0);
-                var totalGastosERP = gastosFiltered.reduce(function(a,g){ return a+(g.monto||0); },0);
-                var totalOldExp    = oldExpenses.reduce(function(a,e){ return a+(e.total||0); },0);
-                var totalGastos    = totalInsumos + totalGastosERP + totalOldExp;
-                var gananciaNeta   = ventasBrutas - totalGastos;
-
-                // Costo promedio ponderado por kilo por tipo de carne
-                var kilosPorTipo = {}, costoTotalPorTipo = {};
-                insumosFiltered.forEach(function(i) {
-                    if(!kilosPorTipo[i.tipo]) { kilosPorTipo[i.tipo]=0; costoTotalPorTipo[i.tipo]=0; }
-                    kilosPorTipo[i.tipo]      += (i.kilos_comprados||0);
-                    costoTotalPorTipo[i.tipo] += (i.costo_total||0);
-                });
-                var avgCostoPorKilo = {};
-                Object.keys(kilosPorTipo).forEach(function(tipo){
-                    avgCostoPorKilo[tipo] = kilosPorTipo[tipo] > 0 ? costoTotalPorTipo[tipo]/kilosPorTipo[tipo] : 0;
-                });
-
-                // Mapa de items vendidos
-                var itemMap = {};
-                salesFiltered.forEach(function(o){
-                    (o.items||[]).forEach(function(i){
-                        if(!itemMap[i.n]) itemMap[i.n]={q:0,s:0};
-                        itemMap[i.n].q += i.qty;
-                        itemMap[i.n].s += i.qty * i.p;
-                    });
-                });
-
-                // Gramos consumidos por tipo (basado en escandallo por defecto)
-                var gramosPorTipo = {};
-                Object.entries(itemMap).forEach(function(entry){
-                    var nombre=entry[0], data=entry[1];
-                    var esc = ESCANDALLO_DEFAULT.find(function(e){ return e.producto===nombre; });
-                    if(esc) {
-                        if(!gramosPorTipo[esc.tipo]) gramosPorTipo[esc.tipo]=0;
-                        gramosPorTipo[esc.tipo] += esc.gramos * data.q;
-                    }
-                });
-
-                // ── KPIs ─────────────────────────────────────────
-                document.getElementById('rp-tot').innerText    = UI.format(ventasBrutas);
-                document.getElementById('rp-cash').innerText   = UI.format(efectivo);
-                document.getElementById('rp-card').innerText   = UI.format(tarjeta);
-                document.getElementById('rp-gastos').innerText = UI.format(totalGastos);
-                var netEl = document.getElementById('rp-ganancia-neta');
-                if(netEl) netEl.innerText = UI.format(gananciaNeta);
-                var insEl = document.getElementById('rp-insumos-total');
-                if(insEl) insEl.innerText = UI.format(totalInsumos);
-
-                // ── INVENTARIO ESTIMADO ───────────────────────────
-                var invEl = document.getElementById('rp-inventario');
-                if(invEl) {
-                    var tiposTracked = Object.keys(kilosPorTipo);
-                    if(!tiposTracked.length) {
-                        invEl.innerHTML = '<p class="col-span-2 text-xs text-slate-400 text-center py-3">Sin insumos registrados para este período</p>';
-                    } else {
-                        invEl.innerHTML = tiposTracked.map(function(tipo){
-                            var consumidos = (gramosPorTipo[tipo]||0)/1000;
-                            var restantes  = kilosPorTipo[tipo] - consumidos;
-                            var pct        = kilosPorTipo[tipo]>0 ? Math.max(0,Math.min(1,restantes/kilosPorTipo[tipo])) : 0;
-                            var barColor   = restantes>1 ? 'bg-green-400' : (restantes>0.3 ? 'bg-yellow-400' : 'bg-red-400');
-                            var textColor  = restantes<0.3 ? 'text-red-600 font-black' : 'text-slate-800';
-                            return '<div class="flex flex-col gap-1.5 p-3 bg-slate-50 rounded-xl border border-slate-100">' +
-                                '<div class="flex justify-between items-center">' +
-                                '<span class="text-xs font-bold text-slate-700">' + tipo + '</span>' +
-                                '<span class="font-mono font-black text-sm ' + textColor + '">' + restantes.toFixed(2) + ' kg</span>' +
-                                '</div>' +
-                                '<div class="w-full bg-slate-200 rounded-full h-2"><div class="' + barColor + ' h-2 rounded-full transition-all" style="width:' + (pct*100).toFixed(0) + '%"></div></div>' +
-                                '<div class="text-[9px] text-slate-400">' + kilosPorTipo[tipo].toFixed(2) + ' kg comprados · ' + consumidos.toFixed(2) + ' kg consumidos</div>' +
-                                '</div>';
-                        }).join('');
-                    }
-                }
-
-                // ── MIX VENTAS + GANANCIA POR PLATO ──────────────
-                var mixRows = Object.entries(itemMap).sort(function(a,b){ return b[1].s-a[1].s; }).map(function(entry){
-                    var nombre=entry[0], data=entry[1];
-                    var esc = ESCANDALLO_DEFAULT.find(function(e){ return e.producto===nombre; });
-                    var ganHtml = '<span class="text-slate-300 text-[9px]">N/D</span>';
-                    if(esc && avgCostoPorKilo[esc.tipo]) {
-                        var costoCarne = avgCostoPorKilo[esc.tipo]*(esc.gramos/1000);
-                        var precioPromedio = data.s/data.q;
-                        var ganancia = precioPromedio - costoCarne;
-                        ganHtml = '<span class="font-mono font-bold ' + (ganancia>=0?'text-green-600':'text-red-600') + '">' + UI.format(ganancia) + '</span>';
-                    }
-                    return '<tr class="hover:bg-slate-50 transition-colors">' +
-                        '<td class="px-3 md:px-4 py-2.5 text-xs font-bold text-slate-700">' + nombre + '</td>' +
-                        '<td class="px-3 md:px-4 py-2.5 text-center text-xs bg-slate-50 text-slate-500 font-mono font-bold">' + data.q + '</td>' +
-                        '<td class="px-3 md:px-4 py-2.5 text-right text-xs font-bold text-slate-800">' + UI.format(data.s) + '</td>' +
-                        '<td class="px-3 md:px-4 py-2.5 text-right text-xs">' + ganHtml + '</td></tr>';
-                });
-                document.getElementById('rp-rows').innerHTML = mixRows.join('') ||
-                    '<tr><td colspan="4" class="text-center py-4 text-xs text-slate-400">Sin ventas en este período</td></tr>';
-
-                // ── INSUMOS ───────────────────────────────────────
-                var insumosEl = document.getElementById('rp-insumos-rows');
-                if(insumosEl) {
-                    insumosEl.innerHTML = insumosFiltered.slice().sort(function(a,b){
-                        return (b.fecha&&b.fecha.seconds?b.fecha.seconds:0)-(a.fecha&&a.fecha.seconds?a.fecha.seconds:0);
-                    }).map(function(i){
-                        var hora = i.fecha&&i.fecha.seconds ? new Date(i.fecha.seconds*1000).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}) : '--:--';
-                        return '<tr class="hover:bg-blue-50/50 transition-colors">' +
-                            '<td class="px-4 py-2.5 text-xs font-bold text-slate-700">' + i.tipo + '</td>' +
-                            '<td class="px-4 py-2.5 text-center text-xs font-mono text-slate-600">' + (i.kilos_comprados||0).toFixed(2) + ' kg</td>' +
-                            '<td class="px-4 py-2.5 text-right text-xs font-bold text-blue-700">' + UI.format(i.costo_total) + '</td>' +
-                            '<td class="px-4 py-2.5 text-right text-xs font-mono text-slate-500">' + UI.format(i.costo_por_kilo) + '/kg</td>' +
-                            '<td class="px-4 py-2.5 text-center text-[9px] text-slate-400">' + hora + '</td>' +
-                            '<td class="px-4 py-2.5 text-center"><button onclick="LOGIC.erp.delInsumo(\'' + i.id + '\')" class="text-slate-300 hover:text-red-500 text-sm p-1 hover:bg-red-50 rounded transition-colors"><i class="fa-solid fa-trash text-xs"></i></button></td>' +
-                            '</tr>';
-                    }).join('') || '<tr><td colspan="6" class="text-center py-4 text-xs text-slate-400">Sin insumos en este período</td></tr>';
-                }
-
-                // ── GASTOS OPERATIVOS ERP ─────────────────────────
-                var gastosERPEl = document.getElementById('rp-gastos-erp-rows');
-                if(gastosERPEl) {
-                    gastosERPEl.innerHTML = gastosFiltered.slice().sort(function(a,b){
-                        return (b.fecha&&b.fecha.seconds?b.fecha.seconds:0)-(a.fecha&&a.fecha.seconds?a.fecha.seconds:0);
-                    }).map(function(g){
-                        var hora = g.fecha&&g.fecha.seconds ? new Date(g.fecha.seconds*1000).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}) : '--:--';
-                        return '<tr class="hover:bg-red-50/50 transition-colors">' +
-                            '<td class="px-4 py-2.5 text-xs font-bold text-red-700">' + g.concepto + '</td>' +
-                            '<td class="px-4 py-2.5 text-right text-xs font-bold text-red-600">' + UI.format(g.monto) + '</td>' +
-                            '<td class="px-4 py-2.5 text-center text-[9px] text-slate-400">' + hora + '</td>' +
-                            '<td class="px-4 py-2.5 text-center"><button onclick="LOGIC.erp.delGastoERP(\'' + g.id + '\')" class="text-slate-300 hover:text-red-500 text-sm p-1 hover:bg-red-50 rounded transition-colors"><i class="fa-solid fa-trash text-xs"></i></button></td>' +
-                            '</tr>';
-                    }).join('') || '<tr><td colspan="4" class="text-center py-4 text-xs text-slate-400">Sin gastos operativos registrados</td></tr>';
-                }
-
-                // ── HISTORIAL (sales + old expenses) ─────────────
-                var allTrans = salesFiltered.concat(oldExpenses).sort(function(a,b){
-                    return (b.ts&&b.ts.seconds?b.ts.seconds:0)-(a.ts&&a.ts.seconds?a.ts.seconds:0);
-                });
-                document.getElementById('rp-trans').innerHTML = allTrans.map(function(o){
-                    var isExp = o.isExpense===true;
-                    return '<tr class="hover:bg-slate-50 transition ' + (isExp?'bg-red-50/50':'') + '">' +
-                        '<td class="px-4 py-3 text-xs text-slate-600">' +
-                        '<div class="font-bold ' + (isExp?'text-red-600':'text-slate-800') + '">' +
-                        (isExp ? '⚠️ GASTO: ' + (o.items[0]&&o.items[0].n||'') : (isNaN(o.mesa)?'Venta Caja':'Mesa '+o.mesa)) +
-                        '</div><div class="text-[9px] ' + (isExp?'text-red-400':'text-slate-400') + ' uppercase">' +
-                        (isExp ? 'Salida de efectivo' : (o.method||'') + ' · ' + (o.items?o.items.length:0) + ' prod') +
-                        '</div></td>' +
-                        '<td class="px-4 py-3 text-right text-xs font-black font-mono ' + (isExp?'text-red-600':'text-slate-800') + '">' +
-                        (isExp?'-':'') + UI.format(o.total) + '</td>' +
-                        '<td class="px-4 py-3 text-center">' +
-                        '<button onclick="LOGIC.adminEdit(\'' + o.id + '\',' + o.total + ')" class="text-blue-400 hover:text-blue-600 text-sm mx-1 p-1 hover:bg-blue-50 rounded"><i class="fa-solid fa-pen-to-square"></i></button>' +
-                        '<button onclick="LOGIC.adminDel(\'' + o.id + '\')" class="text-slate-300 hover:text-red-500 text-sm mx-1 p-1 hover:bg-red-50 rounded"><i class="fa-solid fa-trash"></i></button>' +
-                        '</td></tr>';
-                }).join('') || '<tr><td colspan="3" class="text-center py-6 text-xs text-slate-400">Sin movimientos en este período</td></tr>';
-
-                // Actualizar reportSummary para el generador de PDF
-                STATE.reportSummary = {total:ventasBrutas, cash:efectivo, card:tarjeta, gastos:totalGastos, items:itemMap, history:salesFiltered, expenses:oldExpenses};
-
-                // Renderizar insights (Top3, Horas Pico, Comparativa)
-                UI.renderInsights(salesFiltered, itemMap, avgCostoPorKilo, insumosFiltered, gastosFiltered, oldExpenses);
-            },
-
-            // ══════════════════════════════════════════════════════
-            // INSIGHTS: Top3 · Horas Pico · Comparativa · Historial
-            // ══════════════════════════════════════════════════════
-
-            // Calcula stats resumidas de un conjunto de ventas/gastos
-            _calcFindeStats: function(sales, insumos, gastosERP, oldExp, avgCostoPorKilo) {
-                var ventas  = sales.reduce(function(a,o){ return a+(o.total||0); }, 0);
-                var costoIns= insumos.reduce(function(a,i){ return a+(i.costo_total||0); }, 0);
-                var costoGas= gastosERP.reduce(function(a,g){ return a+(g.monto||0); }, 0);
-                var costoOld= oldExp.reduce(function(a,e){ return a+(e.total||0); }, 0);
-                var gastos  = costoIns + costoGas + costoOld;
-                var ganancia= ventas - gastos;
-                // itemMap
-                var imap = {};
-                sales.forEach(function(o){ (o.items||[]).forEach(function(i){ if(!imap[i.n]) imap[i.n]={q:0,s:0}; imap[i.n].q+=i.qty; imap[i.n].s+=i.qty*i.p; }); });
-                return { ventas:ventas, gastos:gastos, ganancia:ganancia, ordenes:sales.length, imap:imap };
-            },
-
-            // Helper: rango de un fin de semana (weeksAgo=0 = este finde, 1 = el anterior, etc.)
+            // Rango de un fin de semana (weeksAgo=0 es el fin de semana en curso)
             _getWeekendRange: function(weeksAgo) {
                 var today = new Date();
                 var d = today.getDay(); // 0=Dom, 6=Sab
                 var diffS = d === 6 ? 0 : (d + 7 - 6) % 7;
-                var sat = new Date(today); sat.setDate(today.getDate() - diffS - weeksAgo*7);
+                var sat = new Date(today); sat.setDate(today.getDate() - diffS - weeksAgo * 7);
                 var sun = new Date(sat);  sun.setDate(sat.getDate() + 1);
-                var ss = new Date(sat); ss.setHours(0,0,0,0);
-                var se = new Date(sat); se.setHours(23,59,59,999);
-                var ds = new Date(sun); ds.setHours(0,0,0,0);
-                var de = new Date(sun); de.setHours(23,59,59,999);
+                var ss = new Date(sat); ss.setHours(0, 0, 0, 0);
+                var se = new Date(sat); se.setHours(23, 59, 59, 999);
+                var ds = new Date(sun); ds.setHours(0, 0, 0, 0);
+                var de = new Date(sun); de.setHours(23, 59, 59, 999);
                 return {
                     satStart: ss.getTime(), satEnd: se.getTime(),
                     sunStart: ds.getTime(), sunEnd: de.getTime(),
-                    label: sat.toLocaleDateString('es-MX',{day:'numeric',month:'short'}) + ' – ' + sun.toLocaleDateString('es-MX',{day:'numeric',month:'short',year:'numeric'})
+                    label: sat.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }) + ' – ' + sun.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })
                 };
             },
 
-            // Renderiza Top3, Horas Pico y Comparativa
-            renderInsights: function(salesFiltered, itemMap, avgCostoPorKilo, insumosFiltered, gastosFiltered, oldExpenses) {
+            // ══════════════════════════════════════════════════════
+            // FINANZAS v8 · motor de análisis, gráficas y candado
+            // ══════════════════════════════════════════════════════
+            finance: {
 
-                // ── TOP 3 PLATILLOS MÁS RENTABLES ──────────────────
-                var top3El = document.getElementById('rp-top3');
-                if(top3El) {
-                    var conGanancia = Object.entries(itemMap).map(function(entry){
-                        var nombre = entry[0], data = entry[1];
-                        var esc = ESCANDALLO_DEFAULT.find(function(e){ return e.producto===nombre; });
-                        var ganTotal = null;
-                        if(esc && avgCostoPorKilo[esc.tipo]) {
-                            var costoCarne = avgCostoPorKilo[esc.tipo] * (esc.gramos/1000);
-                            ganTotal = (data.s/data.q - costoCarne) * data.q;
-                        }
-                        return { nombre:nombre, q:data.q, ventas:data.s, ganTotal:ganTotal };
-                    }).filter(function(x){ return x.ganTotal !== null; })
-                      .sort(function(a,b){ return b.ganTotal - a.ganTotal; })
-                      .slice(0,3);
+                // ---------- Candado de acceso ----------
+                CLAVE: '2020',
+                unlocked: false,
+                _pin: '',
 
-                    if(!conGanancia.length) {
-                        top3El.innerHTML = '<p class="col-span-3 text-xs text-slate-400 text-center py-4">Agrega insumos del período para calcular rentabilidad</p>';
+                isUnlocked: function() {
+                    if(UI.finance.unlocked) return true;
+                    try { if(sessionStorage.getItem('lc_fin_ok') === '1') { UI.finance.unlocked = true; return true; } } catch(e) {}
+                    return false;
+                },
+
+                pin: function(d) {
+                    var f = UI.finance;
+                    if(f._pin.length >= 4) return;
+                    f._pin += d;
+                    if(window.navigator.vibrate) window.navigator.vibrate(8);
+                    f._dots();
+                    if(f._pin.length === 4) setTimeout(f._check, 130);
+                },
+                pinBack: function() { var f = UI.finance; f._pin = f._pin.slice(0, -1); f._dots(); },
+                pinClear: function() { var f = UI.finance; f._pin = ''; f._dots(); },
+
+                _dots: function(bad) {
+                    var wrap = document.getElementById('fin-pin-dots');
+                    if(!wrap) return;
+                    var n = UI.finance._pin.length;
+                    wrap.classList.toggle('is-bad', !!bad);
+                    var dots = wrap.querySelectorAll('.lc-pin-dot');
+                    for(var i = 0; i < dots.length; i++) dots[i].classList.toggle('is-on', i < n && !bad);
+                    if(!bad) { var m = document.getElementById('fin-pin-msg'); if(m) m.textContent = ''; }
+                },
+
+                _check: function() {
+                    var f = UI.finance;
+                    if(f._pin === f.CLAVE) {
+                        f.unlocked = true;
+                        try { sessionStorage.setItem('lc_fin_ok', '1'); } catch(e) {}
+                        f._pin = '';
+                        f.reveal();
+                        UI.toast('Finanzas desbloqueadas', 'success');
+                        if(window.navigator.vibrate) window.navigator.vibrate([40, 30, 40]);
                     } else {
-                        var medallas = ['🥇','🥈','🥉'];
-                        var colores  = [
-                            'border-amber-300 bg-amber-50',
-                            'border-slate-300 bg-slate-50',
-                            'border-orange-200 bg-orange-50'
-                        ];
-                        var textColors = ['text-amber-600','text-slate-600','text-orange-500'];
-                        top3El.innerHTML = conGanancia.map(function(p, idx){
-                            var pct = conGanancia[0].ganTotal > 0 ? (p.ganTotal/conGanancia[0].ganTotal*100).toFixed(0) : 0;
-                            return '<div class="border-2 ' + colores[idx] + ' rounded-xl p-3 flex flex-col gap-1.5">' +
-                                '<div class="flex items-center gap-1.5">' +
-                                '<span class="text-xl">' + medallas[idx] + '</span>' +
-                                '<span class="text-xs font-black text-slate-800 leading-tight flex-1">' + p.nombre + '</span>' +
-                                '</div>' +
-                                '<p class="font-display font-black text-lg ' + textColors[idx] + '">' + UI.format(p.ganTotal) + '</p>' +
-                                '<p class="text-[9px] text-slate-400">' + p.q + ' uds · ' + UI.format(p.ventas) + ' venta</p>' +
-                                '<div class="w-full bg-white rounded-full h-1.5 border border-slate-200">' +
-                                '<div class="' + (idx===0?'bg-amber-400':idx===1?'bg-slate-400':'bg-orange-400') + ' h-1.5 rounded-full" style="width:' + pct + '%"></div>' +
-                                '</div>' +
-                                '</div>';
-                        }).join('');
+                        f._pin = '';
+                        f._dots(true);
+                        var msg = document.getElementById('fin-pin-msg');
+                        if(msg) msg.textContent = 'Clave incorrecta';
+                        var box = document.getElementById('fin-lock');
+                        if(box) { box.classList.remove('lc-shake'); void box.offsetWidth; box.classList.add('lc-shake'); }
+                        if(window.navigator.vibrate) window.navigator.vibrate([60, 40, 60]);
+                        setTimeout(function(){ f._dots(); }, 700);
                     }
-                }
+                },
 
-                // ── HORAS PICO ──────────────────────────────────────
-                var horasEl = document.getElementById('rp-horas-pico');
-                if(horasEl) {
-                    var horaCounts = {};
-                    salesFiltered.forEach(function(o){
-                        var ms = o.ts&&o.ts.seconds ? o.ts.seconds*1000 : null;
-                        if(!ms) return;
-                        var h = new Date(ms).getHours();
-                        if(!horaCounts[h]) horaCounts[h]=0;
-                        horaCounts[h]++;
+                reveal: function() {
+                    var lock = document.getElementById('fin-lock');
+                    var cont = document.getElementById('fin-content');
+                    if(lock) lock.style.display = 'none';
+                    if(cont) cont.classList.remove('hidden');
+                    UI.finance.render();
+                    UI.renderHistorialFines();
+                },
+
+                lock: function() {
+                    var f = UI.finance;
+                    f.unlocked = false; f._pin = '';
+                    try { sessionStorage.removeItem('lc_fin_ok'); } catch(e) {}
+                    var lock = document.getElementById('fin-lock');
+                    var cont = document.getElementById('fin-content');
+                    if(lock) lock.style.display = '';
+                    if(cont) cont.classList.add('hidden');
+                    f._dots();
+                },
+
+                // ---------- Utilidades de UI ----------
+                toggleCard: function(btn) {
+                    var card = btn.parentElement;
+                    card.classList.toggle('is-open');
+                },
+
+                setFondo: function(v) {
+                    STATE.cashFund = parseFloat(v) || 0;
+                    try { localStorage.setItem('lc_fondo', String(STATE.cashFund)); } catch(e) {}
+                    UI.toast('Fondo de caja actualizado', 'success');
+                    UI.finance.render();
+                },
+
+                _pct: function(a, b) { return b > 0 ? (a / b * 100) : 0; },
+
+                _delta: function(curr, prev) {
+                    if(!prev) return { txt: curr > 0 ? 'nuevo' : '—', up: null };
+                    var p = (curr - prev) / Math.abs(prev) * 100;
+                    return { txt: (p >= 0 ? '+' : '') + p.toFixed(0) + '%', up: p >= 0, val: p };
+                },
+
+                _ms: function(ts) {
+                    if(!ts) return null;
+                    if(ts.seconds) return ts.seconds * 1000;
+                    if(ts instanceof Date) return ts.getTime();
+                    var n = Number(ts);
+                    return isNaN(n) ? null : n;
+                },
+
+                // ---------- MOTOR: calcula todo el período ----------
+                compute: function(filtro, ranges) {
+                    var f = UI.finance;
+                    ranges = ranges || UI._getDateRange(filtro);
+                    function inR(ts) {
+                        var ms = f._ms(ts);
+                        if(ms === null) return false;
+                        for(var i = 0; i < ranges.length; i++) if(ms >= ranges[i].start && ms <= ranges[i].end) return true;
+                        return false;
+                    }
+
+                    var sales   = [], oldExp = [], insumos = [], gastos = [];
+                    STATE.orders.forEach(function(o) {
+                        if(o.isKitchenTicket) return;
+                        if(o.isExpense) { if(inR(o.ts)) oldExp.push(o); return; }
+                        if(o.status === 'pagado' && inR(o.ts)) sales.push(o);
                     });
-                    var horasKeys = Object.keys(horaCounts).map(Number).sort(function(a,b){return a-b;});
-                    if(!horasKeys.length) {
-                        horasEl.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">Sin datos de timestamp en este período</p>';
-                    } else {
-                        var maxCount = Math.max.apply(null, horasKeys.map(function(h){return horaCounts[h];}));
-                        // Rellena horas faltantes entre la primera y última hora
-                        var allHours = [];
-                        for(var h = horasKeys[0]; h <= horasKeys[horasKeys.length-1]; h++) allHours.push(h);
-                        var bars = allHours.map(function(h){
-                            var cnt = horaCounts[h] || 0;
-                            var pct = maxCount > 0 ? Math.round(cnt/maxCount*100) : 0;
-                            var isPico = cnt === maxCount && cnt > 0;
-                            var barH = Math.max(4, Math.round(pct * 0.64)); // max 64px
-                            var hLabel = h < 12 ? h+'am' : (h===12?'12pm':(h-12)+'pm');
-                            return '<div class="flex flex-col items-center gap-1 flex-1 min-w-0">' +
-                                '<span class="text-[8px] font-bold ' + (isPico?'text-orange-500':'text-slate-400') + '">' + (cnt||'') + '</span>' +
-                                '<div class="w-full flex items-end justify-center" style="height:64px">' +
-                                '<div class="w-full max-w-[24px] rounded-t-sm transition-all ' + (isPico?'bg-orange-400':'bg-slate-200') + '" style="height:' + barH + 'px"></div>' +
-                                '</div>' +
-                                '<span class="text-[8px] ' + (isPico?'text-orange-500 font-black':'text-slate-400') + ' whitespace-nowrap">' + hLabel + '</span>' +
-                                '</div>';
-                        }).join('');
-                        var picoHora = horasKeys.reduce(function(best,h){ return (horaCounts[h]||0) > (horaCounts[best]||0) ? h : best; }, horasKeys[0]);
-                        var picoLabel = picoHora < 12 ? picoHora+'am' : (picoHora===12?'12pm':(picoHora-12)+'pm');
-                        horasEl.innerHTML =
-                            '<div class="flex items-center gap-1.5 mb-3">' +
-                            '<i class="fa-solid fa-fire text-orange-500 text-sm"></i>' +
-                            '<span class="text-xs font-bold text-slate-700">Hora pico: <span class="text-orange-500">' + picoLabel + '</span></span>' +
-                            '<span class="text-[10px] text-slate-400 ml-1">(' + horaCounts[picoHora] + ' órdenes)</span>' +
-                            '</div>' +
-                            '<div class="flex gap-0.5 items-end">' + bars + '</div>';
-                    }
-                }
+                    (STATE.insumos || []).forEach(function(i){ if(inR(i.fecha)) insumos.push(i); });
+                    (STATE.gastosERP || []).forEach(function(g){ if(inR(g.fecha)) gastos.push(g); });
 
-                // ── COMPARATIVA FINDE ACTUAL VS ANTERIOR ────────────
-                var compEl = document.getElementById('rp-comparativa');
-                if(compEl) {
-                    var filtro = STATE.filtroFinanzas;
-                    if(filtro !== 'finde' && filtro !== 'sabado' && filtro !== 'domingo') {
-                        compEl.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">Selecciona Sábado, Domingo o Fin de Semana para ver la comparativa</p>';
-                    } else {
-                        // Rango de este finde y del anterior
-                        var w0 = UI._getWeekendRange(0); // este finde
-                        var w1 = UI._getWeekendRange(1); // finde anterior
-                        function filterByRange(arr, tsField, range) {
-                            return arr.filter(function(x){
-                                var ts = x[tsField];
-                                if(!ts) return false;
-                                var ms = ts.seconds ? ts.seconds*1000 : Number(ts);
-                                return (ms>=range.satStart && ms<=range.satEnd) || (ms>=range.sunStart && ms<=range.sunEnd);
+                    var ventas = 0, efectivo = 0, tarjeta = 0, productos = 0;
+                    var porHora = {}, itemMap = {}, porMesa = {};
+                    sales.forEach(function(o) {
+                        var t = o.total || 0;
+                        ventas += t;
+                        if(o.method === 'Efectivo') efectivo += t; else if(o.method) tarjeta += t;
+                        var ms = f._ms(o.ts);
+                        if(ms !== null) {
+                            var h = new Date(ms).getHours();
+                            if(!porHora[h]) porHora[h] = { ordenes: 0, ventas: 0 };
+                            porHora[h].ordenes++; porHora[h].ventas += t;
+                        }
+                        var mesaKey = isNaN(parseInt(o.mesa)) ? String(o.mesa) : 'Mesa ' + o.mesa;
+                        porMesa[mesaKey] = (porMesa[mesaKey] || 0) + t;
+                        (o.items || []).forEach(function(i) {
+                            if(!itemMap[i.n]) itemMap[i.n] = { q: 0, s: 0 };
+                            itemMap[i.n].q += i.qty; itemMap[i.n].s += i.qty * i.p;
+                            productos += i.qty;
+                        });
+                    });
+
+                    var costoInsumos = insumos.reduce(function(a, i){ return a + (i.costo_total || 0); }, 0);
+                    var costoOper    = gastos.reduce(function(a, g){ return a + (g.monto || 0); }, 0)
+                                     + oldExp.reduce(function(a, e){ return a + (e.total || 0); }, 0);
+                    var gastosTot    = costoInsumos + costoOper;
+                    var ganancia     = ventas - gastosTot;
+
+                    // Costo promedio por kilo y consumo por receta
+                    var kilos = {}, costoTipo = {}, avgKilo = {}, gramos = {};
+                    insumos.forEach(function(i) {
+                        kilos[i.tipo] = (kilos[i.tipo] || 0) + (i.kilos_comprados || 0);
+                        costoTipo[i.tipo] = (costoTipo[i.tipo] || 0) + (i.costo_total || 0);
+                    });
+                    Object.keys(kilos).forEach(function(t){ avgKilo[t] = kilos[t] > 0 ? costoTipo[t] / kilos[t] : 0; });
+
+                    var platillos = Object.keys(itemMap).map(function(nombre) {
+                        var d = itemMap[nombre];
+                        var esc = null;
+                        for(var k = 0; k < ESCANDALLO_DEFAULT.length; k++) {
+                            if(ESCANDALLO_DEFAULT[k].producto === nombre) { esc = ESCANDALLO_DEFAULT[k]; break; }
+                        }
+                        if(esc) gramos[esc.tipo] = (gramos[esc.tipo] || 0) + esc.gramos * d.q;
+                        var precioU = d.q > 0 ? d.s / d.q : 0;
+                        var costoU = null, ganU = null, ganTot = null, margen = null;
+                        if(esc && avgKilo[esc.tipo]) {
+                            costoU = avgKilo[esc.tipo] * (esc.gramos / 1000);
+                            ganU   = precioU - costoU;
+                            ganTot = ganU * d.q;
+                            margen = precioU > 0 ? (ganU / precioU * 100) : 0;
+                        }
+                        return { nombre: nombre, q: d.q, ventas: d.s, precioU: precioU, costoU: costoU, ganU: ganU, ganTot: ganTot, margen: margen };
+                    }).sort(function(a, b){ return b.ventas - a.ventas; });
+
+                    var inventario = Object.keys(kilos).map(function(tipo) {
+                        var consumido = (gramos[tipo] || 0) / 1000;
+                        return { tipo: tipo, comprado: kilos[tipo], consumido: consumido, restante: kilos[tipo] - consumido, costoKilo: avgKilo[tipo] };
+                    });
+
+                    var horasKeys = Object.keys(porHora).map(Number).sort(function(a, b){ return a - b; });
+                    var horaPico = null;
+                    horasKeys.forEach(function(h){ if(!horaPico || porHora[h].ventas > porHora[horaPico].ventas) horaPico = h; });
+
+                    var mesaTop = null;
+                    Object.keys(porMesa).forEach(function(m){ if(!mesaTop || porMesa[m] > porMesa[mesaTop]) mesaTop = m; });
+
+                    var fondo = STATE.cashFund || 0;
+
+                    return {
+                        filtro: filtro, ranges: ranges,
+                        sales: sales, insumos: insumos, gastos: gastos, oldExp: oldExp,
+                        ventas: ventas, efectivo: efectivo, tarjeta: tarjeta,
+                        costoInsumos: costoInsumos, costoOper: costoOper, gastosTot: gastosTot,
+                        ganancia: ganancia,
+                        margen: ventas > 0 ? (ganancia / ventas * 100) : 0,
+                        ordenes: sales.length,
+                        productos: productos,
+                        ticket: sales.length > 0 ? ventas / sales.length : 0,
+                        prodPorOrden: sales.length > 0 ? productos / sales.length : 0,
+                        itemMap: itemMap, platillos: platillos, inventario: inventario,
+                        avgKilo: avgKilo, porHora: porHora, horasKeys: horasKeys, horaPico: horaPico,
+                        porMesa: porMesa, mesaTop: mesaTop,
+                        fondo: fondo, efectivoEsperado: fondo + efectivo - gastosTot
+                    };
+                },
+
+                // Período anterior equivalente, para comparar
+                _prevRanges: function(filtro, ranges) {
+                    var dias = { hoy: 1, ayer: 1, sabado: 7, domingo: 7, finde: 7, semana: 7, mes: 30 }[filtro] || 1;
+                    var shift = dias * 86400000;
+                    return ranges.map(function(r){ return { start: r.start - shift, end: r.end - shift }; });
+                },
+
+                // ---------- Series para la gráfica de tendencia ----------
+                _trend: function(filtro) {
+                    var f = UI.finance, buckets = [];
+                    var i, d;
+                    if(filtro === 'sabado' || filtro === 'domingo' || filtro === 'finde') {
+                        for(i = 7; i >= 0; i--) {
+                            var w = UI._getWeekendRange(i);
+                            buckets.push({
+                                label: new Date(w.satStart).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }),
+                                ranges: [{ start: w.satStart, end: w.satEnd }, { start: w.sunStart, end: w.sunEnd }]
                             });
                         }
-                        var sales0 = filterByRange(STATE.orders.filter(function(o){ return o.status==='pagado' && !o.isExpense && !o.isKitchenTicket; }), 'ts', w0);
-                        var sales1 = filterByRange(STATE.orders.filter(function(o){ return o.status==='pagado' && !o.isExpense && !o.isKitchenTicket; }), 'ts', w1);
-                        var ins0   = filterByRange(STATE.insumos,    'fecha', w0);
-                        var ins1   = filterByRange(STATE.insumos,    'fecha', w1);
-                        var gas0   = filterByRange(STATE.gastosERP,  'fecha', w0);
-                        var gas1   = filterByRange(STATE.gastosERP,  'fecha', w1);
-                        var old0   = filterByRange(STATE.orders.filter(function(o){ return o.isExpense; }), 'ts', w0);
-                        var old1   = filterByRange(STATE.orders.filter(function(o){ return o.isExpense; }), 'ts', w1);
-                        var s0 = UI._calcFindeStats(sales0, ins0, gas0, old0, {});
-                        var s1 = UI._calcFindeStats(sales1, ins1, gas1, old1, {});
-
-                        function delta(curr, prev) {
-                            if(prev === 0) return curr > 0 ? {pct:'nuevo', up:true} : {pct:'—', up:null};
-                            var p = ((curr-prev)/Math.abs(prev)*100);
-                            return {pct: (p>=0?'+':'') + p.toFixed(1)+'%', up: p>=0};
+                    } else if(filtro === 'mes') {
+                        for(i = 7; i >= 0; i--) {
+                            var end = new Date(); end.setHours(23, 59, 59, 999); end.setDate(end.getDate() - i * 7);
+                            var st = new Date(end); st.setDate(end.getDate() - 6); st.setHours(0, 0, 0, 0);
+                            buckets.push({ label: st.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }), ranges: [{ start: st.getTime(), end: end.getTime() }] });
                         }
-                        function compRow(label, icon, color, v0, v1) {
-                            var d = delta(v0, v1);
-                            var arrow = d.up===null ? '' : (d.up ? '▲' : '▼');
-                            var arrowColor = d.up===null ? '' : (d.up ? 'text-green-500' : 'text-red-500');
-                            return '<div class="flex items-center gap-3 py-2.5 border-b border-slate-50 last:border-0">' +
-                                '<div class="w-7 h-7 rounded-lg ' + color + ' flex items-center justify-center text-xs shrink-0"><i class="fa-solid ' + icon + '"></i></div>' +
-                                '<span class="text-xs text-slate-600 flex-1 font-medium">' + label + '</span>' +
-                                '<span class="text-xs text-slate-400 font-mono w-20 text-right">' + UI.format(v1) + '</span>' +
-                                '<span class="text-xs font-black font-mono w-20 text-right text-slate-800">' + UI.format(v0) + '</span>' +
-                                '<span class="text-[10px] font-black ' + arrowColor + ' w-14 text-right">' + arrow + ' ' + d.pct + '</span>' +
-                                '</div>';
-                        }
-                        compEl.innerHTML =
-                            '<div class="flex text-[9px] text-slate-400 font-bold uppercase tracking-wide gap-3 pb-1 border-b border-slate-100 mb-1">' +
-                            '<div class="w-7 shrink-0"></div>' +
-                            '<div class="flex-1">Métrica</div>' +
-                            '<div class="w-20 text-right">Ant. (' + w1.label + ')</div>' +
-                            '<div class="w-20 text-right">Este (' + w0.label + ')</div>' +
-                            '<div class="w-14 text-right">Δ</div>' +
-                            '</div>' +
-                            compRow('Ventas brutas',   'fa-coins',          'bg-amber-100 text-amber-600',   s0.ventas,   s1.ventas)   +
-                            compRow('Gastos totales',  'fa-arrow-trend-down','bg-red-100 text-red-500',       s0.gastos,   s1.gastos)   +
-                            compRow('Ganancia neta',   'fa-chart-line',     'bg-green-100 text-green-600',   s0.ganancia, s1.ganancia) +
-                            compRow('Núm. de órdenes', 'fa-receipt',        'bg-blue-100 text-blue-500',     s0.ordenes,  s1.ordenes);
-                    }
-                }
-
-                // ── ESTRUCTURA DE COSTOS (donut chart) ─────────────
-                var gvEl = document.getElementById('rp-gastos-ventas');
-                if(gvEl) {
-                    var gvVentas = salesFiltered.reduce(function(a,o){ return a+(o.total||0); }, 0);
-                    if(gvVentas <= 0) {
-                        gvEl.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">Sin ventas registradas en este período</p>';
                     } else {
-                        var gvIns  = insumosFiltered.reduce(function(a,i){ return a+(i.costo_total||0); }, 0);
-                        var gvOp   = gastosFiltered.reduce(function(a,g){ return a+(g.monto||0); }, 0)
-                                   + oldExpenses.reduce(function(a,e){ return a+(e.total||0); }, 0);
-                        var gvTotG = gvIns + gvOp;
-                        var gvGan  = gvVentas - gvTotG;
-                        var isLoss = gvGan < 0;
-
-                        // Percentages (visual arcs capped at 100 total)
-                        var pIns  = gvIns  / gvVentas * 100;
-                        var pOp   = gvOp   / gvVentas * 100;
-                        var pGanV = Math.max(0, 100 - pIns - pOp);
-                        // If over 100%, normalise arcs proportionally so ring stays full
-                        if(pIns + pOp > 100) {
-                            var tot = pIns + pOp;
-                            pIns = pIns / tot * 100;
-                            pOp  = pOp  / tot * 100;
-                            pGanV = 0;
+                        for(i = 13; i >= 0; i--) {
+                            d = new Date(); d.setDate(d.getDate() - i);
+                            var ds = new Date(d); ds.setHours(0, 0, 0, 0);
+                            var de = new Date(d); de.setHours(23, 59, 59, 999);
+                            buckets.push({ label: ds.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }), ranges: [{ start: ds.getTime(), end: de.getTime() }] });
                         }
+                    }
 
-                        var C  = 2 * Math.PI * 54; // circumference r=54 ≈ 339.3
-                        var s1 = pIns  / 100 * C;
-                        var s2 = pOp   / 100 * C;
-                        var s3 = pGanV / 100 * C;
-
-                        function _gvRow(label, dot, bg, valor, pct, pctNum) {
-                            var bar = Math.min(Math.abs(pctNum), 100);
-                            return '<div class="rounded-xl ' + bg + ' px-3 py-2 flex flex-col gap-1">' +
-                                '<div class="flex items-center gap-2">' +
-                                '<div class="w-2.5 h-2.5 rounded-full shrink-0" style="background:' + dot + '"></div>' +
-                                '<span class="text-xs text-slate-700 flex-1 font-medium">' + label + '</span>' +
-                                '<span class="text-[10px] font-bold text-slate-500 font-mono">' + pct + '</span>' +
-                                '<span class="text-xs font-black font-mono text-slate-800 ml-2">' + UI.format(valor) + '</span>' +
-                                '</div>' +
-                                '<div class="w-full bg-white/70 rounded-full h-1">' +
-                                '<div class="h-1 rounded-full transition-all" style="width:' + bar + '%;background:' + dot + '"></div>' +
-                                '</div>' +
-                                '</div>';
+                    // Un solo recorrido por dataset, asignando a su cubeta
+                    var ventas = [], gastos = [];
+                    for(i = 0; i < buckets.length; i++) { ventas.push(0); gastos.push(0); }
+                    function idxOf(ms) {
+                        if(ms === null) return -1;
+                        for(var b = 0; b < buckets.length; b++) {
+                            var rs = buckets[b].ranges;
+                            for(var r = 0; r < rs.length; r++) if(ms >= rs[r].start && ms <= rs[r].end) return b;
                         }
+                        return -1;
+                    }
+                    STATE.orders.forEach(function(o) {
+                        if(o.isKitchenTicket) return;
+                        var k = idxOf(f._ms(o.ts));
+                        if(k < 0) return;
+                        if(o.isExpense) gastos[k] += (o.total || 0);
+                        else if(o.status === 'pagado') ventas[k] += (o.total || 0);
+                    });
+                    (STATE.insumos || []).forEach(function(x){ var k = idxOf(f._ms(x.fecha)); if(k >= 0) gastos[k] += (x.costo_total || 0); });
+                    (STATE.gastosERP || []).forEach(function(x){ var k = idxOf(f._ms(x.fecha)); if(k >= 0) gastos[k] += (x.monto || 0); });
 
-                        var pTotStr  = (gvTotG / gvVentas * 100).toFixed(1);
-                        var pInsStr  = pIns.toFixed(1);
-                        var pOpStr   = pOp.toFixed(1);
-                        var pGanStr  = (Math.abs(gvGan) / gvVentas * 100).toFixed(1);
+                    return {
+                        labels: buckets.map(function(b){ return b.label; }),
+                        ventas: ventas,
+                        ganancia: ventas.map(function(v, k){ return v - gastos[k]; })
+                    };
+                },
 
-                        var circleBg = '<circle cx="64" cy="64" r="54" fill="none" stroke="#f1f5f9" stroke-width="16"/>';
-                        var cIns = s1 > 0.1 ? '<circle cx="64" cy="64" r="54" fill="none" stroke="#38bdf8" stroke-width="16" stroke-dasharray="' + s1.toFixed(2) + ' ' + (C - s1).toFixed(2) + '" stroke-dashoffset="0" transform="rotate(-90,64,64)"/>' : '';
-                        var cOp  = s2 > 0.1 ? '<circle cx="64" cy="64" r="54" fill="none" stroke="#fb923c" stroke-width="16" stroke-dasharray="' + s2.toFixed(2) + ' ' + (C - s2).toFixed(2) + '" stroke-dashoffset="' + (-s1).toFixed(2) + '" transform="rotate(-90,64,64)"/>' : '';
-                        var cGan = s3 > 0.1 ? '<circle cx="64" cy="64" r="54" fill="none" stroke="#4ade80" stroke-width="16" stroke-dasharray="' + s3.toFixed(2) + ' ' + (C - s3).toFixed(2) + '" stroke-dashoffset="' + (-(s1 + s2)).toFixed(2) + '" transform="rotate(-90,64,64)"/>' : '';
+                // ---------- GRÁFICAS (SVG propio, sin librerías) ----------
+                _fmtK: function(n) {
+                    var a = Math.abs(n);
+                    if(a >= 1000000) return (n / 1000000).toFixed(1).replace('.0', '') + 'M';
+                    if(a >= 1000) return (n / 1000).toFixed(a >= 10000 ? 0 : 1).replace('.0', '') + 'k';
+                    return String(Math.round(n));
+                },
 
-                        gvEl.innerHTML =
-                            '<div class="flex flex-col sm:flex-row items-center gap-5">' +
-                            '<div class="relative shrink-0">' +
-                            '<svg width="128" height="128" viewBox="0 0 128 128">' +
-                            circleBg + cIns + cOp + cGan +
-                            '</svg>' +
-                            '<div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">' +
-                            '<span class="font-black text-xl ' + (isLoss ? 'text-red-600' : 'text-slate-800') + '">' + pTotStr + '%</span>' +
-                            '<span class="text-[8px] text-slate-400 text-center leading-tight">gastos<br>/ ventas</span>' +
+                chartArea: function(t) {
+                    var f = UI.finance;
+                    var n = t.labels.length;
+                    if(!n) return '<p class="lc-empty-sm">Sin datos suficientes</p>';
+                    var W = 640, H = 250, PL = 46, PR = 12, PT = 16, PB = 34;
+                    var iw = W - PL - PR, ih = H - PT - PB;
+                    var all = t.ventas.concat(t.ganancia);
+                    var max = Math.max.apply(null, all.concat([1]));
+                    var min = Math.min.apply(null, all.concat([0]));
+                    if(min > 0) min = 0;
+                    var span = (max - min) || 1;
+                    var x = function(i){ return PL + (n === 1 ? iw / 2 : iw * i / (n - 1)); };
+                    var y = function(v){ return PT + ih - ((v - min) / span) * ih; };
+
+                    // Rejilla y etiquetas del eje Y
+                    var grid = '', ticks = 4, gi, gv, gy;
+                    for(gi = 0; gi <= ticks; gi++) {
+                        gv = min + span * gi / ticks;
+                        gy = y(gv);
+                        grid += '<line x1="' + PL + '" y1="' + gy.toFixed(1) + '" x2="' + (W - PR) + '" y2="' + gy.toFixed(1) + '" stroke="#F1F5F9" stroke-width="1"/>';
+                        grid += '<text x="' + (PL - 7) + '" y="' + (gy + 5).toFixed(1) + '" text-anchor="end" font-size="15" fill="#94A3B8" font-weight="700">' + f._fmtK(gv) + '</text>';
+                    }
+
+                    function path(arr) {
+                        return arr.map(function(v, i){ return (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1); }).join(' ');
+                    }
+                    var pv = path(t.ventas);
+                    var area = pv + ' L' + x(n - 1).toFixed(1) + ' ' + y(min).toFixed(1) + ' L' + x(0).toFixed(1) + ' ' + y(min).toFixed(1) + ' Z';
+
+                    // Etiquetas del eje X (máximo 6, sin encimar la última)
+                    var step = Math.ceil(n / 6), lbl = '', last = -99;
+                    for(var i = 0; i < n; i++) {
+                        var isLast = i === n - 1;
+                        if(i % step && !isLast) continue;
+                        if(isLast && (i - last) < Math.max(1, step * 0.7)) continue;
+                        var anchor = i === 0 ? 'start' : (isLast ? 'end' : 'middle');
+                        lbl += '<text x="' + x(i).toFixed(1) + '" y="' + (H - 10) + '" text-anchor="' + anchor + '" font-size="14" fill="#94A3B8" font-weight="700">' + t.labels[i] + '</text>';
+                        last = i;
+                    }
+
+                    var lastV = t.ventas[n - 1], lastG = t.ganancia[n - 1];
+                    return '<svg class="lc-chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Tendencia de ventas y ganancia">' +
+                        '<defs><linearGradient id="lcGradV" x1="0" y1="0" x2="0" y2="1">' +
+                        '<stop offset="0%" stop-color="#F97316" stop-opacity=".28"/>' +
+                        '<stop offset="100%" stop-color="#F97316" stop-opacity="0"/></linearGradient></defs>' +
+                        grid +
+                        '<path d="' + area + '" fill="url(#lcGradV)"/>' +
+                        '<path d="' + pv + '" fill="none" stroke="#F97316" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>' +
+                        '<path d="' + path(t.ganancia) + '" fill="none" stroke="#10B981" stroke-width="2.5" stroke-dasharray="7 5" stroke-linejoin="round"/>' +
+                        '<circle cx="' + x(n - 1).toFixed(1) + '" cy="' + y(lastV).toFixed(1) + '" r="5.5" fill="#F97316" stroke="#fff" stroke-width="2.5"/>' +
+                        '<circle cx="' + x(n - 1).toFixed(1) + '" cy="' + y(lastG).toFixed(1) + '" r="4.5" fill="#10B981" stroke="#fff" stroke-width="2.5"/>' +
+                        lbl +
+                        '</svg>' +
+                        '<div class="lc-legend"><span><i style="background:#F97316"></i>Ventas</span><span><i style="background:#10B981"></i>Ganancia neta</span></div>';
+                },
+
+                chartHours: function(a) {
+                    var f = UI.finance;
+                    if(!a.horasKeys.length) return '<p class="lc-empty-sm">Sin cobros con hora registrada en este período</p>';
+                    var h0 = a.horasKeys[0], h1 = a.horasKeys[a.horasKeys.length - 1];
+                    var hours = [];
+                    for(var h = h0; h <= h1; h++) hours.push(h);
+                    var max = 0;
+                    hours.forEach(function(h){ var v = a.porHora[h] ? a.porHora[h].ventas : 0; if(v > max) max = v; });
+                    if(max <= 0) return '<p class="lc-empty-sm">Sin ventas con hora registrada</p>';
+
+                    var W = 640, H = 210, PB = 40, PT = 26;
+                    var bw = W / hours.length;
+                    var bars = hours.map(function(h, i) {
+                        var d = a.porHora[h] || { ordenes: 0, ventas: 0 };
+                        var bh = Math.max(3, (d.ventas / max) * (H - PT - PB));
+                        var bx = i * bw + bw * 0.18, by = H - PB - bh, w = bw * 0.64;
+                        var isPico = h === a.horaPico;
+                        var lab = h < 12 ? h + 'am' : (h === 12 ? '12pm' : (h - 12) + 'pm');
+                        return '<rect x="' + bx.toFixed(1) + '" y="' + by.toFixed(1) + '" width="' + w.toFixed(1) + '" height="' + bh.toFixed(1) + '" rx="5" fill="' + (isPico ? '#F97316' : '#CBD5E1') + '"/>' +
+                            (d.ventas > 0 ? '<text x="' + (bx + w / 2).toFixed(1) + '" y="' + (by - 8).toFixed(1) + '" text-anchor="middle" font-size="15" font-weight="800" fill="' + (isPico ? '#EA580C' : '#94A3B8') + '">' + f._fmtK(d.ventas) + '</text>' : '') +
+                            '<text x="' + (bx + w / 2).toFixed(1) + '" y="' + (H - 20) + '" text-anchor="middle" font-size="14" font-weight="700" fill="' + (isPico ? '#EA580C' : '#94A3B8') + '">' + lab + '</text>' +
+                            '<text x="' + (bx + w / 2).toFixed(1) + '" y="' + (H - 5) + '" text-anchor="middle" font-size="12" fill="#CBD5E1">' + (d.ordenes || '') + '</text>';
+                    }).join('');
+
+                    var picoLab = a.horaPico < 12 ? a.horaPico + 'am' : (a.horaPico === 12 ? '12pm' : (a.horaPico - 12) + 'pm');
+                    return '<svg class="lc-chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Ventas por hora">' + bars + '</svg>' +
+                        '<div class="lc-legend"><span><i style="background:#F97316"></i>Hora pico: ' + picoLab + ' · ' + UI.format(a.porHora[a.horaPico].ventas) + '</span><span><i style="background:#CBD5E1"></i>Abajo: número de órdenes</span></div>';
+                },
+
+                chartCosts: function(a) {
+                    if(a.ventas <= 0) return '<p class="lc-empty-sm">Sin ventas en este período</p>';
+                    var f = UI.finance;
+                    var pIns = f._pct(a.costoInsumos, a.ventas);
+                    var pOp  = f._pct(a.costoOper, a.ventas);
+                    var pGan = Math.max(0, 100 - pIns - pOp);
+                    if(pIns + pOp > 100) { var t = pIns + pOp; pIns = pIns / t * 100; pOp = pOp / t * 100; pGan = 0; }
+                    var C = 2 * Math.PI * 54;
+                    var s1 = pIns / 100 * C, s2 = pOp / 100 * C, s3 = pGan / 100 * C;
+                    var perdida = a.ganancia < 0;
+
+                    function arc(len, off, color) {
+                        return len > 0.1 ? '<circle cx="64" cy="64" r="54" fill="none" stroke="' + color + '" stroke-width="17" stroke-dasharray="' + len.toFixed(2) + ' ' + (C - len).toFixed(2) + '" stroke-dashoffset="' + off.toFixed(2) + '" transform="rotate(-90,64,64)"/>' : '';
+                    }
+                    function row(label, color, valor, pct) {
+                        return '<div style="margin-top:9px">' +
+                            '<div style="display:flex;align-items:center;gap:8px">' +
+                            '<i style="width:9px;height:9px;border-radius:3px;background:' + color + ';display:block;flex:none"></i>' +
+                            '<span style="font-size:12px;font-weight:700;color:#475569;flex:1">' + label + '</span>' +
+                            '<span style="font-size:11px;font-weight:800;color:#94A3B8">' + pct.toFixed(1) + '%</span>' +
+                            '<span style="font-size:12.5px;font-weight:900;color:#0F172A;margin-left:10px;font-variant-numeric:tabular-nums">' + UI.format(valor) + '</span>' +
                             '</div>' +
-                            '</div>' +
-                            '<div class="flex-1 w-full flex flex-col gap-2">' +
-                            _gvRow('Insumos (carne)', '#38bdf8', 'bg-sky-50', gvIns, pInsStr + '%', parseFloat(pInsStr)) +
-                            _gvRow('Gastos operativos', '#fb923c', 'bg-orange-50', gvOp, pOpStr + '%', parseFloat(pOpStr)) +
-                            _gvRow(isLoss ? 'Pérdida neta' : 'Ganancia neta', isLoss ? '#f87171' : '#4ade80', isLoss ? 'bg-red-50' : 'bg-green-50', gvGan, (isLoss ? '-' : '') + pGanStr + '%', parseFloat(pGanStr)) +
-                            '<div class="flex items-center gap-2 pt-1 border-t border-slate-100 mt-1">' +
-                            '<div class="w-2.5 h-2.5 rounded-full bg-slate-300 shrink-0"></div>' +
-                            '<span class="text-xs text-slate-500 flex-1">Total Ventas</span>' +
-                            '<span class="text-xs font-black font-mono text-slate-800">' + UI.format(gvVentas) + '</span>' +
-                            '</div>' +
-                            '</div>' +
+                            '<div class="lc-hbar-track" style="margin-top:5px"><div class="lc-hbar-fill" style="width:' + Math.min(100, pct).toFixed(1) + '%;background:' + color + '"></div></div>' +
                             '</div>';
                     }
+
+                    return '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:18px">' +
+                        '<div style="position:relative;flex:none;margin:0 auto">' +
+                        '<svg width="128" height="128" viewBox="0 0 128 128" role="img" aria-label="Estructura de costos">' +
+                        '<circle cx="64" cy="64" r="54" fill="none" stroke="#F1F5F9" stroke-width="17"/>' +
+                        arc(s1, 0, '#38BDF8') + arc(s2, -s1, '#FB923C') + arc(s3, -(s1 + s2), '#4ADE80') +
+                        '</svg>' +
+                        '<div style="position:absolute;top:0;right:0;bottom:0;left:0;display:flex;flex-direction:column;align-items:center;justify-content:center">' +
+                        '<span style="font-size:21px;font-weight:900;color:' + (perdida ? '#DC2626' : '#0F172A') + '">' + f._pct(a.gastosTot, a.ventas).toFixed(0) + '%</span>' +
+                        '<span style="font-size:8.5px;color:#94A3B8;text-align:center;line-height:1.2">se va en<br>costos</span>' +
+                        '</div></div>' +
+                        '<div style="flex:1;min-width:210px">' +
+                        row('Insumos (carne)', '#38BDF8', a.costoInsumos, pIns) +
+                        row('Gastos operativos', '#FB923C', a.costoOper, pOp) +
+                        row(perdida ? 'Pérdida neta' : 'Ganancia neta', perdida ? '#F87171' : '#4ADE80', a.ganancia, Math.abs(f._pct(a.ganancia, a.ventas))) +
+                        '</div></div>';
+                },
+
+                chartTop: function(a) {
+                    var con = a.platillos.filter(function(p){ return p.ganTot !== null; }).sort(function(x, y){ return y.ganTot - x.ganTot; }).slice(0, 6);
+                    if(!con.length) {
+                        var vol = a.platillos.slice(0, 6);
+                        if(!vol.length) return '<p class="lc-empty-sm">Sin ventas en este período</p>';
+                        var maxV = vol[0].ventas || 1;
+                        return '<p style="font-size:11.5px;color:#B45309;background:#FFFBEB;border:1px solid #FDE68A;padding:9px 11px;border-radius:11px;margin-bottom:13px;font-weight:600">Registra las compras de carne del período y aquí verás la ganancia real de cada platillo. Por ahora se muestra por venta.</p>' +
+                            vol.map(function(p) {
+                                return '<div class="lc-hbar"><div class="lc-hbar-top"><span class="lc-hbar-name">' + p.nombre + '</span><span class="lc-hbar-val">' + UI.format(p.ventas) + '</span></div>' +
+                                    '<div class="lc-hbar-track"><div class="lc-hbar-fill" style="width:' + (p.ventas / maxV * 100).toFixed(1) + '%;background:#CBD5E1"></div></div>' +
+                                    '<div class="lc-hbar-sub">' + p.q + ' vendidos</div></div>';
+                            }).join('');
+                    }
+                    var max = Math.max.apply(null, con.map(function(p){ return Math.abs(p.ganTot); }).concat([1]));
+                    var medallas = ['🥇', '🥈', '🥉'];
+                    return con.map(function(p, i) {
+                        var neg = p.ganTot < 0;
+                        var color = neg ? '#F87171' : (i === 0 ? '#F59E0B' : (i === 1 ? '#94A3B8' : '#FB923C'));
+                        return '<div class="lc-hbar">' +
+                            '<div class="lc-hbar-top">' +
+                            '<span class="lc-hbar-name">' + (medallas[i] || '') + ' ' + p.nombre + '</span>' +
+                            '<span class="lc-hbar-val" style="color:' + (neg ? '#DC2626' : '#0F172A') + '">' + UI.format(p.ganTot) + '</span>' +
+                            '</div>' +
+                            '<div class="lc-hbar-track"><div class="lc-hbar-fill" style="width:' + (Math.abs(p.ganTot) / max * 100).toFixed(1) + '%;background:' + color + '"></div></div>' +
+                            '<div class="lc-hbar-sub">' + p.q + ' vendidos · ' + UI.format(p.ganU) + ' por unidad · margen ' + p.margen.toFixed(0) + '%</div>' +
+                            '</div>';
+                    }).join('');
+                },
+
+                chartPay: function(a) {
+                    if(a.ventas <= 0) return '<p class="lc-empty-sm">Sin cobros en este período</p>';
+                    var f = UI.finance;
+                    var pEf = f._pct(a.efectivo, a.ventas), pTa = f._pct(a.tarjeta, a.ventas);
+                    var otros = a.ventas - a.efectivo - a.tarjeta;
+                    var neg = a.efectivoEsperado < 0;
+                    return '<div style="display:flex;height:14px;border-radius:7px;overflow:hidden;background:#F1F5F9">' +
+                        (pEf > 0 ? '<div style="width:' + pEf.toFixed(1) + '%;background:#22C55E"></div>' : '') +
+                        (pTa > 0 ? '<div style="width:' + pTa.toFixed(1) + '%;background:#3B82F6"></div>' : '') +
+                        '</div>' +
+                        '<div class="lc-legend">' +
+                        '<span><i style="background:#22C55E"></i>Efectivo ' + UI.format(a.efectivo) + ' (' + pEf.toFixed(0) + '%)</span>' +
+                        '<span><i style="background:#3B82F6"></i>Tarjeta ' + UI.format(a.tarjeta) + ' (' + pTa.toFixed(0) + '%)</span>' +
+                        (Math.abs(otros) > 0.5 ? '<span><i style="background:#CBD5E1"></i>Sin método ' + UI.format(otros) + '</span>' : '') +
+                        '</div>' +
+                        '<div style="margin-top:14px;border-top:1px solid #F1F5F9;padding-top:13px">' +
+                        '<div style="font-size:9px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#94A3B8;margin-bottom:9px">Arqueo de caja esperado</div>' +
+                        '<div style="display:flex;justify-content:space-between;font-size:12px;color:#64748B;padding:3px 0"><span>Fondo inicial</span><b style="color:#1E293B">' + UI.format(a.fondo) + '</b></div>' +
+                        '<div style="display:flex;justify-content:space-between;font-size:12px;color:#64748B;padding:3px 0"><span>+ Cobros en efectivo</span><b style="color:#16A34A">' + UI.format(a.efectivo) + '</b></div>' +
+                        '<div style="display:flex;justify-content:space-between;font-size:12px;color:#64748B;padding:3px 0"><span>− Gastos y compras</span><b style="color:#DC2626">' + UI.format(a.gastosTot) + '</b></div>' +
+                        '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding:11px 13px;border-radius:12px;background:' + (neg ? '#FEF2F2' : '#F0FDF4') + '">' +
+                        '<span style="font-size:12px;font-weight:800;color:' + (neg ? '#B91C1C' : '#15803D') + '">Debe haber en caja</span>' +
+                        '<b style="font-size:17px;font-weight:900;color:' + (neg ? '#B91C1C' : '#15803D') + '">' + UI.format(a.efectivoEsperado) + '</b>' +
+                        '</div></div>';
+                },
+
+                chartInv: function(a) {
+                    if(!a.inventario.length) return '<p class="lc-empty-sm">Registra una compra de carne para estimar el inventario</p>';
+                    return a.inventario.map(function(v) {
+                        var pct = v.comprado > 0 ? Math.max(0, Math.min(1, v.restante / v.comprado)) : 0;
+                        var color = v.restante > 1 ? '#4ADE80' : (v.restante > 0.3 ? '#FBBF24' : '#F87171');
+                        var txtColor = v.restante < 0.3 ? '#DC2626' : '#0F172A';
+                        return '<div class="lc-inv">' +
+                            '<div class="lc-inv-top"><span class="lc-inv-name">' + v.tipo + '</span>' +
+                            '<span class="lc-inv-kg" style="color:' + txtColor + '">' + v.restante.toFixed(2) + ' kg</span></div>' +
+                            '<div class="lc-inv-track"><div class="lc-inv-fill" style="width:' + (pct * 100).toFixed(0) + '%;background:' + color + '"></div></div>' +
+                            '<div class="lc-inv-sub">' + v.comprado.toFixed(2) + ' kg comprados · ' + v.consumido.toFixed(2) + ' kg consumidos · ' + UI.format(v.costoKilo) + '/kg</div>' +
+                            '</div>';
+                    }).join('');
+                },
+
+                // ---------- ANÁLISIS AUTOMÁTICO ----------
+                narrativa: function(a, prev) {
+                    var f = UI.finance, out = [];
+                    var nombre = { hoy: 'Hoy', ayer: 'Ayer', sabado: 'El sábado', domingo: 'El domingo', finde: 'Este fin de semana', semana: 'En los últimos 7 días', mes: 'En los últimos 30 días' }[a.filtro] || 'En el período';
+
+                    if(a.ordenes === 0) return ['<p>' + nombre + ' todavía no hay cobros registrados. Cuando la caja empiece a cobrar, aquí aparece el análisis automático.</p>'];
+
+                    var d = f._delta(a.ventas, prev.ventas);
+                    var comp = d.up === null ? '' : ' <span class="' + (d.up ? 'up' : 'down') + '">' + d.txt + '</span> vs el período anterior';
+                    out.push('<p>' + nombre + ' llevas <b>' + UI.format(a.ventas) + '</b> en <b>' + a.ordenes + '</b> ' + (a.ordenes === 1 ? 'cuenta' : 'cuentas') + comp + '. Ticket promedio de <b>' + UI.format(a.ticket) + '</b> con ' + a.prodPorOrden.toFixed(1) + ' productos por cuenta.</p>');
+
+                    if(a.gastosTot > 0) {
+                        out.push('<p>Después de <b>' + UI.format(a.gastosTot) + '</b> entre carne y gastos, te ' + (a.ganancia >= 0 ? 'quedan' : 'faltan') + ' <b class="' + (a.ganancia >= 0 ? 'up' : 'down') + '">' + UI.format(Math.abs(a.ganancia)) + '</b> — un margen del <b>' + a.margen.toFixed(0) + '%</b>.</p>');
+                    } else {
+                        out.push('<p>Aún no registras compras ni gastos de este período, así que la ganancia mostrada es igual a la venta. Registra la carne para ver tu margen real.</p>');
+                    }
+
+                    if(a.horaPico !== null) {
+                        var hp = a.horaPico < 12 ? a.horaPico + 'am' : (a.horaPico === 12 ? '12pm' : (a.horaPico - 12) + 'pm');
+                        var extra = a.mesaTop ? ' La ubicación que más dejó fue <b>' + a.mesaTop + '</b>.' : '';
+                        out.push('<p>Tu hora más fuerte fue <b>' + hp + '</b> con ' + UI.format(a.porHora[a.horaPico].ventas) + '.' + extra + '</p>');
+                    }
+
+                    var conGan = a.platillos.filter(function(p){ return p.ganTot !== null; }).sort(function(x, y){ return y.ganTot - x.ganTot; });
+                    if(conGan.length) {
+                        out.push('<p>El que más ganancia deja es <b>' + conGan[0].nombre + '</b>: ' + UI.format(conGan[0].ganTot) + ' de ' + conGan[0].q + ' vendidos.</p>');
+                    } else if(a.platillos.length) {
+                        out.push('<p>El más vendido es <b>' + a.platillos[0].nombre + '</b> con ' + a.platillos[0].q + ' unidades.</p>');
+                    }
+
+                    // Proyección de cierre (sólo para hoy y con datos suficientes)
+                    if(a.filtro === 'hoy' && a.horasKeys.length >= 2) {
+                        var ahora = new Date().getHours();
+                        var inicio = a.horasKeys[0];
+                        var cierre = Math.max(a.horasKeys[a.horasKeys.length - 1] + 1, 17);
+                        if(ahora < cierre && ahora > inicio) {
+                            var transcurrido = (ahora - inicio) + 1;
+                            var totalH = cierre - inicio;
+                            var proy = a.ventas / transcurrido * totalH;
+                            if(proy > a.ventas * 1.02) {
+                                out.push('<p><b>Proyección:</b> al ritmo actual cerrarías cerca de <b>' + UI.format(proy) + '</b> (estimado con el promedio por hora de hoy).</p>');
+                            }
+                        }
+                    }
+                    return out;
+                },
+
+                alertas: function(a, prev) {
+                    var f = UI.finance, out = [];
+                    function add(tipo, ico, titulo, texto) { out.push({ t: tipo, i: ico, h: titulo, x: texto }); }
+
+                    if(a.ordenes === 0) return out;
+
+                    if(a.gastosTot > 0 && a.margen < 0) {
+                        add('bad', 'fa-triangle-exclamation', 'Estás perdiendo dinero', 'Los costos superan la venta en ' + UI.format(Math.abs(a.ganancia)) + '. Revisa el precio de la carne y los gastos del período.');
+                    } else if(a.gastosTot > 0 && a.margen < 20) {
+                        add('warn', 'fa-arrow-trend-down', 'Margen bajo (' + a.margen.toFixed(0) + '%)', 'Un restaurante sano ronda el 30%. Sube precio o baja costo en los platillos de menor margen.');
+                    } else if(a.margen >= 35 && a.gastosTot > 0) {
+                        add('good', 'fa-arrow-trend-up', 'Margen saludable (' + a.margen.toFixed(0) + '%)', 'Vas por encima del 30% que se considera sano. Mantén el control de compras.');
+                    }
+
+                    var perdedores = a.platillos.filter(function(p){ return p.ganU !== null && p.ganU < 0; });
+                    if(perdedores.length) {
+                        add('bad', 'fa-hand-holding-dollar', 'Vendes por debajo del costo', perdedores.map(function(p){ return p.nombre + ' (' + UI.format(p.ganU) + ' por unidad)'; }).join(', ') + '. Cada venta te resta dinero.');
+                    }
+
+                    var bajos = a.inventario.filter(function(v){ return v.restante <= 1; });
+                    if(bajos.length) {
+                        add('warn', 'fa-box-open', 'Carne por agotarse', bajos.map(function(v){ return v.tipo + ': ' + v.restante.toFixed(2) + ' kg'; }).join(' · ') + '. Considera reponer antes del próximo servicio.');
+                    }
+
+                    if(a.efectivoEsperado < 0) {
+                        add('bad', 'fa-cash-register', 'Caja en negativo', 'Pagaste ' + UI.format(Math.abs(a.efectivoEsperado)) + ' más de lo que entró en efectivo. Captura el fondo de caja o revisa los gastos.');
+                    }
+
+                    var dv = f._delta(a.ventas, prev.ventas);
+                    if(dv.up === false && dv.val < -25) {
+                        add('warn', 'fa-chart-line', 'Ventas abajo ' + dv.txt, 'Vendiste ' + UI.format(prev.ventas - a.ventas) + ' menos que el período anterior comparable.');
+                    } else if(dv.up === true && dv.val > 25 && prev.ventas > 0) {
+                        add('good', 'fa-fire', 'Ventas arriba ' + dv.txt, 'Vas ' + UI.format(a.ventas - prev.ventas) + ' por encima del período anterior.');
+                    }
+
+                    if(!a.insumos.length && a.ventas > 0) {
+                        add('info', 'fa-circle-info', 'Falta registrar la carne', 'Sin las compras del período no se puede calcular el margen real por platillo. Usa "Comprar insumo".');
+                    }
+
+                    if(a.ganancia < 0 && a.ventas > 0) {
+                        add('info', 'fa-bullseye', 'Para salir a mano', 'Necesitas vender ' + UI.format(Math.abs(a.ganancia)) + ' más para cubrir los costos de este período.');
+                    }
+                    return out;
+                },
+
+                kpis: function(a, prev) {
+                    var f = UI.finance;
+                    function delta(curr, prv) {
+                        var d = f._delta(curr, prv);
+                        if(d.up === null) return '';
+                        return '<span class="lc-delta ' + (d.up ? 'up' : 'down') + '">' + (d.up ? '▲' : '▼') + ' ' + d.txt + '</span>';
+                    }
+                    function kpi(cls, label, val, sub, ico, color) {
+                        return '<div class="lc-kpi ' + cls + '">' +
+                            (ico ? '<span class="lc-kpi-ico" style="background:' + color + '20;color:' + color + '"><i class="fa-solid ' + ico + '"></i></span>' : '') +
+                            '<span class="lc-kpi-label">' + label + '</span>' +
+                            '<span class="lc-kpi-val">' + val + '</span>' +
+                            '<span class="lc-kpi-sub">' + sub + '</span>' +
+                            '</div>';
+                    }
+                    var perdida = a.ganancia < 0;
+                    return kpi('is-hero', 'Ventas del período', UI.format(a.ventas), delta(a.ventas, prev.ventas) + ' · ' + a.ordenes + ' cuentas', '', '') +
+                        kpi('is-net' + (perdida ? ' is-loss' : ''), perdida ? 'Pérdida neta' : 'Ganancia neta', UI.format(a.ganancia), 'Margen ' + a.margen.toFixed(0) + '% · ' + delta(a.ganancia, prev.ganancia), '', '') +
+                        kpi('', 'Ticket promedio', UI.format(a.ticket), delta(a.ticket, prev.ticket) || a.prodPorOrden.toFixed(1) + ' prod/cuenta', 'fa-receipt', '#0EA5E9') +
+                        kpi('', 'Costo de carne', UI.format(a.costoInsumos), f._pct(a.costoInsumos, a.ventas).toFixed(0) + '% de la venta', 'fa-scale-balanced', '#3B82F6') +
+                        kpi('', 'Gastos operativos', UI.format(a.costoOper), f._pct(a.costoOper, a.ventas).toFixed(0) + '% de la venta', 'fa-receipt', '#EF4444') +
+                        kpi('', 'Efectivo en caja', UI.format(a.efectivoEsperado), 'Fondo ' + UI.format(a.fondo) + ' incluido', 'fa-cash-register', '#22C55E');
+                },
+
+                // ---------- RENDER COMPLETO ----------
+                render: function() {
+                    var f = UI.finance;
+                    if(STATE.role !== 'cajero' || !f.isUnlocked()) return;
+                    var panel = document.getElementById('p-report');
+                    if(!panel || panel.classList.contains('hidden')) return;
+
+                    var filtro = STATE.filtroFinanzas || 'hoy';
+                    var ranges = UI._getDateRange(filtro);
+                    var a = f.compute(filtro, ranges);
+                    var prev = f.compute(filtro, f._prevRanges(filtro, ranges));
+                    f._last = a;
+
+                    // Resumen ejecutivo
+                    var res = document.getElementById('fin-resumen');
+                    if(res) res.innerHTML = '<div class="lc-res-tag"><i class="fa-solid fa-wand-magic-sparkles"></i> Resumen automático</div>' + f.narrativa(a, prev).join('');
+
+                    // Alertas
+                    var al = document.getElementById('fin-alerts');
+                    if(al) {
+                        var lista = f.alertas(a, prev);
+                        al.innerHTML = lista.map(function(x) {
+                            return '<div class="lc-alert is-' + x.t + '"><i class="fa-solid ' + x.i + '"></i><span><b>' + x.h + '</b><span>' + x.x + '</span></span></div>';
+                        }).join('');
+                    }
+
+                    // KPIs y gráficas
+                    var set = function(id, html) { var el = document.getElementById(id); if(el) el.innerHTML = html; };
+                    set('fin-kpis', f.kpis(a, prev));
+                    set('fin-trend', f.chartArea(f._trend(filtro)));
+                    set('fin-hours', f.chartHours(a));
+                    set('fin-costs', f.chartCosts(a));
+                    set('fin-top', f.chartTop(a));
+                    set('fin-pay', f.chartPay(a));
+                    set('fin-inv', f.chartInv(a));
+                    set('fin-comp', f.comparativa());
+
+                    // Tablas
+                    f.tablas(a);
+
+                    // Resumen que consume el generador de PDF
+                    STATE.reportSummary = { total: a.ventas, cash: a.efectivo, card: a.tarjeta, gastos: a.gastosTot, items: a.itemMap, history: a.sales, expenses: a.oldExp };
+                },
+
+                tablas: function(a) {
+                    var esc = function(t){ return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
+
+                    // Mix de ventas
+                    var mix = document.getElementById('rp-rows');
+                    if(mix) {
+                        mix.innerHTML = a.platillos.map(function(p) {
+                            var gan = p.ganU === null
+                                ? '<span style="color:#CBD5E1;font-size:10px">N/D</span>'
+                                : '<span style="color:' + (p.ganU >= 0 ? '#16A34A' : '#DC2626') + '">' + UI.format(p.ganU) + '</span>';
+                            return '<tr><td class="nm">' + esc(p.nombre) + '</td><td class="mid">' + p.q + '</td><td class="num">' + UI.format(p.ventas) + '</td><td class="num">' + gan + '</td></tr>';
+                        }).join('') || '<tr><td colspan="4" class="lc-empty-sm">Sin ventas en este período</td></tr>';
+                    }
+
+                    // Insumos
+                    var ins = document.getElementById('rp-insumos-rows');
+                    if(ins) {
+                        ins.innerHTML = a.insumos.slice().sort(function(x, y){ return (UI.finance._ms(y.fecha) || 0) - (UI.finance._ms(x.fecha) || 0); }).map(function(i) {
+                            var ms = UI.finance._ms(i.fecha);
+                            var hora = ms ? new Date(ms).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+                            return '<tr><td class="nm">' + esc(i.tipo) + '</td>' +
+                                '<td class="mid">' + (i.kilos_comprados || 0).toFixed(2) + ' kg</td>' +
+                                '<td class="num">' + UI.format(i.costo_total) + '</td>' +
+                                '<td class="num" style="color:#64748B;font-weight:700">' + UI.format(i.costo_por_kilo) + '</td>' +
+                                '<td class="mid" style="color:#94A3B8;font-size:10px">' + hora + '</td>' +
+                                '<td class="mid"><button class="lc-icon-btn" onclick="LOGIC.erp.delInsumo(\'' + i.id + '\')" aria-label="Eliminar insumo"><i class="fa-solid fa-trash"></i></button></td></tr>';
+                        }).join('') || '<tr><td colspan="6" class="lc-empty-sm">Sin insumos en este período</td></tr>';
+                    }
+
+                    // Gastos operativos
+                    var gas = document.getElementById('rp-gastos-erp-rows');
+                    if(gas) {
+                        gas.innerHTML = a.gastos.slice().sort(function(x, y){ return (UI.finance._ms(y.fecha) || 0) - (UI.finance._ms(x.fecha) || 0); }).map(function(g) {
+                            var ms = UI.finance._ms(g.fecha);
+                            var hora = ms ? new Date(ms).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+                            return '<tr><td class="nm">' + esc(g.concepto) + '</td>' +
+                                '<td class="num" style="color:#DC2626">' + UI.format(g.monto) + '</td>' +
+                                '<td class="mid" style="color:#94A3B8;font-size:10px">' + hora + '</td>' +
+                                '<td class="mid"><button class="lc-icon-btn" onclick="LOGIC.erp.delGastoERP(\'' + g.id + '\')" aria-label="Eliminar gasto"><i class="fa-solid fa-trash"></i></button></td></tr>';
+                        }).join('') || '<tr><td colspan="4" class="lc-empty-sm">Sin gastos operativos</td></tr>';
+                    }
+
+                    // Movimientos
+                    var tr = document.getElementById('rp-trans');
+                    if(tr) {
+                        var todos = a.sales.concat(a.oldExp).sort(function(x, y){ return (UI.finance._ms(y.ts) || 0) - (UI.finance._ms(x.ts) || 0); });
+                        tr.innerHTML = todos.map(function(o) {
+                            var isExp = o.isExpense === true;
+                            var titulo = isExp ? 'Gasto: ' + esc((o.items && o.items[0] && o.items[0].n) || '')
+                                : (isNaN(parseInt(o.mesa)) ? esc(String(o.mesa)) : 'Mesa ' + o.mesa);
+                            var ms = UI.finance._ms(o.ts);
+                            var hora = ms ? new Date(ms).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : '';
+                            return '<tr>' +
+                                '<td><span class="nm" style="color:' + (isExp ? '#DC2626' : '#334155') + '">' + titulo + '</span>' +
+                                '<span style="display:block;font-size:10px;color:#94A3B8;margin-top:2px">' + (isExp ? 'Salida de efectivo' : ((o.method || 'Sin método') + ' · ' + ((o.items || []).length) + ' prod')) + (hora ? ' · ' + hora : '') + '</span></td>' +
+                                '<td class="num" style="color:' + (isExp ? '#DC2626' : '#0F172A') + '">' + (isExp ? '−' : '') + UI.format(o.total) + '</td>' +
+                                '<td class="mid" style="white-space:nowrap">' +
+                                '<button class="lc-icon-btn" onclick="LOGIC.adminEdit(\'' + o.id + '\',' + (o.total || 0) + ')" aria-label="Editar"><i class="fa-solid fa-pen-to-square"></i></button>' +
+                                '<button class="lc-icon-btn" onclick="LOGIC.adminDel(\'' + o.id + '\')" aria-label="Eliminar"><i class="fa-solid fa-trash"></i></button>' +
+                                '</td></tr>';
+                        }).join('') || '<tr><td colspan="3" class="lc-empty-sm">Sin movimientos en este período</td></tr>';
+                    }
+                },
+
+                // Comparativa fin de semana actual vs anterior
+                comparativa: function() {
+                    var f = UI.finance;
+                    var w0 = UI._getWeekendRange(0), w1 = UI._getWeekendRange(1);
+                    var r0 = [{ start: w0.satStart, end: w0.satEnd }, { start: w0.sunStart, end: w0.sunEnd }];
+                    var r1 = [{ start: w1.satStart, end: w1.satEnd }, { start: w1.sunStart, end: w1.sunEnd }];
+                    var a0 = f.compute('finde', r0), a1 = f.compute('finde', r1);
+                    if(a0.ordenes === 0 && a1.ordenes === 0) return '<p class="lc-empty-sm">Aún no hay datos de fines de semana para comparar</p>';
+
+                    function row(label, ico, color, v0, v1, money) {
+                        var d = f._delta(v0, v1);
+                        var arrow = d.up === null ? '' : (d.up ? '▲' : '▼');
+                        var cls = d.up === null ? '' : (d.up ? 'up' : 'down');
+                        var fmt = function(v){ return money ? UI.format(v) : String(Math.round(v)); };
+                        return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #F8FAFC">' +
+                            '<span style="width:28px;height:28px;border-radius:9px;background:' + color + '18;color:' + color + ';display:flex;align-items:center;justify-content:center;font-size:11px;flex:none"><i class="fa-solid ' + ico + '"></i></span>' +
+                            '<span style="flex:1;font-size:12px;font-weight:700;color:#475569">' + label + '</span>' +
+                            '<span style="font-size:11.5px;color:#94A3B8;font-variant-numeric:tabular-nums;width:74px;text-align:right">' + fmt(v1) + '</span>' +
+                            '<span style="font-size:12.5px;font-weight:900;color:#0F172A;font-variant-numeric:tabular-nums;width:82px;text-align:right">' + fmt(v0) + '</span>' +
+                            '<span class="lc-delta ' + cls + '" style="width:54px;text-align:right">' + arrow + ' ' + d.txt + '</span>' +
+                            '</div>';
+                    }
+                    return '<p style="font-size:11px;color:#94A3B8;font-weight:600;margin-bottom:10px">Anterior: ' + w1.label + '  ·  Actual: ' + w0.label + '</p>' +
+                        '<div style="display:flex;gap:10px;font-size:9px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#94A3B8;padding-bottom:6px;border-bottom:1px solid #F1F5F9">' +
+                        '<span style="width:28px;flex:none"></span><span style="flex:1">Métrica</span>' +
+                        '<span style="width:74px;text-align:right;white-space:nowrap">Anterior</span>' +
+                        '<span style="width:82px;text-align:right;white-space:nowrap">Actual</span>' +
+                        '<span style="width:54px;text-align:right">Δ</span></div>' +
+                        row('Ventas', 'fa-coins', '#F59E0B', a0.ventas, a1.ventas, true) +
+                        row('Gastos', 'fa-arrow-trend-down', '#EF4444', a0.gastosTot, a1.gastosTot, true) +
+                        row('Ganancia', 'fa-chart-line', '#10B981', a0.ganancia, a1.ganancia, true) +
+                        row('Cuentas', 'fa-receipt', '#3B82F6', a0.ordenes, a1.ordenes, false) +
+                        row('Ticket prom.', 'fa-tag', '#8B5CF6', a0.ticket, a1.ticket, true);
+                },
+
+                // ---------- Exportar CSV (para contabilidad) ----------
+                exportCSV: function() {
+                    var a = UI.finance._last;
+                    if(!a) return UI.toast('Sin datos para exportar', 'error');
+                    var q = function(v){ return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; };
+                    var L = [];
+                    L.push(['Reporte La Cabana', new Date().toLocaleString('es-MX')].map(q).join(','));
+                    L.push('');
+                    L.push(['RESUMEN'].map(q).join(','));
+                    [['Ventas', a.ventas], ['Efectivo', a.efectivo], ['Tarjeta', a.tarjeta],
+                     ['Costo insumos', a.costoInsumos], ['Gastos operativos', a.costoOper],
+                     ['Gastos totales', a.gastosTot], ['Ganancia neta', a.ganancia],
+                     ['Margen %', a.margen.toFixed(2)], ['Cuentas', a.ordenes],
+                     ['Ticket promedio', a.ticket.toFixed(2)], ['Efectivo esperado en caja', a.efectivoEsperado]
+                    ].forEach(function(r){ L.push([q(r[0]), r[1]].join(',')); });
+                    L.push('');
+                    L.push(['PLATILLO', 'CANTIDAD', 'VENTA', 'COSTO UNIT', 'GANANCIA UNIT', 'GANANCIA TOTAL'].map(q).join(','));
+                    a.platillos.forEach(function(p) {
+                        L.push([q(p.nombre), p.q, p.ventas.toFixed(2), p.costoU === null ? '' : p.costoU.toFixed(2), p.ganU === null ? '' : p.ganU.toFixed(2), p.ganTot === null ? '' : p.ganTot.toFixed(2)].join(','));
+                    });
+                    L.push('');
+                    L.push(['MOVIMIENTO', 'TIPO', 'METODO', 'MONTO', 'FECHA'].map(q).join(','));
+                    a.sales.forEach(function(o) {
+                        var ms = UI.finance._ms(o.ts);
+                        L.push([q('Mesa ' + o.mesa), q('Venta'), q(o.method || ''), (o.total || 0).toFixed(2), q(ms ? new Date(ms).toLocaleString('es-MX') : '')].join(','));
+                    });
+                    a.gastos.forEach(function(g) {
+                        var ms = UI.finance._ms(g.fecha);
+                        L.push([q(g.concepto), q('Gasto'), q('Efectivo'), (g.monto || 0).toFixed(2), q(ms ? new Date(ms).toLocaleString('es-MX') : '')].join(','));
+                    });
+                    a.insumos.forEach(function(i) {
+                        var ms = UI.finance._ms(i.fecha);
+                        L.push([q(i.tipo + ' ' + (i.kilos_comprados || 0).toFixed(2) + 'kg'), q('Insumo'), q('Efectivo'), (i.costo_total || 0).toFixed(2), q(ms ? new Date(ms).toLocaleString('es-MX') : '')].join(','));
+                    });
+
+                    try {
+                        var blob = new Blob(['﻿' + L.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+                        var url = URL.createObjectURL(blob);
+                        var link = document.createElement('a');
+                        link.href = url;
+                        link.download = 'LaCabana_' + a.filtro + '_' + new Date().toISOString().slice(0, 10) + '.csv';
+                        document.body.appendChild(link); link.click(); document.body.removeChild(link);
+                        setTimeout(function(){ URL.revokeObjectURL(url); }, 1500);
+                        UI.toast('CSV descargado', 'success');
+                    } catch(e) {
+                        console.error(e);
+                        UI.toast('No se pudo generar el CSV', 'error');
+                    }
                 }
+            },
+
+            // Entrada pública: la usan los snapshots de Firestore y las pestañas
+            renderFinance: () => {
+                if(STATE.role !== 'cajero') return;
+                if(UI._finTimer) return;
+                UI._finTimer = setTimeout(function() {
+                    UI._finTimer = null;
+                    UI.finance.render();
+                }, 120);
             },
 
             // Historial de los últimos 8 fines de semana (se calcula on-demand)
             renderHistorialFines: function() {
                 var tbody = document.getElementById('rp-historial-fines-rows');
                 if(!tbody) return;
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-xs text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-1"></i>Calculando…</td></tr>';
 
                 setTimeout(function() {
                     var rows = [];
                     for(var w = 0; w < 8; w++) {
                         var range = UI._getWeekendRange(w);
-                        function mkFilter(r) {
-                            return function(x, tsField) {
-                                var ts = x[tsField];
-                                if(!ts) return false;
-                                var ms = ts.seconds ? ts.seconds*1000 : Number(ts);
-                                return (ms>=r.satStart && ms<=r.satEnd) || (ms>=r.sunStart && ms<=r.sunEnd);
-                            };
-                        }
-                        var f = mkFilter(range);
-                        var sales = STATE.orders.filter(function(o){ return o.status==='pagado' && !o.isExpense && !o.isKitchenTicket && f(o,'ts'); });
-                        var ins   = STATE.insumos.filter(function(i){ return f(i,'fecha'); });
-                        var gas   = STATE.gastosERP.filter(function(g){ return f(g,'fecha'); });
-                        var old   = STATE.orders.filter(function(o){ return o.isExpense && f(o,'ts'); });
-                        var st    = UI._calcFindeStats(sales, ins, gas, old, {});
-                        if(st.ordenes === 0 && w > 0) continue; // no mostrar semanas vacías excepto la actual
+                        var r = [{start: range.satStart, end: range.satEnd}, {start: range.sunStart, end: range.sunEnd}];
+                        var st = UI.finance.compute('finde', r);
+                        if(st.ordenes === 0 && w > 0) continue;
                         var isEste = w === 0;
-                        var ganColor = st.ganancia >= 0 ? 'text-green-600 font-black' : 'text-red-600 font-black';
                         rows.push(
-                            '<tr class="hover:bg-slate-50 transition-colors cursor-pointer ' + (isEste?'bg-orange-50/50':'') + '" onclick="UI.setFiltroFinanzas(\'finde\')" title="Haz clic para ver este período">' +
-                            '<td class="px-4 py-2.5 text-xs font-bold text-slate-700">' +
-                            (isEste ? '<span class="inline-block bg-orange-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded mr-1.5">ESTE</span>' : '') +
-                            range.label +
-                            '</td>' +
-                            '<td class="px-4 py-2.5 text-right text-xs font-mono font-bold text-slate-800">' + UI.format(st.ventas) + '</td>' +
-                            '<td class="px-4 py-2.5 text-right text-xs font-mono text-red-500">' + UI.format(st.gastos) + '</td>' +
-                            '<td class="px-4 py-2.5 text-right text-xs font-mono ' + ganColor + '">' + UI.format(st.ganancia) + '</td>' +
-                            '<td class="px-4 py-2.5 text-center text-xs text-slate-500">' + st.ordenes + '</td>' +
+                            '<tr onclick="UI.setFiltroFinanzas(\'finde\')" style="cursor:pointer' + (isEste ? ';background:#FFF7ED' : '') + '">' +
+                            '<td class="nm">' + (isEste ? '<span style="display:inline-block;background:#F97316;color:#fff;font-size:8px;font-weight:900;padding:2px 5px;border-radius:5px;margin-right:6px">ESTE</span>' : '') + range.label + '</td>' +
+                            '<td class="num">' + UI.format(st.ventas) + '</td>' +
+                            '<td class="num" style="color:#DC2626">' + UI.format(st.gastosTot) + '</td>' +
+                            '<td class="num" style="color:' + (st.ganancia >= 0 ? '#16A34A' : '#DC2626') + '">' + UI.format(st.ganancia) + '</td>' +
+                            '<td class="mid">' + st.ordenes + '</td>' +
                             '</tr>'
                         );
                     }
-                    tbody.innerHTML = rows.join('') || '<tr><td colspan="5" class="text-center py-5 text-xs text-slate-400">Sin datos históricos disponibles</td></tr>';
+                    tbody.innerHTML = rows.join('') || '<tr><td colspan="5" class="lc-empty-sm">Sin datos históricos todavía</td></tr>';
                 }, 0);
             },
 
-            // --- MOTOR DE REPORTES PDF PROFESIONAL ERP v7.0 ---
+            // Carga jsPDF sólo cuando se pide un reporte (arranque ~350 KB más ligero)
+            _ensurePDF: () => {
+                if(window.jspdf && window.jspdf.jsPDF) return Promise.resolve();
+                if(UI._pdfPromise) return UI._pdfPromise;
+                UI._pdfPromise = new Promise(function(resolve, reject) {
+                    function load(src, cb) {
+                        var sc = document.createElement('script');
+                        sc.src = src;
+                        sc.onload = cb;
+                        sc.onerror = function(){ UI._pdfPromise = null; reject(new Error('No se pudo cargar ' + src)); };
+                        document.head.appendChild(sc);
+                    }
+                    load('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', function() {
+                        load('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js', resolve);
+                    });
+                });
+                return UI._pdfPromise;
+            },
+
             generatePDF: (filtro) => {
+                UI.toast('Generando reporte…', 'info');
+                UI._ensurePDF().then(function() {
+                    UI._pdfNow(filtro);
+                }).catch(function(e) {
+                    console.error(e);
+                    UI.toast('Sin conexión para cargar el motor de PDF', 'error');
+                });
+            },
+
+            // --- MOTOR DE REPORTES PDF PROFESIONAL ERP v8.0 ---
+            _pdfNow: (filtro) => {
                 try {
                     const f = filtro || STATE.filtroFinanzas || 'hoy';
                     const { jsPDF } = window.jspdf;
@@ -3275,7 +3995,7 @@
                     });
 
                     // ── Etiqueta de período ──
-                    const periodoLabels = { hoy:'Hoy', sabado:'Sábado', domingo:'Domingo', finde:'Fin de Semana' };
+                    const periodoLabels = { hoy:'Hoy', ayer:'Ayer', sabado:'Sábado', domingo:'Domingo', finde:'Fin de Semana', semana:'Últimos 7 días', mes:'Últimos 30 días' };
                     const periodoLabel  = periodoLabels[f] || 'Período';
                     let rangeDate = '';
                     if(ranges.length === 1) {
@@ -3610,7 +4330,7 @@
                         doc.setFontSize(7.5);
                         doc.setTextColor(...C.gris);
                         doc.setFont("helvetica","normal");
-                        doc.text("La Cabaña de la Progreso — Sistema ERP POS v7.0", 13, 287);
+                        doc.text("La Cabaña de la Progreso — Sistema ERP POS v8.0", 13, 287);
                         doc.text(`Página ${i} de ${pageCount}`, 197, 287, {align:'right'});
                         doc.text(`Corte: ${periodoLabel}  |  ${d.toLocaleString('es-MX')}`, 105, 287, {align:'center'});
                     }
@@ -3991,6 +4711,16 @@
             }
         }, 5000);
         
+        // Fondo de caja recordado en el dispositivo
+        try {
+            var _fondo = parseFloat(localStorage.getItem('lc_fondo'));
+            if(!isNaN(_fondo)) {
+                STATE.cashFund = _fondo;
+                var _inpF = document.getElementById('inp-fondo');
+                if(_inpF) _inpF.value = _fondo;
+            }
+        } catch(e) {}
+
         auth.onAuthStateChanged(u => { if(u){ 
             firebaseConnected = true;
             document.getElementById('app-loader').classList.add('opacity-0','pointer-events-none');
